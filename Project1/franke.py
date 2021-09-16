@@ -181,7 +181,7 @@ print("MSE, test: ", mse)
 print('')
 mse = MSE(z_model, z_train_scaled)
 print("MSE, train: ", mse)
-print('')
+print('  ')
 
 
 
