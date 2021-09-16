@@ -32,12 +32,10 @@ def design_matrix(x, y):  #Makes the design matrix for a fifth order polynomial,
 '''
 
 
-
 #Mortens design matrix
 def design_matrix(x, y, poly):
-	N = len(x)
 	l = int((poly+1)*(poly+2)/2)		# Number of elements in beta
-	X = np.ones((N,l))
+	X = np.ones((len(x),l))
 
 	for i in range(1,poly+1):
 		q = int((i)*(i+1)/2)
@@ -114,30 +112,48 @@ def OLS(x, y, z, poly):
 
 
 
-def tradeoff(x, y, z, poly):
+def tradeoff(poly, runs):
+
 	MSE_train = []
 	MSE_test = []
 	R2_train = []
 	R2_test = []
 	polynomial = []
 
+
+
 	for i in range(1, poly+1):
-		z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, i)
 
-		MSE_train.append(MSE(z_model, z_train_scaled))
-		R2_train.append(R2(z_model, z_train_scaled))
 
-		MSE_test.append(MSE(z_predict, z_test_scaled))
-		R2_test.append(R2(z_predict, z_test_scaled))
+
+        for j in range(runs):
+
+            x = np.sort(np.random.uniform(0, 1, 20))
+            y = np.sort(np.random.uniform(0, 1, 20))
+            x, y = np.meshgrid(x, y)
+            z = FrankeFunction(x, y) + 0.1*np.random.randn(20, 20)
+
+            z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, i)
+
+
+
+
+		    MSE_train.append(MSE(z_model, z_train_scaled))
+		    R2_train.append(R2(z_model, z_train_scaled))
+
+		    MSE_test.append(MSE(z_predict, z_test_scaled))
+		    R2_test.append(R2(z_predict, z_test_scaled))
+
+
 
 		polynomial.append(i)
+
 
 	return MSE_train, MSE_test, R2_train, R2_test, polynomial
 
 
 
-
-# Generate data.
+# Generate data
 x = np.sort(np.random.uniform(0, 1, 20))
 y = np.sort(np.random.uniform(0, 1, 20))
 x, y = np.meshgrid(x, y)
@@ -164,8 +180,6 @@ print("MSE, train: ", mse)
 print('')
 
 plot(x_axis, y_axis, z_new_grid, "Prediction")
-
-
 
 
 MSE_train, MSE_test, R2_train, R2_test, polynomial = tradeoff(x, y, z, 30)
