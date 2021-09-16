@@ -193,6 +193,7 @@ print('')
 '''
 
 
+
 MSE_train, MSE_test, R2_train, R2_test, polynomial = tradeoff(polynomial, 3000)
 
 
