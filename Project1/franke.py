@@ -118,20 +118,21 @@ def OLS(x, y, z, poly):
 
 def tradeoff(poly, runs):
 
-    MSE_train = []
-    MSE_test = []
-    R2_train = []
-    R2_test = []
+    MSE_train = np.zeros([poly,runs])
+    #print(MSE_train[0,:])
+    MSE_test = np.zeros([poly,runs])
+    R2_train = np.zeros([poly,runs])
+    R2_test = np.zeros([poly,runs])
     polynomial = []
 
 
-'''
+
     for i in range(1, poly+1):
 
-
         for j in range(runs):
-
+            
             x = np.sort(np.random.uniform(0, 1, 20))
+            
             y = np.sort(np.random.uniform(0, 1, 20))
             x, y = np.meshgrid(x, y)
             z = FrankeFunction(x, y) + 0.1*np.random.randn(20, 20)
@@ -139,19 +140,26 @@ def tradeoff(poly, runs):
             z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, i)
 
 
-        MSE_train.append(MSE(z_model, z_train_scaled))
-        R2_train.append(R2(z_model, z_train_scaled))
+            MSE_train[i-1][j] = (MSE(z_model, z_train_scaled))
+            R2_train[i-1][j] = R2(z_model, z_train_scaled)
 
-        MSE_test.append(MSE(z_predict, z_test_scaled))
-        R2_test.append(R2(z_predict, z_test_scaled))
+            MSE_test[i-1][j] = (MSE(z_predict, z_test_scaled))
+            R2_test[i-1][j] = (R2(z_predict, z_test_scaled))
+            
+    
 
+        polynomial.append(i)
+    #print(MSE_train)
+    for k in range(poly):
+        MSE_train[k][0] = np.mean(MSE_train[k])
+        R2_train[k][0] = np.mean(R2_train[k])
+        MSE_test[k][0] = np.mean(MSE_test[k])
+        R2_test[k][0] = np.mean(R2_test[k])
+        
+    #print(MSE_train)
 
+    return MSE_train[:,0], MSE_test[:,0], R2_train[:,0], R2_test[:,0], polynomial
 
-    polynomial.append(i)
-
-
-    return MSE_train, MSE_test, R2_train, R2_test, polynomial
-'''
 
 
 # Generate data
@@ -160,12 +168,12 @@ y = np.sort(np.random.uniform(0, 1, 20))
 x, y = np.meshgrid(x, y)
 z = FrankeFunction(x, y) + 0.1*np.random.randn(20, 20)
 
-polynomial = 5
+polynomial = 10
 
 z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, polynomial)
 
 
-plot(x_axis, y_axis, z_new_grid, "Prediction")
+#plot(x_axis, y_axis, z_new_grid, "Prediction")
 
 '''
 print('')
@@ -182,14 +190,16 @@ print('')
 mse = MSE(z_model, z_train_scaled)
 print("MSE, train: ", mse)
 print('')
+'''
 
 
+MSE_train, MSE_test, R2_train, R2_test, polynomial = tradeoff(polynomial, 3000)
 
 
-MSE_train, MSE_test, R2_train, R2_test, polynomial = tradeoff(x, y, z, 30)
 
 
 plt.plot(polynomial, MSE_test, label="Testing data", color='blue')
+
 plt.plot(polynomial, MSE_train, label="Training data", color='red')
 plt.xlabel("Degrees of polynomial")
 plt.ylabel("Mean Squared Errod")
@@ -203,4 +213,5 @@ plt.xlabel("Degrees of polynomial")
 plt.ylabel("R squared")
 plt.legend()
 plt.show()
-'''
+
+
