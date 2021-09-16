@@ -26,7 +26,7 @@ def FrankeFunction(x,y):
 '''
 def design_matrix(x, y):  #Makes the design matrix for a fifth order polynomial, dimension 20x21
 
-	#Stacks column vectors together. axis=-1 means they are columns and not rows
+    #Stacks column vectors together. axis=-1 means they are columns and not rows
     X = np.stack((np.ones(len(x)), x, y, x**2, y**2, x*y, x**3, y**3, (x**2)*y, (y**2)*x, x**4, y**4, (x**3)*y, (y**3)*x, (x**2)*(y**2), x**5, y**5, (x**4)*y, (y**4)*x, (x**3)*(y**2), (y**3)*(x**2)), axis=-1)
     return X
 '''
@@ -34,28 +34,32 @@ def design_matrix(x, y):  #Makes the design matrix for a fifth order polynomial,
 
 #Mortens design matrix
 def design_matrix(x, y, poly):
-	l = int((poly+1)*(poly+2)/2)		# Number of elements in beta
-	X = np.ones((len(x),l))
+    l = int((poly+1)*(poly+2)/2)		# Number of elements in beta
+    X = np.ones((len(x),l))
 
-	for i in range(1,poly+1):
-		q = int((i)*(i+1)/2)
-		for k in range(i+1):
-			X[:,q+k] = (x**(i-k))*(y**k)
+    for i in range(1,poly+1):
+        q = int((i)*(i+1)/2)
 
-	return X
+        for k in range(i+1):
+            X[:,q+k] = (x**(i-k))*(y**k)
+
+    return X
 
 
 
 def plot(x, y, z, title):
-	fig_predict = plt.figure()
-	ax_predict = fig_predict.gca(projection='3d')
-	# Plot the surface.
-	surf_predict = ax_predict.plot_surface(x, y, z, cmap=cm.coolwarm,
-	                       linewidth=0, antialiased=False)
-	# Add a color bar which maps values to colors.
-	fig_predict.colorbar(surf_predict, shrink=0.5, aspect=5)
-	plt.title(title)
-	plt.show()
+    fig_predict = plt.figure()
+    ax_predict = fig_predict.gca(projection='3d')
+    # Plot the surface.
+    surf_predict = ax_predict.plot_surface(x, y, z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+    # Add a color bar which maps values to colors.
+    fig_predict.colorbar(surf_predict, shrink=0.5, aspect=5)
+    plt.title(title)
+    plt.show()
+
+
+
 
 
 
@@ -114,16 +118,15 @@ def OLS(x, y, z, poly):
 
 def tradeoff(poly, runs):
 
-	MSE_train = []
-	MSE_test = []
-	R2_train = []
-	R2_test = []
-	polynomial = []
+    MSE_train = []
+    MSE_test = []
+    R2_train = []
+    R2_test = []
+    polynomial = []
 
 
-
-	for i in range(1, poly+1):
-
+'''
+    for i in range(1, poly+1):
 
 
         for j in range(runs):
@@ -136,21 +139,19 @@ def tradeoff(poly, runs):
             z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, i)
 
 
+        MSE_train.append(MSE(z_model, z_train_scaled))
+        R2_train.append(R2(z_model, z_train_scaled))
 
-
-		    MSE_train.append(MSE(z_model, z_train_scaled))
-		    R2_train.append(R2(z_model, z_train_scaled))
-
-		    MSE_test.append(MSE(z_predict, z_test_scaled))
-		    R2_test.append(R2(z_predict, z_test_scaled))
+        MSE_test.append(MSE(z_predict, z_test_scaled))
+        R2_test.append(R2(z_predict, z_test_scaled))
 
 
 
-		polynomial.append(i)
+    polynomial.append(i)
 
 
-	return MSE_train, MSE_test, R2_train, R2_test, polynomial
-
+    return MSE_train, MSE_test, R2_train, R2_test, polynomial
+'''
 
 
 # Generate data
@@ -164,6 +165,9 @@ polynomial = 5
 z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, polynomial)
 
 
+plot(x_axis, y_axis, z_new_grid, "Prediction")
+
+'''
 print('')
 r2 = R2(z_predict, z_test_scaled)
 print("R2, test: ", r2)
@@ -179,7 +183,7 @@ mse = MSE(z_model, z_train_scaled)
 print("MSE, train: ", mse)
 print('')
 
-plot(x_axis, y_axis, z_new_grid, "Prediction")
+
 
 
 MSE_train, MSE_test, R2_train, R2_test, polynomial = tradeoff(x, y, z, 30)
@@ -199,3 +203,4 @@ plt.xlabel("Degrees of polynomial")
 plt.ylabel("R squared")
 plt.legend()
 plt.show()
+'''
