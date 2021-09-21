@@ -16,7 +16,7 @@ Pseudokode:
 * Lasso: (x,y,x, string="scaler")
 	return z_train_scaled, z_test_scaled, z_predict, z_model
 
-*Scaling-funksjoner: (X_train, X_test, z_train, z_test)
+* Scaling-funksjoner: (X_train, X_test, z_train, z_test)
 	return skalerte inputs
 	
 * MSE
