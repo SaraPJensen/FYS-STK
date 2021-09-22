@@ -8,8 +8,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from scalers import *
 
-'''
+
 def ThreeD_plot(x, y, z, title):
     fig_predict = plt.figure()
     ax_predict = fig_predict.gca(projection='3d')
@@ -20,7 +21,7 @@ def ThreeD_plot(x, y, z, title):
     fig_predict.colorbar(surf_predict, shrink=0.5, aspect=5)
     plt.title(title)
     plt.show()
-'''
+
 
 
 
@@ -47,20 +48,24 @@ def design_matrix(x, y, poly):
 
 def scaling(X_train, X_test, z_train, z_test, scaler):
 
-    if scaler == "Standard" :
-        something
+    if scaler == "standard" :
+        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerStandard(X_train, X_test, z_train, z_test)
 
-    elif scaler == "MinMax" :
-        something
-
-    elif scaler == "Normalise" :
-        something
-
-    elif scaler == "Robust" :
-        something
+    elif scaler == "minmax" :
+        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMinMax(X_train, X_test, z_train, z_test)
 
     else:
         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = X_train, X_test, z_train, z_test
+
+
+    '''
+    elif scaler == "normalise" :
+        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaler...(X_train, X_test, z_train, z_test)
+
+    elif scaler == "robust" :
+        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaler...(X_train, X_test, z_train, z_test)
+    '''
+
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
@@ -68,7 +73,7 @@ def scaling(X_train, X_test, z_train, z_test, scaler):
 
 def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb):    #Gjør Ridge, hvis lambda != 0
 
-    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test)
+    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
     I = np.eye(len(X_train_scaled[0,:]))
 
@@ -87,7 +92,7 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb):    #Gjør Ridge, 
 def Lasso(X_train, X_test, z_train, z_test, scaler, lamb):
 
     #Legg til if-statement for ulike skaleringer
-    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test)
+    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
 
     RegLasso = linear_model.Lasso(lamb, fit_intercept=False)
@@ -102,32 +107,32 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb):
 
 
 def Bootstrap(x, y, z, scaler, poly, B_runs, metode, lamb):
-        x = np.ravel(x)
-        y = np.ravel(y)
-        z = np.ravel(z)
+    x = np.ravel(x)
+    y = np.ravel(y)
+    z = np.ravel(z)
 
-        MSE = []
-        Bias = []
-        Variance = []
+    MSE = []
+    Bias = []
+    Variance = []
 
-        for degree in poly:
+    for degree in poly:
 
-            X = design_matrix(x, y, poly)
+        X = design_matrix(x, y, poly)
 
-            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-            z_predictions = ([(len(z_test)), B])
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+        z_predictions = ([(len(z_test)), B])
 
-            for i in range(B):
-                X_train_boot, z_train_boot = resample(X_train, z_train)
+        for i in range(B):
+            X_train_boot, z_train_boot = resample(X_train, z_train)
 
-                #Legg til if-statements for ulike modeller
-                z_train_scaled, z_test_scaled, z_predict, z_model = model(X_train, X_test, z_train, z_test, scaler, lamb)
+            #Legg til if-statements for ulike modeller
+            z_train_scaled, z_test_scaled, z_predict, z_model = model(X_train, X_test, z_train, z_test, scaler, lamb)
 
-                z_predictions[:, i] = z_predict
+            z_predictions[:, i] = z_predict
 
-            error = np.mean( np.mean((z_test - z_predict)**2, axis=1, keepdims=True) )
-            bias = np.mean( (z_test - np.mean(z_predict, axis=1, keepdims=True))**2 )
-            variance = np.mean( np.var(z_predict, axis=1, keepdims=True) )
+        error = np.mean( np.mean((z_test - z_predict)**2, axis=1, keepdims=True) )
+        bias = np.mean( (z_test - np.mean(z_predict, axis=1, keepdims=True))**2 )
+        variance = np.mean( np.var(z_predict, axis=1, keepdims=True) )
 
     return MSE, Bias, Variance
 
@@ -137,14 +142,54 @@ def CrossVal(x, y, z, scaler, poly, k_fold, metode, lamb):
     return mse, bias, variance
 
 
-def main(n, polynomial):
+def main():
     # Generate data
-    polynomial = 20
     n = 20
     x = np.sort(np.random.uniform(0, 1, n))
     y = np.sort(np.random.uniform(0, 1, n))
     x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.5*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.01*np.random.randn(n, n)
+
+    '''
+    Exercise 1
+    '''
+    #Plot the graph
+    ThreeD_plot(x, y, z, "Function")
 
 
-    return 0
+    #Generate prediction
+    poly = 5
+    X = design_matrix(x, y, poly)
+
+    X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
+
+    z_train_scaled, z_test_scaled, z_predict, z_model = OLS(X_train, X_test, z_train, z_test, none, 0)
+
+
+    #Plot the Prediction
+    #Plotter, genererer nye punkter for x, y, z
+    x_axis = np.linspace(0, 1, 20)
+    y_axis = np.linspace(0, 1, 20)
+    x_axis, y_axis = np.meshgrid(x_axis, y_axis)
+
+    x_axis_flat = np.ravel(x_axis)
+    y_axis_flat = np.ravel(y_axis)
+
+    #Uten skalering
+    X_new = design_matrix(x_axis_flat, y_axis_flat, poly)
+
+    #X_new_scaled = scaler.transform(X_new)
+
+    z_new = X_new @ beta   #gir 1d kolonne
+
+    #z_new = X_new_scaled @ beta   #gir 1d kolonne
+
+    #z_new_scaled = (z_new - np.mean(z_train))/np.std(z_train)  #scale
+
+    z_new_grid = z_new.reshape(20, 20)   #make into a grid for plotting
+
+    ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
+
+
+
+main()
