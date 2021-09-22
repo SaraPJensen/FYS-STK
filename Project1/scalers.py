@@ -36,3 +36,33 @@ def scalerMinMax(X_train, X_test, z_train, z_test):
     z_test_scaled = scaler3.transform(z_test)
     
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
+
+def scalerNormalizer(X_train, X_test, z_train, z_test):
+    scaler = Normalizer().fit(X_train)
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    
+    #Scale the response variable
+    z_train = z_train.reshape((1,-1))
+    z_test = z_test.reshape((1,-1))
+    scaler = Normalizer().fit(z_train)
+    z_train_scaled = scaler.transform(z_train)
+    scaler = Normalizer().fit(z_test)
+    z_test_scaled = scaler.transform(z_test)
+    
+    return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
+
+def scalerRobust(X_train, X_test, z_train, z_test):
+    scaler = RobustScaler().fit(X_train)
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    
+    #Scale the response variable
+    z_train = z_train.reshape((-1,1))
+    z_test = z_test.reshape((-1,1))
+    scaler = RobustScaler().fit(z_train)
+    z_train_scaled = scaler.transform(z_train)
+    scaler = RobustScaler().fit(z_test)
+    z_test_scaled = scaler.transform(z_test)
+    
+    return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
