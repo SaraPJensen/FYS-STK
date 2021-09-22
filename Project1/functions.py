@@ -10,6 +10,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from scalers import *
 
+np.random.seed(2018)
+
 
 def ThreeD_plot(x, y, z, title):
     fig_predict = plt.figure()
@@ -71,7 +73,7 @@ def scaling(X_train, X_test, z_train, z_test, scaler):
 
 
 
-def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb):    #Gjør Ridge, hvis lambda != 0
+def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #Gjør Ridge, hvis lambda != 0
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
@@ -84,6 +86,30 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb):    #Gjør Ridge, 
 
     #generate the prediction z
     z_predict = X_test_scaled @ beta
+
+    if plot == "plot_prediction":
+            #Plot the Prediction
+            scaler = StandardScaler()
+            scaler.fit(X_train)
+
+            #Plotter, genererer nye punkter for x, y, z
+            x_axis = np.linspace(0, 1, 20)
+            y_axis = np.linspace(0, 1, 20)
+            x_axis, y_axis = np.meshgrid(x_axis, y_axis)
+
+            x_axis_flat = np.ravel(x_axis)
+            y_axis_flat = np.ravel(y_axis)
+
+            X_new = design_matrix(x_axis_flat, y_axis_flat, poly)
+            X_new_scaled = scaler.transform(X_new)
+
+            z_new = X_new_scaled @ beta   #gir 1d kolonne
+
+            z_new_scaled = (z_new - np.mean(z_train))/np.std(z_train)  #scale
+
+            z_new_grid = z_new_scaled.reshape(20, 20)   #make into a grid for plotting
+
+            ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
 
     return z_train_scaled, z_test_scaled, z_predict, z_model
 
@@ -144,51 +170,37 @@ def CrossVal(x, y, z, scaler, poly, k_fold, metode, lamb):
 
 def main():
     # Generate data
-    n = 20
+    n = 25
     x = np.sort(np.random.uniform(0, 1, n))
     y = np.sort(np.random.uniform(0, 1, n))
     x, y = np.meshgrid(x, y)
     z = FrankeFunction(x, y) + 0.01*np.random.randn(n, n)
 
+    poly = 5
+
+    x_flat = np.ravel(x)
+    y_flat = np.ravel(y)
+    z_flat = np.ravel(z)
+
+    X = design_matrix(x_flat, y_flat, poly)
+
+    X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
+
     '''
     Exercise 1
+    '''
     '''
     #Plot the graph
     ThreeD_plot(x, y, z, "Function")
 
+    #Plot prediction
+    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", 0, poly, "plot_prediction")
+    '''
 
-    #Generate prediction
-    poly = 5
-    X = design_matrix(x, y, poly)
-
-    X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
-
-    z_train_scaled, z_test_scaled, z_predict, z_model = OLS(X_train, X_test, z_train, z_test, none, 0)
+    
 
 
-    #Plot the Prediction
-    #Plotter, genererer nye punkter for x, y, z
-    x_axis = np.linspace(0, 1, 20)
-    y_axis = np.linspace(0, 1, 20)
-    x_axis, y_axis = np.meshgrid(x_axis, y_axis)
 
-    x_axis_flat = np.ravel(x_axis)
-    y_axis_flat = np.ravel(y_axis)
-
-    #Uten skalering
-    X_new = design_matrix(x_axis_flat, y_axis_flat, poly)
-
-    #X_new_scaled = scaler.transform(X_new)
-
-    z_new = X_new @ beta   #gir 1d kolonne
-
-    #z_new = X_new_scaled @ beta   #gir 1d kolonne
-
-    #z_new_scaled = (z_new - np.mean(z_train))/np.std(z_train)  #scale
-
-    z_new_grid = z_new.reshape(20, 20)   #make into a grid for plotting
-
-    ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
 
 
 
