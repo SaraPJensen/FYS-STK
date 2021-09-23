@@ -1,16 +1,6 @@
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import numpy as np
-from random import random, seed
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from scalers import *
 
-np.random.seed(2018)
+#np.random.seed(2018)
 
 
 def ThreeD_plot(x, y, z, title):
@@ -26,7 +16,6 @@ def ThreeD_plot(x, y, z, title):
 
 
 
-
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
     term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
@@ -35,16 +24,15 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-
-def design_matrix(x, y, poly):
+def design_matrix(x_flat, y_flat, poly):
     l = int((poly+1)*(poly+2)/2)		# Number of elements in beta
-    X = np.ones((len(x),l))
+    X = np.ones((len(x_flat),l))
 
     for i in range(0, poly+1):
         q = int((i)*(i+1)/2)
 
         for k in range(i+1):
-            X[:,q+k] = (x**(i-k))*(y**k)
+            X[:,q+k] = (x_flat**(i-k))*(y_flat**k)
     return X
 
 
@@ -131,8 +119,39 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb):
 
 
 
+def tradeoff(x, y, z, poly, reg_method, scaling):
 
-def Bootstrap(x, y, z, scaler, poly, B_runs, metode, lamb):
+    MSE_train = []
+    MSE_test = []
+
+    for i in range(1, poly+1):
+
+        if reg_method == "OLS":
+
+            X = design_matrix(x, y, i)
+
+            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
+            z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaling, 0, i, "none")
+
+
+        elif reg_method == "Bootstrap":
+            z_train_scaled, z_test_scaled, z_predict, z_model = Bootstrap(x, y, z, scaler, poly, B_runs, method, lamb)
+
+        elif reg_method == "Crossval":
+            z_train_scaled, z_test_scaled, z_predict, z_model = CrossVal(x, y, z, scaler, poly, k_fold, method, lamb)
+
+
+        MSE_train.append(mean_squared_error(z_train_scaled, z_model))
+
+        MSE_test.append(mean_squared_error(z_test_scaled, z_predict))
+
+
+    return MSE_train, MSE_test
+
+
+
+def Bootstrap(x, y, z, scaler, poly, B_runs, method, lamb):
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)
@@ -141,63 +160,117 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, metode, lamb):
     Bias = []
     Variance = []
 
-    for degree in poly:
+    for degree in range(1, poly+1):
 
-        X = design_matrix(x, y, poly)
+        X = design_matrix(x, y, degree)
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-        z_predictions = ([(len(z_test)), B])
+        z_predictions = np.zeros((len(z_test), B_runs))
 
-        for i in range(B):
+        for i in range(B_runs):
+
             X_train_boot, z_train_boot = resample(X_train, z_train)
 
+            if method == "OLS":
             #Legg til if-statements for ulike modeller
-            z_train_scaled, z_test_scaled, z_predict, z_model = model(X_train, X_test, z_train, z_test, scaler, lamb)
+                z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
 
-            z_predictions[:, i] = z_predict
+            z_predictions[:, i] = z_predict.ravel()  #Dette funker ikke
 
-        error = np.mean( np.mean((z_test - z_predict)**2, axis=1, keepdims=True) )
-        bias = np.mean( (z_test - np.mean(z_predict, axis=1, keepdims=True))**2 )
-        variance = np.mean( np.var(z_predict, axis=1, keepdims=True) )
+        z_test = z_test.reshape((-1, 1))
+
+        error = np.mean( np.mean((z_test - z_predictions)**2, axis=1, keepdims=True) )
+        bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
+        variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
+
+        MSE.append(error)
+        Bias.append(bias)
+        Variance.append(variance)
+
 
     return MSE, Bias, Variance
 
 
-def CrossVal(x, y, z, scaler, poly, k_fold, metode, lamb):
+def CrossVal(x, y, z, scaler, poly, k_fold, method, lamb):
 
     return mse, bias, variance
 
 
 def main():
     # Generate data
-    n = 25
+    n = 20
     x = np.sort(np.random.uniform(0, 1, n))
     y = np.sort(np.random.uniform(0, 1, n))
     x, y = np.meshgrid(x, y)
     z = FrankeFunction(x, y) + 0.01*np.random.randn(n, n)
 
-    poly = 5
-
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
     z_flat = np.ravel(z)
-
-    X = design_matrix(x_flat, y_flat, poly)
-
-    X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
     '''
     Exercise 1
     '''
     '''
-    #Plot the graph
-    ThreeD_plot(x, y, z, "Function")
+    poly = 25
 
-    #Plot prediction
+    X = design_matrix(x_flat, y_flat, poly)
+
+    X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
+
+    #Plot the graph
+    #ThreeD_plot(x, y, z, "Function")
+
+    #Plot prediction and calculate errors
     z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", 0, poly, "plot_prediction")
+
+    print('')
+    r2_train = r2_score(z_train_scaled, z_model)
+    print(f"R2, train: {r2_train:.5}")
+    print('')
+    r2_test = r2_score(z_test_scaled, z_predict)
+    print(f"R2, test: {r2_test:.5}")
+    print('')
+
+    mse_train = mean_squared_error(z_train_scaled, z_model)
+    print(f"MSE, train: {mse_train:.5}")
+    print('')
+    mse_test = mean_squared_error(z_test_scaled, z_predict)
+    print(f"MSE, test: {mse_test:.5}")
+    print('')
     '''
 
-    
+    '''
+    Exercise 2
+    '''
+    '''
+    #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
+    poly = 50
+    MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, poly, "OLS", "none")
+
+    deg_poly = [i for i in range(1, poly+1)]
+
+    plt.plot(deg_poly, MSE_test, label="Testing data", color='blue')
+    plt.plot(deg_poly, MSE_train, label="Training data", color='red')
+    plt.xlabel("Degrees of polynomial")
+    plt.ylabel("Mean Squared Errod")
+    plt.legend()
+    plt.show()
+    '''
+
+    #Bootstrapping
+    poly = 20
+    B_runs = 20
+    MSE, Bias, Variance = Bootstrap(x, y, z, "none", poly, B_runs, "OLS", 0)
+    deg_poly = [i for i in range(1, poly+1)]
+
+    plt.plot(deg_poly, MSE, label="Testing data", color='blue')
+    plt.xlabel("Degrees of polynomial")
+    plt.ylabel("Mean Squared Errod")
+    plt.legend()
+    plt.show()
+
+
 
 
 
