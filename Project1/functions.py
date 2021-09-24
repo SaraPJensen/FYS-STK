@@ -190,7 +190,28 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
+        LAMBDA =
 
+        X = design_matrix(x, y, degree)
+
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
+        z_predictions = np.zeros((len(z_test), B_runs))  #én prediksjon for hver verdi av lambda
+
+        n_lambdas = 500
+        lambdas = np.logspace(-3, 5, n_lambdas)
+
+        for lamb in range (lambdas):
+
+            if reg_method == "Ridge":
+
+                z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+
+                mse = mean_squared_error(z_test_scaled, z_predict)
+
+                MSE.append(mse)
+
+            elif reg_method == "Lasso":
 
 
 
@@ -343,6 +364,11 @@ def main(exercise):
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
         poly = 5
+
+
+
+
+
 
 
 
