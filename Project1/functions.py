@@ -251,12 +251,12 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
 
 
-def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
+def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, dependency):
     """
     input:
     """
 
-    '''   #vi inputter x_flat, y_flat, z_flat
+    '''   #vi inputter x_flat, y_flat, z_flat, så dette er unødvendig
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)     # Kjent data
@@ -266,21 +266,30 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
     bias = []
     variance = []
 
-    kf = KFold(n_splits = f_fold)
+    kf = KFold(n_splits = k_fold)
 
     for p in range(poly + 1):
         X = design_matrix(x, y, p)
 
-        if reg_method == "Ridge":
+        if reg_method == "Ridge" or reg_method == "OLS":
             n_lambda = 500
-            lambdas = np.logspace(-3, 5, n_lambda)
+            lambdas = np.logspace(-5, 5, n_lambda)
 
             for l in range(n_lambda):
 
                 for train_ind, test_ind in kf.split(X_train_sc):
+
                     X_train, X_test = X[train_ind, :], X[test_ind, :]
                     z_train, z_test = z[train_ind], z[test_ind]
 
+                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "none")
+
+                    bias = np.sum((z_train_scaled - z_model)**2) / len(z_tilde)        # Pr. def bias?
+                    variance = np.sum((z_test_scaled - z_predict)**2) / len(z_pred)       # Pr. def variance?
+
+
+                    '''
+                    #
                     X_train_sc, X_test_sc, z_train_sc, z_test_sz = scaling(X_train, X_test, z_train, z_test, scaler)
                     I = np.eye(np.shape(X_train_sc)[0])
                     beta = np.linalg.pinv(X_train_sc.T @ X_train_sc + lambdas[l]*I) @ X_train_sc.T @ z_train_sc
@@ -288,10 +297,12 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
                     z_tilde = X_train_sc @ beta     # Modellen vår
                     z_pred = X_test_sc @ beta       # Prediksjon av usett data
 
+
                     bias = np.sum((z_train - z_tilde)**2) / len(z_tilde)        # Pr. def bias?
                     variance = np.sum((z_test - z_pred)**2) / len(z_pred)       # Pr. def variance?
+                    '''
 
-
+    #Må lagre verdiene i listene
 
     return mse, bias, variance
 
@@ -390,7 +401,14 @@ def main(exercise):
 
 
     elif exercise == 3:
-        Crossvalidation
+        scaler = "none"
+        poly = 10
+        k_fold = 5
+        reg_method = "Ridge"
+        lamb = 0.001
+        dependency = "poly"
+
+        CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
 
 
 
@@ -478,4 +496,4 @@ def main(exercise):
 
 
 
-main(4)
+main(3)
