@@ -64,13 +64,14 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
     I = np.eye(len(X_train_scaled[0,:]))
 
-    beta = np.linalg.pinv(X_train_scaled.T @ X_train_scaled - lamb*I) @ X_train_scaled.T @ z_train_scaled    #use the pseudoinverse for the singular matrix
+    beta = np.linalg.pinv(X_train_scaled.T @ X_train_scaled + lamb*I) @ X_train_scaled.T @ z_train_scaled    #use the pseudoinverse for the singular matrix
 
     #Generate the model z
     z_model = X_train_scaled @ beta
 
     #generate the prediction z
     z_predict = X_test_scaled @ beta
+
 
     if plot == "plot_prediction":
             #Plot the Prediction
@@ -97,6 +98,23 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
             ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
 
     return z_train_scaled, z_test_scaled, z_predict, z_model
+
+
+
+
+
+def Rigde_Sklearn(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):
+
+    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
+
+    ridge = linear_model.Ridge(alpha=lamb)
+    ridge.fit(X_train_scaled, z_train_scaled)
+
+    y_prediction = ridge.predict(X_test_scaled)
+
+
+    #How to do this???
+
 
 
 
@@ -128,7 +146,7 @@ def tradeoff(x, y, z, scaler, poly, reg_method, lamb, B_runs, k_fold):
 
             X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
 
-            z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaling, 0, i, "none")
+            z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaling, lamb, i, "none")
 
         elif reg_method == "Lasso":
             MSE, Bias, Variance = Lasso(x, y, z, scaler, poly, B_runs, reg_method, lamb)
@@ -144,6 +162,7 @@ def tradeoff(x, y, z, scaler, poly, reg_method, lamb, B_runs, k_fold):
 
 
 def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
+
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)
@@ -159,25 +178,26 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
             X = design_matrix(x, y, degree)
 
             X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-            z_predictions = np.zeros((len(z_test), B_runs))
+
+            z_predictions = np.zeros((len(z_test), B_runs))   #matrix containing the values for different bootstrap runs
 
             for i in range(B_runs):
 
                 X_train_boot, z_train_boot = resample(X_train, z_train)
 
                 if reg_method == "OLS" or reg_method == "Ridge":
-                #Legg til if-statements for ulike modeller
+
                     z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
 
-                if reg_method == "Lasso":
-                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+                elif reg_method == "Lasso":
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
 
                 z_predictions[:, i] = z_predict.ravel()
 
-            z_test = z_test.reshape((-1, 1))
+                z_test_scaled = z_test_scaled.reshape((-1, 1))
 
-            mse = np.mean( np.mean((z_test - z_predictions)**2, axis=1, keepdims=True) )
-            bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
+            mse = np.mean( np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True) )
+            bias = np.mean( (z_test_scaled - np.mean(z_predictions, axis=1, keepdims=True))**2 )
             variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
 
             MSE.append(mse)
@@ -190,38 +210,57 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        LAMBDA =
-
-        X = design_matrix(x, y, degree)
+        X = design_matrix(x, y, poly)
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
 
-        z_predictions = np.zeros((len(z_test), B_runs))  #én prediksjon for hver verdi av lambda
 
-        n_lambdas = 500
-        lambdas = np.logspace(-3, 5, n_lambdas)
+        n_lambdas = 200
+        lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
 
-        for lamb in range (lambdas):        # Gir range(lambdas) mening? Skal det være range(len(lambdas)), aka range(n_lambdas)
+        MSE = []
+        LAMBDA = []
 
-            if reg_method == "Ridge":
+        for lamb in lambdas:
 
-                z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+            z_predictions = np.zeros((len(z_test), B_runs))
 
-                mse = mean_squared_error(z_test_scaled, z_predict)
+            for i in range(B_runs):
 
-                MSE.append(mse)
+                X_train_boot, z_train_boot = resample(X_train, z_train)
 
-            elif reg_method == "Lasso":
+                if reg_method == "Ridge":
+
+                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
+
+                elif reg_method == "Lasso":
+
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
+
+                z_predictions[:, i] = z_predict.ravel()
 
 
-from sklearn.model_selection import KFold           # Usikker på hvor jeg skal sette denne
+            z_test_scaled = z_test_scaled.reshape((-1, 1))
+
+            mse = np.mean(np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True))
+            MSE.append(mse)
+            LAMBDA.append(lamb)
+
+        return MSE, LAMBDA
+
+
+
+
 def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
     """
-    input:  
+    input:
     """
+
+    '''   #vi inputter x_flat, y_flat, z_flat
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)     # Kjent data
+    '''
 
     mse = []
     bias = []
@@ -234,7 +273,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
 
         if reg_method == "Ridge":
             n_lambda = 500
-            lambdas = np.logspec(-3, 5, n_lambda)
+            lambdas = np.logspace(-3, 5, n_lambda)
 
             for l in range(n_lambda):
 
@@ -244,7 +283,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
 
                     X_train_sc, X_test_sc, z_train_sc, z_test_sz = scaling(X_train, X_test, z_train, z_test, scaler)
                     I = np.eye(np.shape(X_train_sc)[0])
-                    beta = np.linalg.pinv(X_train_sc.T @ X_train_sc - lambdas[l]*I) @ X_train_sc.T @ z_train_sc
+                    beta = np.linalg.pinv(X_train_sc.T @ X_train_sc + lambdas[l]*I) @ X_train_sc.T @ z_train_sc
 
                     z_tilde = X_train_sc @ beta     # Modellen vår
                     z_pred = X_test_sc @ beta       # Prediksjon av usett data
@@ -263,7 +302,7 @@ def main(exercise):
     x = np.sort(np.random.uniform(0, 1, n))
     y = np.sort(np.random.uniform(0, 1, n))
     x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.01*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -305,12 +344,13 @@ def main(exercise):
         '''
         Exercise 2
         '''
-        scaler = "none"
+        scaler = "standard"
         reg_method = "OLS"
         lamb = 0
         B_runs = 0
         k_fold = 0
         poly = 30
+
 
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
         MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, scaler, poly, reg_method, lamb, B_runs, k_fold)
@@ -330,12 +370,10 @@ def main(exercise):
 
         #Bootstrapping
         poly = 20
-        B_runs = 30
-        reg_method = "OLS"
-        lamb = 0
-        #scaler = "standard"
-        scaler = "none"
-        dependency == "poly"
+        B_runs = 100
+        scaler = "standard"
+        #scaler = "none"
+        dependency = "poly"
 
         MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
         deg_poly = [i for i in range(1, poly+1)]
@@ -349,22 +387,41 @@ def main(exercise):
         plt.legend()
         plt.show()
 
+
+
     elif exercise == 3:
-        something
+        Crossvalidation
 
 
 
     elif exercise == 4:
 
-        poly = 25
-        B_runs = 0
+        poly = 20
+        B_runs = 100
         reg_method = "Ridge"
-        lamb = 0
-        #scaler = "standard"
-        scaler = "none"
+        lamb = 0.000
+        scaler = "standard"
+        #scaler = "none"
         k_fold = 0
 
-        '''
+
+        dependency = "poly"
+
+
+        MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
+        deg_poly = [i for i in range(1, poly+1)]
+
+        plt.plot(deg_poly, Bias, label="Bias", color='blue')
+        plt.plot(deg_poly, Variance, label="Variance", color='red')
+        plt.plot(deg_poly, MSE, label="MSE", color='green')
+        plt.xlabel("Degrees of polynomial")
+        plt.ylabel("")
+        plt.title(f"Bias-variance tradeoff for incresing complexity for {reg_method} regression")
+        plt.legend()
+        plt.show()
+
+
+
         #Look at test/training MSE without Bootstrapping
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
         MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, scaler, poly, reg_method, lamb, B_runs, k_fold)
@@ -378,11 +435,12 @@ def main(exercise):
         plt.title(f"Mean squared error as a function of complexity for {reg_method} regression")
         plt.legend()
         plt.show()
-        '''
+
+
 
 
         #Bootstrapping for Ridge
-        B_runs = 40
+        poly = 20
         dependency = "poly"
 
         #Look at Bias-Variance tradeoff with bootstrap
@@ -398,20 +456,25 @@ def main(exercise):
         plt.legend()
         plt.show()
 
+
+
+
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
         poly = 5
 
+        MSE, LAMBDA = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
+
+        plt.plot(np.log10(LAMBDA), MSE, label="MSE test", color='blue')
+        plt.xlabel("log10(lambda)")
+        plt.ylabel("Mean Squared Error")
+        plt.title(f"Mean squared error as a function of lambda for {reg_method} regression")
+        plt.legend()
+        plt.show()
 
 
-
-
-
-
-
-
-
-
+        #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
+        #Maybe similar to the 3d plot? Ask about this in group session.
 
 
 
