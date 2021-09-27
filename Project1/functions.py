@@ -1,6 +1,6 @@
 from scalers import *
 
-np.random.seed(2018)
+#np.random.seed(2018)
 
 
 def ThreeD_plot(x, y, z, title):
@@ -210,12 +210,9 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        #LAMBDA =
-
-        X = design_matrix(x, y, degree)
+        X = design_matrix(x, y, poly)
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
 
         n_lambdas = 200
         lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
@@ -236,15 +233,24 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
                     z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
 
                 elif reg_method == "Lasso":
-                    #z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
-                    None # Kladd
 
-        return None # Kladd, syntaxfeil om func ikke returnerer
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
 
-                   
+                z_predictions[:, i] = z_predict.ravel()
 
-from sklearn.model_selection import KFold           # Usikker på hvor jeg skal sette denne
-def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda):
+
+            z_test_scaled = z_test_scaled.reshape((-1, 1))
+
+            mse = np.mean(np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True))
+            MSE.append(mse)
+            LAMBDA.append(lamb)
+
+        return MSE, LAMBDA
+
+
+
+
+def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
     """
     input:
     """
@@ -311,13 +317,13 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda):
                     temp_model[k_index] = z_model
 
                     k_index += 1 # End k-split loop
-                
-                
+
+
 
 
     return mse, bias, variance
 
-
+'''
 def main(exercise):
     # Generate data
     n = 20
@@ -331,9 +337,9 @@ def main(exercise):
     z_flat = np.ravel(z)
 
     if exercise == 1:
-        '''
-        Exercise 1
-        '''
+
+        #Exercise 1
+
         poly = 25
 
         X = design_matrix(x_flat, y_flat, poly)
@@ -363,9 +369,9 @@ def main(exercise):
 
 
     elif exercise == 2:
-        '''
-        Exercise 2
-        '''
+
+        #Exercise 2
+
         scaler = "standard"
         reg_method = "OLS"
         lamb = 0
@@ -432,29 +438,12 @@ def main(exercise):
         scaler = "standard"
         #scaler = "none"
         k_fold = 0
-
-
         dependency = "poly"
-
-
-        MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
-        deg_poly = [i for i in range(1, poly+1)]
-
-        plt.plot(deg_poly, Bias, label="Bias", color='blue')
-        plt.plot(deg_poly, Variance, label="Variance", color='red')
-        plt.plot(deg_poly, MSE, label="MSE", color='green')
-        plt.xlabel("Degrees of polynomial")
-        plt.ylabel("")
-        plt.title(f"Bias-variance tradeoff for incresing complexity for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
 
 
         #Look at test/training MSE without Bootstrapping
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
         MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, scaler, poly, reg_method, lamb, B_runs, k_fold)
-
         deg_poly = [i for i in range(1, poly+1)]
 
         plt.plot(deg_poly, MSE_test, label="Testing data", color='blue')
@@ -470,7 +459,6 @@ def main(exercise):
 
         #Bootstrapping for Ridge
         poly = 20
-        dependency = "poly"
 
         #Look at Bias-Variance tradeoff with bootstrap
         MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
@@ -485,9 +473,7 @@ def main(exercise):
         plt.legend()
         plt.show()
 
-        #Look at dependence on lambda for a given polynomial
-        dependency = "lambda"
-        poly = 5
+
 
 
         #Look at dependence on lambda for a given polynomial
@@ -507,13 +493,7 @@ def main(exercise):
         #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
         #Maybe similar to the 3d plot? Ask about this in group session.
 
-    elif exercise == "test":
-        CrossVal(x, y, z, "standard", 5, 5, "Ridge", n_lambda = 5)
 
 
-
-
-
-
-
-main("test")
+main(3)
+'''
