@@ -489,13 +489,6 @@ def main(exercise):
         dependency = "lambda"
         poly = 5
 
-    elif exercise == "test":
-        CrossVal(x, y, z, "standard", 5, 5, "Ridge", n_lambda = 5)
-
-
-
-
-
 
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
@@ -513,6 +506,13 @@ def main(exercise):
 
         #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
         #Maybe similar to the 3d plot? Ask about this in group session.
+
+    elif exercise == "test":
+        CrossVal(x, y, z, "standard", 5, 5, "Ridge", n_lambda = 5)
+
+
+
+
 
 
 
