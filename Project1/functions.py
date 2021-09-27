@@ -190,7 +190,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        LAMBDA =
+        #LAMBDA =
 
         X = design_matrix(x, y, degree)
 
@@ -212,10 +212,13 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
                 MSE.append(mse)
 
             elif reg_method == "Lasso":
+                None # Kladd
+
+        return None # Kladd, syntaxfeil om func ikke returnerer
 
 
 from sklearn.model_selection import KFold           # Usikker på hvor jeg skal sette denne
-def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
+def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda):
     """
     input:  
     """
@@ -223,25 +226,29 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
     y = np.ravel(y)
     z = np.ravel(z)     # Kjent data
 
-    mse = []
-    bias = []
-    variance = []
+    mse = np.zeros((poly, n_lambda))
+    bias = np.zeros((poly, n_lambda))
+    variance = np.zeros((poly, n_lambda))
 
-    kf = KFold(n_splits = f_fold)
+    kf = KFold(n_splits = k_fold)
 
     for p in range(poly + 1):
         X = design_matrix(x, y, p)
 
         if reg_method == "Ridge":
-            n_lambda = 500
-            lambdas = np.logspec(-3, 5, n_lambda)
+            lambdas = np.logspace(-3, 5, n_lambda)
 
             for l in range(n_lambda):
 
-                for train_ind, test_ind in kf.split(X_train_sc):
+                temp_pred = np.zeros((k_fold, int(1/k_fold * np.shape(X)[0])))
+                temp_model = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+
+                k_index = 0
+                for train_ind, test_ind in kf.split(X):     # Riktig å bruke hele X her?
                     X_train, X_test = X[train_ind, :], X[test_ind, :]
                     z_train, z_test = z[train_ind], z[test_ind]
 
+                    '''
                     X_train_sc, X_test_sc, z_train_sc, z_test_sz = scaling(X_train, X_test, z_train, z_test, scaler)
                     I = np.eye(np.shape(X_train_sc)[0])
                     beta = np.linalg.pinv(X_train_sc.T @ X_train_sc - lambdas[l]*I) @ X_train_sc.T @ z_train_sc
@@ -251,7 +258,31 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb):
 
                     bias = np.sum((z_train - z_tilde)**2) / len(z_tilde)        # Pr. def bias?
                     variance = np.sum((z_test - z_pred)**2) / len(z_pred)       # Pr. def variance?
+                    '''
+                    z_train_sc, z_test_sc, z_predict, z_model = OLS_Ridge(X_train, X_test,
+                                                                          z_train, z_test,
+                                                                          scaler=scaler, lamb=lambdas[l],
+                                                                          poly=p, plot=False)
+                    '''
+                    print(f"poly: {p}, lambda: {l}")
+                    print(np.shape(z_predict))
+                    print(z_predict)
+                    print(np.shape(z_model))
+                    print(z_model)
+                    '''
+                    # Trolig riktige uttrykk, idk
+                    # Tar utgangspunkt i at alle prediksjonene er lagret i matriser
+                    '''
+                    mse = np.mean( np.mean((z_test - z_predictions)**2, axis=1, keepdims=True) )
+                    bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
+                    variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
+                    '''
+                    temp_pred[k_index] = z_predict
+                    temp_model[k_index] = z_model
 
+                    k_index += 1 # End k-split loop
+                
+                
 
 
     return mse, bias, variance
@@ -402,6 +433,8 @@ def main(exercise):
         dependency = "lambda"
         poly = 5
 
+    elif exercise == "test":
+        CrossVal(x, y, z, "standard", 5, 5, "Ridge", n_lambda = 5)
 
 
 
@@ -415,4 +448,4 @@ def main(exercise):
 
 
 
-main(4)
+main("test")
