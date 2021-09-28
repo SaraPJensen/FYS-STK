@@ -17,7 +17,8 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.utils import resample
 from sklearn.model_selection import KFold
 import plotly.express as px
-import plotly.graph_objects as go           
+import plotly.graph_objects as go
+from sklearn import linear_model
 
 
 def scalerStandard(X_train, X_test, z_train, z_test):
