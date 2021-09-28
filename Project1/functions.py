@@ -1,6 +1,5 @@
 from scalers import *
 
-#np.random.seed(2018)
 
 
 def ThreeD_plot(x, y, z, title):
@@ -33,6 +32,7 @@ def design_matrix(x_flat, y_flat, poly):
 
         for k in range(i+1):
             X[:,q+k] = (x_flat**(i-k))*(y_flat**k)
+
     return X
 
 
@@ -102,7 +102,6 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
 
 
-
 def Rigde_Sklearn(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
@@ -118,46 +117,18 @@ def Rigde_Sklearn(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):
 
 
 
-def Lasso(X_train, X_test, z_train, z_test, scaler, lamb):
+def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly):
 
-    #Legg til if-statement for ulike skaleringer
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
-    RegLasso = linear_model.Lasso(lamb, fit_intercept=False)
+    RegLasso = linear_model.Lasso(lamb)
 
     RegLasso.fit(X_train_scaled, z_train_scaled)
 
+    z_model = RegLasso.predict(X_train_scaled)
     z_predict = RegLasso.predict(X_test_scaled)
 
     return z_train_scaled, z_test_scaled, z_predict, z_model
-
-
-
-def tradeoff(x, y, z, scaler, poly, reg_method, lamb, B_runs, k_fold):
-
-    MSE_train = []
-    MSE_test = []
-
-    for i in range(1, poly+1):
-
-        if reg_method == "OLS" or reg_method == "Ridge":
-
-            X = design_matrix(x, y, i)
-
-            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
-            z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaling, lamb, i, "none")
-
-        elif reg_method == "Lasso":
-            MSE, Bias, Variance = Lasso(x, y, z, scaler, poly, B_runs, reg_method, lamb)
-
-
-        MSE_train.append(mean_squared_error(z_train_scaled, z_model))
-
-        MSE_test.append(mean_squared_error(z_test_scaled, z_predict))
-
-    return MSE_train, MSE_test
-
 
 
 
@@ -167,11 +138,11 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
     y = np.ravel(y)
     z = np.ravel(z)
 
-    MSE = []
-    Bias = []
-    Variance = []
-
     if dependency == "poly":
+
+        MSE = []
+        Bias = []
+        Variance = []
 
         for degree in range(1, poly+1):
 
@@ -190,10 +161,10 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
                     z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
 
                 elif reg_method == "Lasso":
-                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree)
+
 
                 z_predictions[:, i] = z_predict.ravel()
-
                 z_test_scaled = z_test_scaled.reshape((-1, 1))
 
             mse = np.mean( np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True) )
@@ -234,7 +205,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
                 elif reg_method == "Lasso":
 
-                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly)
 
                 z_predictions[:, i] = z_predict.ravel()
 
@@ -247,6 +218,41 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
         return MSE, LAMBDA
 
+
+
+    elif dependency == "tradeoff":
+
+        MSE_train = []
+        MSE_test = []
+
+        for degree in range(1, poly+1):
+
+            X = design_matrix(x, y, degree)
+
+            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
+            MSE_train_boot = []
+            MSE_test_boot = []
+
+            for i in range(B_runs):
+
+                X_train_boot, z_train_boot = resample(X_train, z_train)
+
+                if reg_method == "OLS" or reg_method == "Ridge":
+
+                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+
+                    MSE_train_boot.append(mean_squared_error(z_train_scaled, z_model))
+                    MSE_test_boot.append(mean_squared_error(z_test_scaled, z_predict))
+
+                elif reg_method == "Lasso":
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree)
+
+
+            MSE_train.append(np.mean(MSE_train_boot))
+            MSE_test.append(np.mean(MSE_test_boot))
+
+        return MSE_train, MSE_test
 
 
 
