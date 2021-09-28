@@ -2,6 +2,15 @@
 
 Overleaf: https://www.overleaf.com/project/61434511c27ecb747adb108b
  
+
+Hva gjenstår på koden?
+* Lasso
+* CrossVal
+* Confidence intervals
+* Sammenligne med Sklearn sine egne metoder for OLS og Ridge
+* Terrengdata 
+ 
+ 
 Pseudokode:
 
 * OLS-funksjon: (x, y, z, string="scaler", lambda) #Gjør Ridge, hvis lambda =/= 0
@@ -32,3 +41,4 @@ Exercise 3:
 OPPGAVE 1: xVal av OLS-test-data, analyse MSE
 Exercise 4: 
 OPPGAVE 1: Bootstrap med Ridge, for ulike grader av polynom
+
