@@ -1,6 +1,6 @@
 from scalers import *
 
-#np.random.seed(2018)
+np.random.seed(2018)
 
 
 def ThreeD_plot(x, y, z, title):
@@ -261,9 +261,9 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
     z = np.ravel(z)     # Kjent data
     '''
 
-    mse = np.zeros((poly, n_lambda))
-    bias = np.zeros((poly, n_lambda))
-    variance = np.zeros((poly, n_lambda))
+    mse = np.zeros((poly+1, n_lambda))
+    #bias = np.zeros((poly+1, n_lambda))
+    #variance = np.zeros((poly+1, n_lambda))
 
     kf = KFold(n_splits = k_fold)
 
@@ -275,11 +275,13 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
 
             for l in range(n_lambda):
 
-                temp_pred = np.zeros((k_fold, int(1/k_fold * np.shape(X)[0])))
-                temp_model = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+                #temp_mse = np.zeros((k_fold, int(1/k_fold * np.shape(X)[0])))
+                #temp_bias = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+                #temp_variance = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+                temp_mse = np.zeros(k_fold)
 
                 k_index = 0
-                for train_ind, test_ind in kf.split(X):     # Riktig å bruke hele X her?
+                for train_ind, test_ind in kf.split(X):     # Riktig å bruke hele X her? Ja.
                     X_train, X_test = X[train_ind, :], X[test_ind, :]
                     z_train, z_test = z[train_ind], z[test_ind]
 
@@ -313,17 +315,21 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
                     bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
                     variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
                     '''
-                    temp_pred[k_index] = z_predict
-                    temp_model[k_index] = z_model
+                    #print(np.shape(z_test_sc))
+                    #print(np.shape(z_predict))
+                    #temp_mse[k_index] = np.mean( (z_test_sc - z_predict).T.dot(z_test_sc - z_predict) )
+                    #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
+                    #print(mean_squared_error(z_test_sc, z_predict))
+                    temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
+                    #temp_bias[k_index] = 
 
                     k_index += 1 # End k-split loop
 
+                mse[p, l] = np.mean(temp_mse)
+
+    return mse
 
 
-
-    return mse, bias, variance
-
-'''
 def main(exercise):
     # Generate data
     n = 20
@@ -336,6 +342,7 @@ def main(exercise):
     y_flat = np.ravel(y)
     z_flat = np.ravel(z)
 
+    '''
     if exercise == 1:
 
         #Exercise 1
@@ -492,8 +499,16 @@ def main(exercise):
 
         #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
         #Maybe similar to the 3d plot? Ask about this in group session.
+    '''
 
+    if exercise == "test":
+        '''def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):'''
+        mse = CrossVal(x_flat, y_flat, z_flat, "standard", 10, 10, "Ridge", 200, dependency=None)
+        #print(x_flat[:10])
+        #print(np.mean(x_flat[:10],axis=0, keepdims=True))
+        #print(np.mean(x_flat[:10],axis=1, keepdims=True))
+        minind = np.where(mse == np.amin(mse)) 
+        print(minind)
+        print(mse[minind])
 
-
-main(3)
-'''
+main("test")
