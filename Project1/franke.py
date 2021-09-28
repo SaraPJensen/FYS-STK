@@ -23,13 +23,13 @@ def R2(data, prediction):
 def variance(prediction):
     #variance = np.var(prediction)
     variance = np.var(prediction)
-    print("Variance", variance)
+    #print("Variance", variance)
     return variance
 
 def bias(data, prediction):
     #bias = np.mean(data - np.mean(prediction)) #, axis=1, keepdims=True))**2
     bias = np.mean((data - np.mean(prediction))**2)
-    print("Bias ", bias)
+    #print("Bias ", bias)
     return bias
 
 
@@ -40,21 +40,13 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-'''
-def design_matrix(x, y):  #Makes the design matrix for a fifth order polynomial, dimension 20x21
-
-    #Stacks column vectors together. axis=-1 means they are columns and not rows
-    X = np.stack((np.ones(len(x)), x, y, x**2, y**2, x*y, x**3, y**3, (x**2)*y, (y**2)*x, x**4, y**4, (x**3)*y, (y**3)*x, (x**2)*(y**2), x**5, y**5, (x**4)*y, (y**4)*x, (x**3)*(y**2), (y**3)*(x**2)), axis=-1)
-    return X
-'''
-
 
 #Mortens design matrix
 def design_matrix(x, y, poly):
     l = int((poly+1)*(poly+2)/2)		# Number of elements in beta
     X = np.ones((len(x),l))
 
-    for i in range(1,poly+1):
+    for i in range(0, poly+1):
         q = int((i)*(i+1)/2)
 
         for k in range(i+1):
@@ -75,7 +67,25 @@ def plot(x, y, z, title):
     plt.title(title)
     plt.show()
 
+def plot2(x, y, z, title):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
 
+    # Plot the surface.
+    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+
+    # Customize the z axis.
+    ax.set_zlim(-0.10, 1.40)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    plt.title(title)
+
+    plt.show()
 
 
 def OLS(x, y, z, poly):
@@ -87,7 +97,7 @@ def OLS(x, y, z, poly):
 
     X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
 
-    #Scale the design matrix
+    #Scale the design matrix, do this in a separate function
     scaler = StandardScaler()
     scaler.fit(X_train)
     X_train_scaled = scaler.transform(X_train)
@@ -99,6 +109,7 @@ def OLS(x, y, z, poly):
 
     beta = np.linalg.pinv(X_train_scaled.T @ X_train_scaled) @ X_train_scaled.T @ z_train_scaled    #use the pseudoinverse for the singular matrix
 
+    print(beta)
 
     #Generate the model z
     z_model = X_train_scaled @ beta
@@ -183,14 +194,12 @@ def tradeoff(poly, runs):
         for j in range(runs):
             '''
             x = np.sort(np.random.uniform(0, 1, 20))
-
             y = np.sort(np.random.uniform(0, 1, 20))
             x, y = np.meshgrid(x, y)
             z = FrankeFunction(x, y) + 0.1*np.random.randn(20, 20)
             '''
             #Nå bruker den nye test/training data hver runde. Dette er jo egentlig cross-validation...
             z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, i)
-
 
             MSE_train[i-1][j] = (MSE(z_train_scaled, z_model))
             R2_train[i-1][j] = R2(z_train_scaled, z_model)
@@ -250,8 +259,6 @@ def Bootstrap(x, y, z, poly, B):
 
             z_predictions[:, i] = z_predict
 
-            R2[i] = R2(z_test, z_predict)
-            MSE[i] = MSE(z_test, z_predict)
 
         error = np.mean( np.mean((z_test - z_predict)**2, axis=1, keepdims=True) )
         bias = np.mean( (z_test - np.mean(z_predict, axis=1, keepdims=True))**2 )
@@ -263,31 +270,26 @@ def Bootstrap(x, y, z, poly, B):
 
 
 
-
-
-
-
-
-
-
-n = 20
+n = 25
 # Generate data
 x = np.sort(np.random.uniform(0, 1, n))
 y = np.sort(np.random.uniform(0, 1, n))
 x, y = np.meshgrid(x, y)
-z = FrankeFunction(x, y) + 0.5*np.random.randn(n, n)
+z = FrankeFunction(x, y) + 0.01*np.random.randn(n, n)
 
-polynomial = 20
+polynomial = 5
+
+#plot(x, y, z, "Function")
 
 z_test_scaled, z_train_scaled, z_predict, z_model, x_axis, y_axis, z_new_grid = OLS(x, y, z, polynomial)
 
-#plot(x_axis, y_axis, z_new_grid, "Prediction")
 
+#plot(x_axis, y_axis, z_new_grid, "Prediction")
 
 #MSE_train, MSE_test, R2_train, R2_test, poly = tradeoff(polynomial, 100)
 
 
-Error, Bias, Variance, poly_degree = bias_variance(polynomial, 1)
+#Error, Bias, Variance, poly_degree = bias_variance(polynomial, 1)
 
 '''
 print('')
@@ -322,7 +324,6 @@ plt.xlabel("Degrees of polynomial")
 plt.ylabel("R squared")
 plt.legend()
 plt.show()
-'''
 
 
 plt.plot(poly_degree, Bias, label="Bias", color='teal')
@@ -332,3 +333,4 @@ plt.xlabel("Degrees of polynomial")
 #plt.ylabel("")
 plt.legend()
 plt.show()
+'''
