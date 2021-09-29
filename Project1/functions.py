@@ -118,7 +118,7 @@ def Rigde_Sklearn(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):
 
 
 
-def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly):
+def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
@@ -267,6 +267,10 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
     y = np.ravel(y)
     z = np.ravel(z)     # Kjent data
     '''
+    if reg_method == "Ridge" or "OLS":
+        train_func = OLS_Ridge
+    elif reg_method == "Lasso":
+        train_func = Lasso
 
     mse = np.zeros((poly+1, n_lambda))
     #bias = np.zeros((poly+1, n_lambda))
@@ -277,65 +281,61 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
     for p in range(poly + 1):
         X = design_matrix(x, y, p)
 
-        if reg_method == "Ridge":
-            lambdas = np.logspace(-3, 5, n_lambda)
+        lambdas = np.logspace(-3, 5, n_lambda)
 
-            for l in range(n_lambda):
+        for l in range(n_lambda):
 
-                #temp_mse = np.zeros((k_fold, int(1/k_fold * np.shape(X)[0])))
-                #temp_bias = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
-                #temp_variance = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
-                temp_mse = np.zeros(k_fold)
+            #temp_mse = np.zeros((k_fold, int(1/k_fold * np.shape(X)[0])))
+            #temp_bias = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+            #temp_variance = np.zeros((k_fold, int((1-1/k_fold) * np.shape(X)[0])))
+            temp_mse = np.zeros(k_fold)
 
-                k_index = 0
-                for train_ind, test_ind in kf.split(X):     # Riktig å bruke hele X her? Ja.
-                    X_train, X_test = X[train_ind, :], X[test_ind, :]
-                    z_train, z_test = z[train_ind], z[test_ind]
+            k_index = 0
+            for train_ind, test_ind in kf.split(X):     # Riktig å bruke hele X her? Ja.
+                X_train, X_test = X[train_ind, :], X[test_ind, :]
+                z_train, z_test = z[train_ind], z[test_ind]
 
-                    '''
-                    X_train_sc, X_test_sc, z_train_sc, z_test_sz = scaling(X_train, X_test, z_train, z_test, scaler)
-                    I = np.eye(np.shape(X_train_sc)[0])
-                    beta = np.linalg.pinv(X_train_sc.T @ X_train_sc + lambdas[l]*I) @ X_train_sc.T @ z_train_sc
+                '''
+                X_train_sc, X_test_sc, z_train_sc, z_test_sz = scaling(X_train, X_test, z_train, z_test, scaler)
+                I = np.eye(np.shape(X_train_sc)[0])
+                beta = np.linalg.pinv(X_train_sc.T @ X_train_sc + lambdas[l]*I) @ X_train_sc.T @ z_train_sc
 
-                    z_tilde = X_train_sc @ beta     # Modellen vår
-                    z_pred = X_test_sc @ beta       # Prediksjon av usett data
+                z_tilde = X_train_sc @ beta     # Modellen vår
+                z_pred = X_test_sc @ beta       # Prediksjon av usett data
 
 
-                    bias = np.sum((z_train - z_tilde)**2) / len(z_tilde)        # Pr. def bias?
-                    variance = np.sum((z_test - z_pred)**2) / len(z_pred)       # Pr. def variance?
-                    '''
-                    z_train_sc, z_test_sc, z_predict, z_model = OLS_Ridge(X_train, X_test,
-                                                                          z_train, z_test,
-                                                                          scaler=scaler, lamb=lambdas[l],
-                                                                          poly=p, plot=False)
-                    '''
-                    print(f"poly: {p}, lambda: {l}")
-                    print(np.shape(z_predict))
-                    print(z_predict)
-                    print(np.shape(z_model))
-                    print(z_model)
-                    '''
-                    # Trolig riktige uttrykk, idk
-                    # Tar utgangspunkt i at alle prediksjonene er lagret i matriser
-                    '''
-                    mse = np.mean( np.mean((z_test - z_predictions)**2, axis=1, keepdims=True) )
-                    bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
-                    variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
-                    '''
-                    #print(np.shape(z_test_sc))
-                    #print(np.shape(z_predict))
-                    #temp_mse[k_index] = np.mean( (z_test_sc - z_predict).T.dot(z_test_sc - z_predict) )
-                    #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
-                    #print(mean_squared_error(z_test_sc, z_predict))
-                    temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
-                    #temp_bias[k_index] =
+                bias = np.sum((z_train - z_tilde)**2) / len(z_tilde)        # Pr. def bias?
+                variance = np.sum((z_test - z_pred)**2) / len(z_pred)       # Pr. def variance?
+                '''
+                z_train_sc, z_test_sc, z_predict, z_model = train_func(X_train, X_test,
+                                                                    z_train, z_test,
+                                                                    scaler=scaler, lamb=lambdas[l],
+                                                                    poly=p, plot=False)
+                '''
+                print(f"poly: {p}, lambda: {l}")
+                print(np.shape(z_predict))
+                print(z_predict)
+                print(np.shape(z_model))
+                print(z_model)
+                '''
+                # Trolig riktige uttrykk, idk
+                # Tar utgangspunkt i at alle prediksjonene er lagret i matriser
+                '''
+                mse = np.mean( np.mean((z_test - z_predictions)**2, axis=1, keepdims=True) )
+                bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
+                variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
+                '''
+                #print(np.shape(z_test_sc))
+                #print(np.shape(z_predict))
+                #temp_mse[k_index] = np.mean( (z_test_sc - z_predict).T.dot(z_test_sc - z_predict) )
+                #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
+                #print(mean_squared_error(z_test_sc, z_predict))
+                temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
+                #temp_bias[k_index] =
 
-                    k_index += 1 # End k-split loop
+                k_index += 1 # End k-split loop
 
-                mse[p, l] = np.mean(temp_mse)
-
-        elif reg_method == "Lasso":
-            None
+            mse[p, l] = np.mean(temp_mse)
 
     return mse
 
@@ -513,12 +513,16 @@ def main(exercise):
 
     if exercise == "test":
         '''def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):'''
-        mse = CrossVal(x_flat, y_flat, z_flat, "standard", 10, 10, "Ridge", 200, dependency=None)
+        mse = CrossVal(x_flat, y_flat, z_flat, "standard", 10, 10, "Lasso", 200, dependency=None)
         #print(x_flat[:10])
         #print(np.mean(x_flat[:10],axis=0, keepdims=True))
         #print(np.mean(x_flat[:10],axis=1, keepdims=True))
+
         minind = np.where(mse == np.amin(mse))
         print(minind)
         print(mse[minind])
+
+        #print(np.shape(mse))
+
 
 main("test")
