@@ -328,7 +328,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
                     #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
                     #print(mean_squared_error(z_test_sc, z_predict))
                     temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
-                    #temp_bias[k_index] = 
+                    #temp_bias[k_index] =
 
                     k_index += 1 # End k-split loop
 
@@ -336,7 +336,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
 
         elif reg_method == "Lasso":
             None
-            
+
     return mse
 
 
@@ -517,7 +517,7 @@ def main(exercise):
         #print(x_flat[:10])
         #print(np.mean(x_flat[:10],axis=0, keepdims=True))
         #print(np.mean(x_flat[:10],axis=1, keepdims=True))
-        minind = np.where(mse == np.amin(mse)) 
+        minind = np.where(mse == np.amin(mse))
         print(minind)
         print(mse[minind])
 
