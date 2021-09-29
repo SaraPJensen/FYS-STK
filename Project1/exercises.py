@@ -392,54 +392,13 @@ def main(exercise):
 main(5)
 
 
-'''
-n = 20
-x = np.sort(np.random.uniform(0, 1, n))
-y = np.sort(np.random.uniform(0, 1, n))
-x, y = np.meshgrid(x, y)
-z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
 
-x_flat = np.ravel(x)
-y_flat = np.ravel(y)
-z_flat = np.ravel(z)
-
-
-scaler = "none"
-reg_method = "OLS"
-lamb = 0
-B_runs = 3
-k_fold = 0
-poly = 25
-dependency = 'tradeoff'
-
-
-#Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
-
-deg_poly = [i for i in range(1, poly+1)]
-
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
-    mode='lines+markers',
-    line=dict(dash='solid', width=4, color="darkcyan"),
-    marker=dict(size=9),
-    name="Testing data"))
-
-
-fig.add_trace(go.Scatter(x=deg_poly, y=MSE_train,
-    mode='lines+markers',
-    line=dict(dash='solid', width=4, color = "firebrick"),
-    marker=dict(size=9),
-    name="Training data"))
-
-fig.update_layout(
-    font_family="Garamond",
-    font_size=33,
-    title=f"Mean squared error as a function of complexity for {reg_method} regression",
-    xaxis_title="Degrees of polynomial",
-    yaxis_title="Mean Squared Error",
-    legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
-    )
-fig.show()
-'''
+# Load the terrain
+terrain1 = imread("SRTM_data_Norway_1.tif")
+# Show the terrain
+plt.figure()
+plt.title("Terrain over Norway 1")
+plt.imshow(terrain1, cmap="gray")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.show()

@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 import plotly.express as px
 import plotly.graph_objects as go
 from sklearn import linear_model
-
+from imageio import imread
 
 def scalerStandard(X_train, X_test, z_train, z_test):
     scaler = StandardScaler()
