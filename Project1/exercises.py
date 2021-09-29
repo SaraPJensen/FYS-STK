@@ -5,10 +5,10 @@ np.random.seed(2018)
 def main(exercise):
     # Generate data
     n = 20
-    x = np.sort(np.random.uniform(0, 1, n))
-    y = np.sort(np.random.uniform(0, 1, n))
+    x = np.arange(0,1,1/n)
+    y = np.arange(0,1,1/n)
     x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.3*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -18,17 +18,17 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 25
+        poly = 10
 
         X = design_matrix(x_flat, y_flat, poly)
 
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
         #Plot the graph
-        ThreeD_plot(x, y, z, "Function")
+        #ThreeD_plot(x, y, z, "Function")
 
         #Plot prediction and calculate errors
-        z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", 0, poly, "plot_prediction")
+        z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "none", 0, poly, "plot_prediction")
 
         print('')
         r2_train = r2_score(z_train_scaled, z_model)
@@ -293,9 +293,9 @@ def main(exercise):
         poly = 50
         B_runs = 10
         reg_method = "Lasso"
-        lamb = 0.01
-        #scaler = "standard"
-        scaler = "none"
+        lamb = 0.001
+        scaler = "standard"
+        #scaler = "none"
         k_fold = 0
         dependency = "poly"
 
@@ -305,7 +305,7 @@ def main(exercise):
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly)
-
+        print(z_predict[0:2])
         print('')
         r2_train = r2_score(z_train_scaled, z_model)
         print(f"R2, train: {r2_train:.5}")
