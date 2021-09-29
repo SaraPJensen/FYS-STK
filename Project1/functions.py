@@ -334,6 +334,9 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
 
                 mse[p, l] = np.mean(temp_mse)
 
+        elif reg_method == "Lasso":
+            None
+            
     return mse
 
 
