@@ -8,7 +8,7 @@ def main(exercise):
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
     x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.3*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -18,17 +18,19 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 10
+        poly = 8
+        scaler = "none"
+        lamb = 0
 
         X = design_matrix(x_flat, y_flat, poly)
 
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
         #Plot the graph
-        #ThreeD_plot(x, y, z, "Function")
+        ThreeD_plot(x, y, z, "Function")
 
         #Plot prediction and calculate errors
-        z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "none", 0, poly, "plot_prediction")
+        z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "plot_prediction")
 
         print('')
         r2_train = r2_score(z_train_scaled, z_model)
@@ -305,7 +307,7 @@ def main(exercise):
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly)
-        print(z_predict[0:2])
+
         print('')
         r2_train = r2_score(z_train_scaled, z_model)
         print(f"R2, train: {r2_train:.5}")
@@ -387,59 +389,67 @@ def main(exercise):
         '''
 
 
+#main(1)
 
 
-main(5)
+# Load the terrain
+terrain1 = imread("SRTM_data_Norway_1.tif")
+#Dimensions of entire image: 3601 x 1801
+
+N = 1000
+start = 2000
+end = 3000
+poly = 15 # polynomial order
+terrain = terrain1[start:end,:N]
+
+# Creates mesh of image pixels
+x = np.linspace(0,1, np.shape(terrain)[0])
+y = np.linspace(0,1, np.shape(terrain)[1])
+x_mesh, y_mesh = np.meshgrid(x,y)
+
+z = terrain
+
+x_flat = np.ravel(x_mesh)
+y_flat = np.ravel(y_mesh)
+z_flat = np.ravel(z)
+
+scaler = Normalizer().fit(z)
+z_scaled = scaler.transform(z)
+
+#ThreeD_plot(x_mesh, y_mesh, z_scaled, "Terreng")
+
+lamb = 0
+
+
+X = design_matrix(x_flat, y_flat, poly)
+
+X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
+
+#Plot prediction and calculate errors
+z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", lamb, poly, "plot_prediction")
+
+print('')
+r2_train = r2_score(z_train_scaled, z_model)
+print(f"R2, train: {r2_train:.5}")
+print('')
+r2_test = r2_score(z_test_scaled, z_predict)
+print(f"R2, test: {r2_test:.5}")
+print('')
+
+mse_train = mean_squared_error(z_train_scaled, z_model)
+print(f"MSE, train: {mse_train:.5}")
+print('')
+mse_test = mean_squared_error(z_test_scaled, z_predict)
+print(f"MSE, test: {mse_test:.5}")
+print('')
 
 
 '''
-n = 20
-x = np.sort(np.random.uniform(0, 1, n))
-y = np.sort(np.random.uniform(0, 1, n))
-x, y = np.meshgrid(x, y)
-z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
-
-x_flat = np.ravel(x)
-y_flat = np.ravel(y)
-z_flat = np.ravel(z)
-
-
-scaler = "none"
-reg_method = "OLS"
-lamb = 0
-B_runs = 3
-k_fold = 0
-poly = 25
-dependency = 'tradeoff'
-
-
-#Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
-
-deg_poly = [i for i in range(1, poly+1)]
-
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
-    mode='lines+markers',
-    line=dict(dash='solid', width=4, color="darkcyan"),
-    marker=dict(size=9),
-    name="Testing data"))
-
-
-fig.add_trace(go.Scatter(x=deg_poly, y=MSE_train,
-    mode='lines+markers',
-    line=dict(dash='solid', width=4, color = "firebrick"),
-    marker=dict(size=9),
-    name="Training data"))
-
-fig.update_layout(
-    font_family="Garamond",
-    font_size=33,
-    title=f"Mean squared error as a function of complexity for {reg_method} regression",
-    xaxis_title="Degrees of polynomial",
-    yaxis_title="Mean Squared Error",
-    legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
-    )
-fig.show()
+# Show the terrain
+plt.figure()
+plt.title("Terrain over Norway 1")
+plt.imshow(terrain, cmap="gray")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.show()
 '''

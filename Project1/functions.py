@@ -73,13 +73,9 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
     #generate the prediction z
     z_predict = X_test_scaled @ beta
 
-
     if plot == "plot_prediction":
             #Plot the Prediction
-            scaler = StandardScaler()
-            scaler.fit(X_train)
 
-            #Plotter, genererer nye punkter for x, y, z
             x_axis = np.linspace(0, 1, 20)
             y_axis = np.linspace(0, 1, 20)
             x_axis, y_axis = np.meshgrid(x_axis, y_axis)
@@ -88,13 +84,10 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
             y_axis_flat = np.ravel(y_axis)
 
             X_new = design_matrix(x_axis_flat, y_axis_flat, poly)
-            X_new_scaled = scaler.transform(X_new)
 
-            z_new = X_new_scaled @ beta   #gir 1d kolonne
+            z_new = X_new @ beta   #gir 1d kolonne
 
-            z_new_scaled = (z_new - np.mean(z_train))/np.std(z_train)  #scale
-
-            z_new_grid = z_new_scaled.reshape(20, 20)   #make into a grid for plotting
+            z_new_grid = z_new.reshape(20, 20)   #make into a grid for plotting
 
             ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
 
@@ -331,12 +324,12 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency=Non
                 #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
                 #print(mean_squared_error(z_test_sc, z_predict))
                 temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
-                #temp_bias[k_index] = 
+                #temp_bias[k_index] =
 
                 k_index += 1 # End k-split loop
 
             mse[p, l] = np.mean(temp_mse)
-            
+
     return mse
 
 
@@ -510,17 +503,18 @@ def main(exercise):
         #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
         #Maybe similar to the 3d plot? Ask about this in group session.
     '''
-
+    '''
     if exercise == "test":
-        '''def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):'''
+        #def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
         mse = CrossVal(x_flat, y_flat, z_flat, "standard", 10, 10, "Lasso", 200, dependency=None)
         #print(x_flat[:10])
         #print(np.mean(x_flat[:10],axis=0, keepdims=True))
         #print(np.mean(x_flat[:10],axis=1, keepdims=True))
 
-        minind = np.where(mse == np.amin(mse)) 
+        minind = np.where(mse == np.amin(mse))
         print(minind)
         print(mse[minind])
+        '''
 
         #print(np.shape(mse))
 
