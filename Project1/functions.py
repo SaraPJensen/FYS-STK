@@ -257,7 +257,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
 
 
-def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
+def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency=None):
     """
     input:
     """
@@ -524,4 +524,5 @@ def main(exercise):
 
         #print(np.shape(mse))
 
-main("test")
+if __name__  == "__main__":
+    main("test")
