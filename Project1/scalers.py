@@ -21,6 +21,7 @@ import plotly.graph_objects as go
 from sklearn import linear_model
 from imageio import imread
 
+#Standardize features by removing the mean and scaling to unit variance.
 def scalerStandard(X_train, X_test, z_train, z_test):
     scaler = StandardScaler()
     scaler.fit(X_train)
@@ -34,6 +35,7 @@ def scalerStandard(X_train, X_test, z_train, z_test):
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
+#Scales the features to a given range, here [0,1]
 def scalerMinMax(X_train, X_test, z_train, z_test):
     scaler = MinMaxScaler(feature_range=(0,1))
     scaler.fit(X_train)
@@ -48,9 +50,9 @@ def scalerMinMax(X_train, X_test, z_train, z_test):
     scaler = MinMaxScaler(feature_range=(0,1)).fit(z_test)
     z_test_scaled = scaler.transform(z_test)
 
-
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
 
+#Scales samples so that L2 = 1
 def scalerNormalizer(X_train, X_test, z_train, z_test):
     scaler = Normalizer().fit(X_train)
     X_train_scaled = scaler.transform(X_train)
@@ -66,6 +68,7 @@ def scalerNormalizer(X_train, X_test, z_train, z_test):
 
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
 
+#Scale features using statistics that are robust to outliers
 def scalerRobust(X_train, X_test, z_train, z_test):
     scaler = RobustScaler().fit(X_train)
     X_train_scaled = scaler.transform(X_train)
