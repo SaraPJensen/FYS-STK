@@ -62,7 +62,6 @@ def scaling(X_train, X_test, z_train, z_test, scaler):
 def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #Gjør Ridge, hvis lambda != 0
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
-
     I = np.eye(len(X_train_scaled[0,:]))
 
     beta = np.linalg.pinv(X_train_scaled.T @ X_train_scaled + lamb*I) @ X_train_scaled.T @ z_train_scaled    #use the pseudoinverse for the singular matrix
@@ -72,6 +71,7 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
     #generate the prediction z
     z_predict = X_test_scaled @ beta
+    print(len(z_test_scaled), len(z_predict))
 
     if plot == "plot_prediction":
             #Plot the Prediction
@@ -89,7 +89,7 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
             z_new_grid = z_new.reshape(20, 20)   #make into a grid for plotting
 
-            ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
+            #ThreeD_plot(x_axis, y_axis, z_new_grid, "Prediction")
 
     return z_train_scaled, z_test_scaled, z_predict, z_model
 

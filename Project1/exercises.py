@@ -8,7 +8,7 @@ def main(exercise):
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
     x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.05*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -18,8 +18,8 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 8
-        scaler = "none"
+        poly = 1
+        scaler = "standard"
         lamb = 0
 
         X = design_matrix(x_flat, y_flat, poly)
@@ -27,7 +27,7 @@ def main(exercise):
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
         #Plot the graph
-        ThreeD_plot(x, y, z, "Function")
+        #ThreeD_plot(x, y, z, "Function")
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "plot_prediction")
@@ -389,59 +389,59 @@ def main(exercise):
         '''
 
 
-#main(1)
+main(1)
 
 
 # Load the terrain
-terrain1 = imread("SRTM_data_Norway_1.tif")
-#Dimensions of entire image: 3601 x 1801
-
-N = 1000
-start = 2000
-end = 3000
-poly = 15 # polynomial order
-terrain = terrain1[start:end,:N]
-
-# Creates mesh of image pixels
-x = np.linspace(0,1, np.shape(terrain)[0])
-y = np.linspace(0,1, np.shape(terrain)[1])
-x_mesh, y_mesh = np.meshgrid(x,y)
-
-z = terrain
-
-x_flat = np.ravel(x_mesh)
-y_flat = np.ravel(y_mesh)
-z_flat = np.ravel(z)
-
-scaler = Normalizer().fit(z)
-z_scaled = scaler.transform(z)
-
-#ThreeD_plot(x_mesh, y_mesh, z_scaled, "Terreng")
-
-lamb = 0
-
-
-X = design_matrix(x_flat, y_flat, poly)
-
-X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
-
-#Plot prediction and calculate errors
-z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", lamb, poly, "plot_prediction")
-
-print('')
-r2_train = r2_score(z_train_scaled, z_model)
-print(f"R2, train: {r2_train:.5}")
-print('')
-r2_test = r2_score(z_test_scaled, z_predict)
-print(f"R2, test: {r2_test:.5}")
-print('')
-
-mse_train = mean_squared_error(z_train_scaled, z_model)
-print(f"MSE, train: {mse_train:.5}")
-print('')
-mse_test = mean_squared_error(z_test_scaled, z_predict)
-print(f"MSE, test: {mse_test:.5}")
-print('')
+# terrain1 = imread("SRTM_data_Norway_1.tif")
+# #Dimensions of entire image: 3601 x 1801
+#
+# N = 1000
+# start = 2000
+# end = 3000
+# poly = 15 # polynomial order
+# terrain = terrain1[start:end,:N]
+#
+# # Creates mesh of image pixels
+# x = np.linspace(0,1, np.shape(terrain)[0])
+# y = np.linspace(0,1, np.shape(terrain)[1])
+# x_mesh, y_mesh = np.meshgrid(x,y)
+#
+# z = terrain
+#
+# x_flat = np.ravel(x_mesh)
+# y_flat = np.ravel(y_mesh)
+# z_flat = np.ravel(z)
+#
+# scaler = Normalizer().fit(z)
+# z_scaled = scaler.transform(z)
+#
+# #ThreeD_plot(x_mesh, y_mesh, z_scaled, "Terreng")
+#
+# lamb = 0
+#
+#
+# X = design_matrix(x_flat, y_flat, poly)
+#
+# X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
+#
+# #Plot prediction and calculate errors
+# z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", lamb, poly, "plot_prediction")
+#
+# print('')
+# r2_train = r2_score(z_train_scaled, z_model)
+# print(f"R2, train: {r2_train:.5}")
+# print('')
+# r2_test = r2_score(z_test_scaled, z_predict)
+# print(f"R2, test: {r2_test:.5}")
+# print('')
+#
+# mse_train = mean_squared_error(z_train_scaled, z_model)
+# print(f"MSE, train: {mse_train:.5}")
+# print('')
+# mse_test = mean_squared_error(z_test_scaled, z_predict)
+# print(f"MSE, test: {mse_test:.5}")
+# print('')
 
 
 '''

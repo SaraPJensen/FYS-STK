@@ -35,21 +35,19 @@ def scalerStandard(X_train, X_test, z_train, z_test):
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
 def scalerMinMax(X_train, X_test, z_train, z_test):
-    scaler = MinMaxScaler()
+    scaler = MinMaxScaler(feature_range=(0,1))
     scaler.fit(X_train)
 
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-
     #Scale the response variable
     z_train = z_train.reshape((-1,1))
-    z_test = z_train.reshape((-1,1))
-    scaler2 = MinMaxScaler()
-    scaler3 = MinMaxScaler()
-    scaler2.fit(z_train)
-    scaler3.fit(z_test)
-    z_train_scaled = scaler2.transform(z_train)
-    z_test_scaled = scaler3.transform(z_test)
+    z_test = z_test.reshape((1,-1))
+    scaler = MinMaxScaler(feature_range=(0,1)).fit(z_train)
+    z_train_scaled = scaler.transform(z_train)
+    scaler = MinMaxScaler(feature_range=(0,1)).fit(z_test)
+    z_test_scaled = scaler.transform(z_test)
+
 
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
 
