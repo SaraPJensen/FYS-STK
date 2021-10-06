@@ -169,15 +169,17 @@ def main(exercise):
 
 
     elif exercise == 3:
-        scaler = "none"
+        scaler = "standard"
         poly = 10
-        k_fold = 5
+        k_fold = 20
         reg_method = "Ridge"
-        lamb = 0.001
+        lamb = 1
         dependency = "poly"
 
-        CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
-
+        mse = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
+      
+        plt.plot(np.arange(1,poly+2), mse)
+        plt.title("Scaler: " + scaler)
 
 
     elif exercise == 4:
@@ -389,7 +391,7 @@ def main(exercise):
         '''
 
 
-main(1)
+main(3)
 
 
 # Load the terrain
