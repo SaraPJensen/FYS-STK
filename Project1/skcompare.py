@@ -40,28 +40,30 @@ def OLS_compare(x, y, z, scaler, lamb, poly):
     manual_mse = MSE(z_test_scaled, z_predict)
     
     # Scikit-learn method
-    model = LinearRegression(fit_intercept = True)      # Fit intercept
-    '''
+    model = LinearRegression(fit_intercept = False)      # Fit intercept
     scaler = StandardScaler()
     X_train_sc = scaler.fit_transform(X_train)
     X_test_sc = scaler.fit_transform(X_test)
     z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
     z_test_sc = scaler.fit_transform(z_test.reshape(-1, 1))
+    '''
     X_train_sc = scale(X_train)
     X_test_sc = scale(X_test)
     z_train_sc = scale(z_train.reshape(-1, 1))
     z_test_sc = scale(z_test.reshape(-1, 1))
     '''
-    #print(np.shape(X_train_sc))
-    #print(np.shape(z_train_sc))
     model.fit(X_train, z_train)     # Fitter modellen uten skalering
     zpred = model.predict(X_test)
+
+    #model.fit(X_train_sc, z_train_sc)     # Fitter modellen med skalering
+    #zpred_sc = model.predict(X_test_sc)
 
     sk_mse = MSE(z_test, zpred)     # Funker jævlig bra for z_test (uskalert), fordi modellen er fittet mot uskalert data. Funker SHIT når vi fitter mot skalert
     # Hvorfor funker det ikke :'(
 
-    print("Manuell: ",manual_mse)
-    print("sk: ", sk_mse)
+    #print("Manuell: ",manual_mse)
+    #print("sk: ", sk_mse)
 
+print("før func-call")
 OLS_compare(x_flat, y_flat, z_flat, "standard", 0, 8)
 

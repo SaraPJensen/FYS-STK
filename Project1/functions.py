@@ -71,7 +71,7 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
     #generate the prediction z
     z_predict = X_test_scaled @ beta
-    print(len(z_test_scaled), len(z_predict))
+    #print(len(z_test_scaled), len(z_predict))
 
     if plot == "plot_prediction":
             #Plot the Prediction
