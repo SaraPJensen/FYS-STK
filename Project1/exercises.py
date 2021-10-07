@@ -1,18 +1,18 @@
 from functions import *
 
-np.random.seed(2018)
+seed = int(time())
+rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
 def main(exercise):
     # Generate data
-    n = 20
-    #x = np.arange(0,1,1/n)
-    #y = np.arange(0,1,1/n)
+    n = 800
+    noise = 0.25
 
-    x = np.random.rand(n)
-    y = np.random.rand(n)
+    x = rng.uniform(0, 1, (n,1))
+    y = rng.uniform(0, 1, (n,1))
 
-    x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.05*np.random.randn(n, n)
+    z = FrankeFunction(x, y)
+    z += noise * rng.normal(0,1,z.shape)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -491,7 +491,7 @@ def main(exercise):
         '''
 
 
-main(4)
+main(1)
 
 def terrain():
 
