@@ -14,9 +14,9 @@ def main(exercise):
     z = FrankeFunction(x, y)
     z += noise * rng.normal(0,1,z.shape)
 
-    x_flat = np.ravel(x)
-    y_flat = np.ravel(y)
-    z_flat = np.ravel(z)
+    #x_flat = np.ravel(x)
+    #y_flat = np.ravel(y)
+    #z_flat = np.ravel(z)
 
     if exercise == 1:
         '''
@@ -174,46 +174,48 @@ def main(exercise):
 
     elif exercise == 3:
         scaler = "none"
-        poly = 20
+        poly = 10
         k_fold = 5
         reg_method = "OLS"
-        lamb = 1
+        lamb = 0
         dependency = "tradeoff"
         B_runs = 1
 
         #Calculate MSE values for test set with single validation set
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly+1, B_runs, reg_method, 0, dependency)
+        #MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly+1, B_runs, reg_method, 0, dependency)
         #Calcualte MSE for xval with k_fold folds
-        mse = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
+        mse = CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
 
 
+        plt.plot(np.arange(1,poly+1), mse, label="Ny")
+        plt.legend()
         #Plotting
-        deg_poly = [i for i in range(1, poly+2)]
+        # deg_poly = [i for i in range(1, poly+2)]
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color="darkcyan"),
-            marker=dict(size=9),
-            name="No validation"))
+        # fig = go.Figure()
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color="darkcyan"),
+        #     marker=dict(size=9),
+        #     name="No validation"))
 
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=mse.ravel(),
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "firebrick"),
-            marker=dict(size=9),
-            name="Cross-validation"))
+        # fig.add_trace(go.Scatter(x=deg_poly, y=mse.ravel(),
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "firebrick"),
+        #     marker=dict(size=9),
+        #     name="Cross-validation"))
 
-        fig.update_layout(
-            font_family="Garamond",
-            font_size=33,
-            title=f"MSE for training set with Cross-validation (k-fold = " + str(k_fold) + ") and no validation",
-            xaxis_title="Degrees of polynomial",
-            yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.5, y=0.99)
-            )
-        plot(fig)
-        fig.show()
+        # fig.update_layout(
+        #     font_family="Garamond",
+        #     font_size=33,
+        #     title=f"MSE for training set with Cross-validation (k-fold = " + str(k_fold) + ") and no validation",
+        #     xaxis_title="Degrees of polynomial",
+        #     yaxis_title="Mean Squared Error",
+        #     legend=dict(yanchor="top", xanchor="left", x=0.5, y=0.99)
+        #     )
+        # plot(fig)
+        # fig.show()
 
 
 
@@ -491,7 +493,7 @@ def main(exercise):
         '''
 
 
-main(1)
+main(3)
 
 def terrain():
 
