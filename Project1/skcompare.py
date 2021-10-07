@@ -13,7 +13,7 @@ n = 20
 x = np.sort((np.random.rand(n)))        # Equal to np.random.uniform(0, 1, n)
 y = np.sort((np.random.rand(n)))
 x, y = np.meshgrid(x, y)
-z = FrankeFunction(x, y) + 0.1*np.random.randn(n, n)
+z = FrankeFunction(x, y) + 0.5*np.random.randn(n, n)
 
 x_flat = np.ravel(x)
 y_flat = np.ravel(y)
@@ -76,7 +76,7 @@ def ridge_compare(x, y, z, scaler, lamb, poly):
                                                                 poly, plot="false")
     man_mse = MSE(z_test_scaled, z_predict)
 
-    model = linear_model.Ridge(alpha = lamb)
+    model = linear_model.Ridge(alpha = lamb, fit_intercept = False)
     model.fit(X_train, z_train)
     zpred = model.predict(X_test)
 
@@ -84,19 +84,43 @@ def ridge_compare(x, y, z, scaler, lamb, poly):
 
     return man_mse, sk_mse
 
+def lasso_compare(x, y, z, scaler, lamb, poly):
+
+    X = design_matrix(x, y, poly)
+    X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
+    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train, X_test, z_train,
+                                                                z_test, scaler, lamb,
+                                                                poly, plot="false")
+    man_mse = MSE(z_test_scaled, z_predict)
+
+    model = linear_model.Lasso(alpha = lamb, fit_intercept = False)
+    model.fit(X_train, z_train)
+    zpred = model.predict(X_test)
+
+    sk_mse = MSE(z_test, zpred)
+
+    return man_mse, sk_mse
 
 #OLS_compare(x_flat, y_flat, z_flat, "standard", 8)
 
-man = np.zeros((5, 5))
-sk = np.zeros((5, 5))
+ridge_man = np.zeros((5, 5))
+ridge_sk = np.zeros((5, 5))
+lasso_man = np.zeros((5, 5))
+lasso_sk = np.zeros((5, 5))
 
 ls = np.logspace(-4, 1, 5)
 for p in range(5):
     for l in range(len(ls)):
         man_mse, sk_mse = ridge_compare(x_flat, y_flat, z_flat, "standard", ls[l], p)
-        man[p, l] = man_mse
-        sk[p, l] = sk_mse
+        ridge_man[p, l] = man_mse
+        ridge_sk[p, l] = sk_mse
+        '''
+        man_mse, sk_mse = lasso_compare(x_flat, y_flat, z_flat, "none", ls[l], p)
+        lasso_man[p, l] = man_mse
+        lasso_sk[p, l] = sk_mse
+        '''
 
-print(man)
-print(sk)
-
+print(ridge_man)
+print(ridge_sk)          # Denne sammenlikningen gir lignende resultater men sklearn er en størrelsesorden bedre.
+#print(lasso_man)
+#print(lasso_sk)
