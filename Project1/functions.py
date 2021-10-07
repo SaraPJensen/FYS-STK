@@ -128,8 +128,6 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
 def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
-
-
     if dependency == "poly":
 
         MSE = []
@@ -248,6 +246,51 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
 
 
+    elif dependency == "lamb_bvt":   #bias-variance tradeoff with different lambdas
+
+        X = design_matrix(x, y, poly)
+
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
+        n_lambdas = 200
+        lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
+
+        MSE = []
+        Bias = []
+        Variance = []
+
+        for lamb in lambdas:
+
+            z_predictions = np.zeros((len(z_test), B_runs))   #matrix containing the values for different bootstrap runs
+
+            for i in range(B_runs):
+
+                X_train_boot, z_train_boot = resample(X_train, z_train)
+
+                if reg_method == "OLS" or reg_method == "Ridge":
+
+                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
+
+                elif reg_method == "Lasso":
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree)
+
+
+                z_predictions[:, i] = z_predict.ravel()
+                z_test_scaled = z_test_scaled.reshape((-1, 1))
+
+            mse = np.mean( np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True) )
+            bias = np.mean( (z_test_scaled - np.mean(z_predictions, axis=1, keepdims=True))**2 )
+            variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
+
+            MSE.append(mse)
+            Bias.append(bias)
+            Variance.append(variance)
+
+
+        return MSE, Bias, Variance, lambdas
+
+
+
 def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency=None):
     """
     input:
@@ -322,11 +365,11 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency=Non
                 #print(f"Polygrad: {p}, Lambda: {lambdas[l]}, k-run: {k_index}")
                 #print(mean_squared_error(z_test_sc, z_predict))
                 temp_mse[k_index] = mean_squared_error(z_test_sc, z_predict)
-    
+
                 #temp_bias[k_index] =
 
                 k_index += 1 # End k-split loop
-                
+
             mse[p, l] = np.mean(temp_mse)
 
     return mse
