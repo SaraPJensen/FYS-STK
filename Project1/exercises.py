@@ -1,6 +1,6 @@
 from functions import *
 
-np.random.seed(2018)
+#np.random.seed(2018)
 
 def main(exercise):
     # Generate data
@@ -59,7 +59,7 @@ def main(exercise):
         scaler = "none"
         reg_method = "OLS"
         lamb = 0
-        B_runs = 1
+        B_runs = 100
         k_fold = 0
         poly = 20
         dependency = "tradeoff"
@@ -95,6 +95,10 @@ def main(exercise):
         #plot(fig)
         fig.show()
 
+        #np.random.seed(2018)
+
+        '''
+
 
         #Generate fig. 2.11 with bootstrapping
         B_runs = 100
@@ -128,6 +132,8 @@ def main(exercise):
              legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
              )
         fig.show()
+
+        np.random.seed(2018)
 
 
 
@@ -169,6 +175,7 @@ def main(exercise):
              legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
              )
         fig.show()
+        '''
 
 
 
@@ -360,7 +367,7 @@ def main(exercise):
         fig.show()
 
 
-        '''
+
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
         poly = 8
@@ -385,8 +392,6 @@ def main(exercise):
             )
         fig.show()
 
-
-        '''
 
 
 
@@ -491,7 +496,7 @@ def main(exercise):
         '''
 
 
-main(4)
+main(2)
 
 def terrain():
 
