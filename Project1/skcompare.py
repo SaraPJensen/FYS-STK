@@ -111,7 +111,7 @@ lasso_sk = np.zeros((5, 5))
 ls = np.logspace(-4, 1, 5)
 for p in range(5):
     for l in range(len(ls)):
-        man_mse, sk_mse = ridge_compare(x_flat, y_flat, z_flat, "standard", ls[l], p)
+        man_mse, sk_mse = ridge_compare(x_flat, y_flat, z_flat, "none", ls[l], p)
         ridge_man[p, l] = man_mse
         ridge_sk[p, l] = sk_mse
         '''

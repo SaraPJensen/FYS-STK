@@ -35,7 +35,7 @@ def scalerStandard(X_train, X_test, z_train, z_test):
     z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
     z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
     '''
-    X_train_scaled = scaler.fit_transform(X_train)
+    X_train_scaled = scaler.fit_transform(X_train, with_std = False) #æææ
     X_test_scaled = scaler.fit_transform(X_test)
     z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
     z_test_scaled = (z_test - np.mean(z_test))/np.std(z_test)
