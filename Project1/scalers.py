@@ -21,6 +21,7 @@ import plotly.graph_objects as go
 from plotly.offline import plot
 from sklearn import linear_model
 from imageio import imread
+from time import time
 
 #Standardize features by removing the mean and scaling to unit variance.
 def scalerStandard(X_train, X_test, z_train, z_test):
