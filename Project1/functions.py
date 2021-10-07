@@ -1,6 +1,6 @@
 from scalers import *
 
-np.random.seed(2018)
+#np.random.seed(2018)
 
 
 def ThreeD_plot(x, y, z, title):
@@ -62,6 +62,7 @@ def scaling(X_train, X_test, z_train, z_test, scaler):
 def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #Gjør Ridge, hvis lambda != 0
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
+
     I = np.eye(len(X_train_scaled[0,:]))
 
     beta = np.linalg.pinv(X_train_scaled.T @ X_train_scaled + lamb*I) @ X_train_scaled.T @ z_train_scaled    #use the pseudoinverse for the singular matrix
@@ -134,7 +135,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
         Bias = []
         Variance = []
 
-        for degree in range(1, poly+1):
+        for degree in range(0, poly+1):
 
             X = design_matrix(x, y, degree)
 
@@ -205,6 +206,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
             mse = np.mean(np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True))
             MSE.append(mse)
             LAMBDA.append(lamb)
+            print(lamb)
 
         return MSE, LAMBDA
 
@@ -215,11 +217,25 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
         MSE_train = []
         MSE_test = []
 
+        X = design_matrix(x, y, poly)
+
+        X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
+        print(np.shape(X_train_tot))
+
+
         for degree in range(1, poly+1):
 
-            X = design_matrix(x, y, degree)
+            n = int((degree + 1)*(degree + 2)/2) + 1
 
-            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+            print("degree", degree)
+
+            print("n", n)
+
+            X_train = X_train_tot[:, :n]
+            X_test = X_test_tot[:, :n]
+
+            print(np.shape(X_train))
 
             MSE_train_boot = []
             MSE_test_boot = []
@@ -244,50 +260,6 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
         return MSE_train, MSE_test
 
-
-
-    elif dependency == "lamb_bvt":   #bias-variance tradeoff with different lambdas
-
-        X = design_matrix(x, y, poly)
-
-        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
-        n_lambdas = 200
-        lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
-
-        MSE = []
-        Bias = []
-        Variance = []
-
-        for lamb in lambdas:
-
-            z_predictions = np.zeros((len(z_test), B_runs))   #matrix containing the values for different bootstrap runs
-
-            for i in range(B_runs):
-
-                X_train_boot, z_train_boot = resample(X_train, z_train)
-
-                if reg_method == "OLS" or reg_method == "Ridge":
-
-                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
-
-                elif reg_method == "Lasso":
-                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree)
-
-
-                z_predictions[:, i] = z_predict.ravel()
-                z_test_scaled = z_test_scaled.reshape((-1, 1))
-
-            mse = np.mean( np.mean((z_test_scaled - z_predictions)**2, axis=1, keepdims=True) )
-            bias = np.mean( (z_test_scaled - np.mean(z_predictions, axis=1, keepdims=True))**2 )
-            variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
-
-            MSE.append(mse)
-            Bias.append(bias)
-            Variance.append(variance)
-
-
-        return MSE, Bias, Variance, lambdas
 
 
 
