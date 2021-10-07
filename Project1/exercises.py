@@ -1,17 +1,37 @@
 from functions import *
 
-#np.random.seed(2018)
+
+
+#seed = 2018
+#rng = np.random.default_rng(np.random.MT19937(seed=seed))
+
+np.random.seed(2018)
+
 
 def main(exercise):
     # Generate data
-    n = 20
-    #x = np.arange(0,1,1/n)
-    #y = np.arange(0,1,1/n)
+    '''
+    n = 400
+    noise = 0.05
 
-    x = np.random.rand(n)
-    y = np.random.rand(n)
+    x = rng.uniform(0, 1, (n,1))
+    y = rng.uniform(0, 1, (n,1))
+
+    z = FrankeFunction(x, y)
+    z += noise * rng.normal(0, 1, z.shape)
+
+    x_flat = np.ravel(x)
+    y_flat = np.ravel(y)
+    z_flat = np.ravel(z)
+    '''
+
+    n = 20
+
+    x = np.arange(0,1,1/n)
+    y = np.arange(0,1,1/n)
 
     x, y = np.meshgrid(x, y)
+
     z = FrankeFunction(x, y) + 0.05*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
@@ -22,8 +42,8 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 1
-        scaler = "standard"
+        poly = 4
+        scaler = "none"
         lamb = 0
 
         X = design_matrix(x_flat, y_flat, poly)
@@ -31,7 +51,7 @@ def main(exercise):
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
         #Plot the graph
-        #ThreeD_plot(x, y, z, "Function")
+        ThreeD_plot(x, y, z, "Function")
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "plot_prediction")
@@ -59,13 +79,15 @@ def main(exercise):
         scaler = "none"
         reg_method = "OLS"
         lamb = 0
-        B_runs = 100
+        B_runs = 1
         k_fold = 0
         poly = 20
-        dependency = "tradeoff"
+        dependency = "bias_variance"
+
+        np.random.seed(2018)
 
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
 
         deg_poly = [i for i in range(1, poly+1)]
@@ -95,16 +117,15 @@ def main(exercise):
         #plot(fig)
         fig.show()
 
-        #np.random.seed(2018)
 
-        '''
 
+        np.random.seed(2018)
 
         #Generate fig. 2.11 with bootstrapping
         B_runs = 100
 
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
 
         deg_poly = [i for i in range(1, poly+1)]
@@ -141,9 +162,9 @@ def main(exercise):
         poly = 20
         B_runs = 100
         scaler = "none"
-        dependency = "poly"
+        dependency = "bias_variance"
 
-        MSE, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
         deg_poly = [i for i in range(1, poly+1)]
 
         fig = go.Figure()
@@ -159,7 +180,7 @@ def main(exercise):
              marker=dict(size=9),
              name="Variance"))
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE,
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
              mode='lines+markers',
              line=dict(width=4, color = "darkcyan"),
              marker=dict(size=9),
@@ -175,70 +196,71 @@ def main(exercise):
              legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
              )
         fig.show()
-        '''
+
 
 
 
     elif exercise == 3:
         scaler = "none"
-        poly = 20
+        poly = 10
         k_fold = 5
         reg_method = "OLS"
-        lamb = 1
-        dependency = "tradeoff"
+        lamb = 0
+        dependency = "bias_variance"
         B_runs = 1
 
         #Calculate MSE values for test set with single validation set
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly+1, B_runs, reg_method, 0, dependency)
+        #MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly+1, B_runs, reg_method, 0, dependency)
         #Calcualte MSE for xval with k_fold folds
-        mse = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
+        mse = CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
 
 
+        plt.plot(np.arange(1,poly+1), mse, label="Ny")
+        plt.legend()
         #Plotting
-        deg_poly = [i for i in range(1, poly+2)]
+        # deg_poly = [i for i in range(1, poly+2)]
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color="darkcyan"),
-            marker=dict(size=9),
-            name="No validation"))
+        # fig = go.Figure()
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color="darkcyan"),
+        #     marker=dict(size=9),
+        #     name="No validation"))
 
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=mse.ravel(),
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "firebrick"),
-            marker=dict(size=9),
-            name="Cross-validation"))
+        # fig.add_trace(go.Scatter(x=deg_poly, y=mse.ravel(),
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "firebrick"),
+        #     marker=dict(size=9),
+        #     name="Cross-validation"))
 
-        fig.update_layout(
-            font_family="Garamond",
-            font_size=33,
-            title=f"MSE for training set with Cross-validation (k-fold = " + str(k_fold) + ") and no validation",
-            xaxis_title="Degrees of polynomial",
-            yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.5, y=0.99)
-            )
-        plot(fig)
-        fig.show()
+        # fig.update_layout(
+        #     font_family="Garamond",
+        #     font_size=33,
+        #     title=f"MSE for training set with Cross-validation (k-fold = " + str(k_fold) + ") and no validation",
+        #     xaxis_title="Degrees of polynomial",
+        #     yaxis_title="Mean Squared Error",
+        #     legend=dict(yanchor="top", xanchor="left", x=0.5, y=0.99)
+        #     )
+        # plot(fig)
+        # fig.show()
 
 
 
     elif exercise == 4:
 
-        poly = 20
-        B_runs = 100
+        poly = 40
+        B_runs = 1
         reg_method = "Ridge"
-        lamb = 0.01
+        lamb = 0.001
         scaler = "none"
         #scaler = "none"
         k_fold = 0
-        dependency = "tradeoff"
-
+        dependency = "bias_variance"
 
 
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
 
         deg_poly = [i for i in range(1, poly+1)]
@@ -268,16 +290,18 @@ def main(exercise):
         #plot(fig)
         fig.show()
 
+        '''
+
 
 
         deg_poly = [i for i in range(1, poly+1)]
 
         #Plot MSE_test for 5 different lambdas
-        MSE_train0, MSE_test0 = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
-        MSE_train1, MSE_test1 = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.001, dependency)
-        MSE_train2, MSE_test2 = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.01, dependency)
-        MSE_train3, MSE_test3 = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
-        MSE_train4, MSE_test4 = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 1, dependency)
+        MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
+        MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.001, dependency)
+        MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.01, dependency)
+        MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
+        MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 1, dependency)
 
 
         fig = go.Figure()
@@ -287,6 +311,7 @@ def main(exercise):
             line=dict(dash='solid', width=4, color = "orange"),
             marker=dict(size=9),
             name="Lambda = 0"))
+
 
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
             mode='lines+markers',
@@ -327,13 +352,13 @@ def main(exercise):
 
 
 
-        dependency = "poly"   #plot bias-variance tradeoff
+        dependency = "bias_variance"   #plot bias-variance tradeoff
 
         #Bootstrapping for Ridge
         poly = 20
 
         #Look at Bias-Variance tradeoff with bootstrap
-        MSE, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
         deg_poly = [i for i in range(1, poly+1)]
 
         fig = go.Figure()
@@ -349,7 +374,7 @@ def main(exercise):
             marker=dict(size=9),
             name="Variance"))
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE,
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
             mode='lines+markers',
             line=dict(width=4, color = "darkcyan"),
             marker=dict(size=9),
@@ -368,9 +393,11 @@ def main(exercise):
 
 
 
+
+
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
-        poly = 8
+        poly = 5
 
         MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
@@ -393,6 +420,11 @@ def main(exercise):
         fig.show()
 
 
+        '''
+
+
+
+
 
 
         #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
@@ -406,7 +438,7 @@ def main(exercise):
         scaler = "standard"
         #scaler = "none"
         k_fold = 0
-        dependency = "poly"
+        dependency = "bias_variance"
 
         X = design_matrix(x_flat, y_flat, poly)
 
@@ -431,7 +463,7 @@ def main(exercise):
         print('')
 
         '''
-        MSE, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
         deg_poly = [i for i in range(1, poly+1)]
 
         fig = go.Figure()
@@ -447,7 +479,7 @@ def main(exercise):
             marker=dict(size=9),
             name="Variance"))
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE,
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
             mode='lines+markers',
             line=dict(width=4, color = "darkcyan"),
             marker=dict(size=9),
@@ -465,9 +497,9 @@ def main(exercise):
         fig.show()
 
 
-        dependency = "tradeoff"
+        dependency = "bias_variance"
 
-        MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
         deg_poly = [i for i in range(1, poly+1)]
 
         fig = go.Figure()
@@ -496,7 +528,8 @@ def main(exercise):
         '''
 
 
-main(2)
+main(4)
+
 
 def terrain():
 

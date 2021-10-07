@@ -18,8 +18,10 @@ from sklearn.utils import resample
 from sklearn.model_selection import KFold
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.offline import plot
 from sklearn import linear_model
 from imageio import imread
+from time import time
 
 #Standardize features by removing the mean and scaling to unit variance.
 def scalerStandard(X_train, X_test, z_train, z_test):
@@ -32,6 +34,12 @@ def scalerStandard(X_train, X_test, z_train, z_test):
     #scale the response variable
     z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
     z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
+    '''
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.fit_transform(X_test)
+    z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
+    z_test_scaled = (z_test - np.mean(z_test))/np.std(z_test)
+    '''
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
