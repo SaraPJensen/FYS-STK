@@ -97,26 +97,11 @@ def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #G
 
 
 
-def Rigde_Sklearn(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):
-
-    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
-
-    ridge = linear_model.Ridge(alpha=lamb)
-    ridge.fit(X_train_scaled, z_train_scaled)
-
-    y_prediction = ridge.predict(X_test_scaled)
-
-
-    #How to do this???
-
-
-
-
 def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
-    RegLasso = linear_model.Lasso(lamb)
+    RegLasso = linear_model.Lasso(lamb, tol=3e-1, max_iter=1e6)   #tol=1e-1, max_iter=1e7
 
     RegLasso.fit(X_train_scaled, z_train_scaled)
 
@@ -129,16 +114,17 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
 def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
+    X = design_matrix(x, y, poly)
+
+    #np.random.seed(123)   #make sure we use the same split of the design matrix for each lambda
+    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+
     if dependency == "bias_variance":
 
         MSE_train = []
         MSE_test = []
         Bias = []
         Variance = []
-
-        X = design_matrix(x, y, poly)
-        X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
 
         for degree in range(0, poly+1):
 
@@ -187,12 +173,8 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        X = design_matrix(x, y, poly)
-
-        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
         n_lambdas = 200
-        lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
+        lambdas = np.logspace(-10, 1, n_lambdas)   #list of values
 
         MSE = []
         LAMBDA = []
@@ -203,15 +185,15 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
             for i in range(B_runs):
 
-                X_train_boot, z_train_boot = resample(X_train, z_train)
+                X_train_boot, z_train_boot = resample(X_train_tot, z_train)
 
                 if reg_method == "Ridge":
 
-                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly, "none")
+                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test_tot, z_train_boot, z_test, scaler, lamb, poly, "none")
 
                 elif reg_method == "Lasso":
 
-                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, poly)
+                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test_tot, z_train_boot, z_test, scaler, lamb, poly)
 
                 z_predictions[:, i] = z_predict.ravel()
 
@@ -223,59 +205,6 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
             LAMBDA.append(lamb)
 
         return MSE, LAMBDA
-
-
-
-
-
-    elif dependency == "tradeoff":   #should be able to remove this
-
-        MSE_train = []
-        MSE_test = []
-
-        X = design_matrix(x, y, poly)
-
-        X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
-
-        print(np.shape(X_train_tot))
-
-
-        for degree in range(1, poly+1):
-
-            n = int((degree + 1)*(degree + 2)/2) + 1
-
-            print("degree", degree)
-
-            print("n", n)
-
-            X_train = X_train_tot[:, :n]
-            X_test = X_test_tot[:, :n]
-
-            print(np.shape(X_train))
-
-            MSE_train_boot = []
-            MSE_test_boot = []
-
-            for i in range(B_runs):
-
-                X_train_boot, z_train_boot = resample(X_train, z_train)
-
-                if reg_method == "OLS" or reg_method == "Ridge":
-
-                    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree, "none")
-
-                    MSE_train_boot.append(mean_squared_error(z_train_scaled, z_model))
-                    MSE_test_boot.append(mean_squared_error(z_test_scaled, z_predict))
-
-                elif reg_method == "Lasso":
-                    z_train_scaled, z_test_scaled, z_predict, z_model = Lasso(X_train_boot, X_test, z_train_boot, z_test, scaler, lamb, degree)
-
-
-            MSE_train.append(np.mean(MSE_train_boot))
-            MSE_test.append(np.mean(MSE_test_boot))
-
-        return MSE_train, MSE_test
-
 
 
 
@@ -322,190 +251,6 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependenc
     return mse_cv
 
 
-def main(exercise):
-    # Generate data
-    n = 20
-    x = np.sort(np.random.uniform(0, 1, n))
-    y = np.sort(np.random.uniform(0, 1, n))
-    x, y = np.meshgrid(x, y)
-    z = FrankeFunction(x, y) + 0.03*np.random.randn(n, n)
-
-    x_flat = np.ravel(x)
-    y_flat = np.ravel(y)
-    z_flat = np.ravel(z)
-
-    '''
-    if exercise == 1:
-
-        #Exercise 1
-
-        poly = 25
-
-        X = design_matrix(x_flat, y_flat, poly)
-
-        X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
-
-        #Plot the graph
-        ThreeD_plot(x, y, z, "Function")
-
-        #Plot prediction and calculate errors
-        z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, "standard", 0, poly, "plot_prediction")
-
-        print('')
-        r2_train = r2_score(z_train_scaled, z_model)
-        print(f"R2, train: {r2_train:.5}")
-        print('')
-        r2_test = r2_score(z_test_scaled, z_predict)
-        print(f"R2, test: {r2_test:.5}")
-        print('')
-
-        mse_train = mean_squared_error(z_train_scaled, z_model)
-        print(f"MSE, train: {mse_train:.5}")
-        print('')
-        mse_test = mean_squared_error(z_test_scaled, z_predict)
-        print(f"MSE, test: {mse_test:.5}")
-        print('')
-
-
-    elif exercise == 2:
-
-        #Exercise 2
-
-        scaler = "standard"
-        reg_method = "OLS"
-        lamb = 0
-        B_runs = 0
-        k_fold = 0
-        poly = 30
-
-
-        #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-        MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, scaler, poly, reg_method, lamb, B_runs, k_fold)
-
-
-        deg_poly = [i for i in range(1, poly+1)]
-
-        plt.plot(deg_poly, MSE_test, label="Testing data", color='blue')
-        plt.plot(deg_poly, MSE_train, label="Training data", color='red')
-        plt.xlabel("Degrees of polynomial")
-        plt.ylabel("Mean Squared Error")
-        plt.title(f"Mean squared error as a function of complexity for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
-
-
-        #Bootstrapping
-        poly = 20
-        B_runs = 100
-        scaler = "standard"
-        #scaler = "none"
-        dependency = "poly"
-
-        MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
-        deg_poly = [i for i in range(1, poly+1)]
-
-        plt.plot(deg_poly, Bias, label="Bias", color='blue')
-        plt.plot(deg_poly, Variance, label="Variance", color='red')
-        plt.plot(deg_poly, MSE, label="MSE", color='green')
-        plt.xlabel("Degrees of polynomial")
-        plt.ylabel("")
-        plt.title(f"Bias-variance tradeoff for incresing complexity for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
-
-
-    elif exercise == 3:
-        scaler = "none"
-        poly = 10
-        k_fold = 5
-        reg_method = "Ridge"
-        lamb = 0.001
-        dependency = "poly"
-
-        CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, dependency)
-
-
-
-    elif exercise == 4:
-
-        poly = 20
-        B_runs = 100
-        reg_method = "Ridge"
-        lamb = 0.000
-        scaler = "standard"
-        #scaler = "none"
-        k_fold = 0
-        dependency = "poly"
-
-
-        #Look at test/training MSE without Bootstrapping
-        #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
-        MSE_train, MSE_test = tradeoff(x_flat, y_flat, z_flat, scaler, poly, reg_method, lamb, B_runs, k_fold)
-        deg_poly = [i for i in range(1, poly+1)]
-
-        plt.plot(deg_poly, MSE_test, label="Testing data", color='blue')
-        plt.plot(deg_poly, MSE_train, label="Training data", color='red')
-        plt.xlabel("Degrees of polynomial")
-        plt.ylabel("Mean Squared Error")
-        plt.title(f"Mean squared error as a function of complexity for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
-
-
-
-        #Bootstrapping for Ridge
-        poly = 20
-
-        #Look at Bias-Variance tradeoff with bootstrap
-        MSE, Bias, Variance = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
-        deg_poly = [i for i in range(1, poly+1)]
-
-        plt.plot(deg_poly, Bias, label="Bias", color='blue')
-        plt.plot(deg_poly, Variance, label="Variance", color='red')
-        plt.plot(deg_poly, MSE, label="MSE", color='green')
-        plt.xlabel("Degrees of polynomial")
-        plt.ylabel("")
-        plt.title(f"Bias-variance tradeoff for incresing complexity for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
-
-
-
-        #Look at dependence on lambda for a given polynomial
-        dependency = "lambda"
-        poly = 5
-
-        MSE, LAMBDA = Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency)
-
-        plt.plot(np.log10(LAMBDA), MSE, label="MSE test", color='blue')
-        plt.xlabel("log10(lambda)")
-        plt.ylabel("Mean Squared Error")
-        plt.title(f"Mean squared error as a function of lambda for {reg_method} regression")
-        plt.legend()
-        plt.show()
-
-
-        #Add function for finding for what values of poly and lambda MSE is lowest. Is it possible to use a different type of diagram for this?
-        #Maybe similar to the 3d plot? Ask about this in group session.
-    '''
-    '''
-    if exercise == "test":
-        #def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, dependency):
-        mse = CrossVal(x_flat, y_flat, z_flat, "standard", 10, 10, "Lasso", 200, dependency=None)
-        #print(x_flat[:10])
-        #print(np.mean(x_flat[:10],axis=0, keepdims=True))
-        #print(np.mean(x_flat[:10],axis=1, keepdims=True))
-
-        minind = np.where(mse == np.amin(mse))
-        print(minind)
-        print(mse[minind])
-        '''
-
-        #print(np.shape(mse))
 
 if __name__  == "__main__":
     main("test")
