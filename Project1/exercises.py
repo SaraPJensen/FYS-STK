@@ -26,13 +26,14 @@ def main(exercise):
     '''
 
     n = 20
+    noise = 0.05
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
 
     x, y = np.meshgrid(x, y)
 
-    z = FrankeFunction(x, y) + 0.05*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + noise*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -42,7 +43,7 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 4
+        poly = 5
         scaler = "none"
         lamb = 0
 
@@ -70,6 +71,33 @@ def main(exercise):
         mse_test = mean_squared_error(z_test_scaled, z_predict)
         print(f"MSE, test: {mse_test:.5}")
         print('')
+
+        '''
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train_sc = scaler.transform(X_train)
+        #print(np.shape(z_train)[0])
+        #print(np.shape(z_train.reshape(z_train.shape[0], 1)))
+        z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
+        #print(np.shape(z_train_sc))
+        '''
+        beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
+        #print(beta)
+        k = len(beta)       # number of parameters
+        var_error = noise       # Variance in the standard normally distibuted noise
+        ste_beta = np.zeros(k)
+        width = np.zeros(k) # Width of the confidence interval
+        a = 0.10            # 100(1-a)% CI
+        n = len(X_train)    # Number of samples
+        
+        for i in range(k):
+            ste_beta[i] = np.sqrt( var_error * np.linalg.pinv(X_train.T @ X_train)[i, i] )
+            #print(ste_beta[i])
+            width[i] = ste_beta[i] * 1.6499     # t-value for a = 0.1, df = 304 # n - (k+1)
+
+        plt.scatter(np.arange(len(beta)), beta)
+        plt.errorbar(np.arange(len(beta)), beta, xerr = 0, yerr = width, linestyle='')
+        plt.show()
 
 
     elif exercise == 2:
@@ -528,7 +556,7 @@ def main(exercise):
         '''
 
 
-main(4)
+main(1)
 
 
 def terrain():
