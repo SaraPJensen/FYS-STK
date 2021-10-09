@@ -18,6 +18,7 @@ from sklearn.utils import resample
 from sklearn.model_selection import KFold
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from plotly.offline import plot
 from sklearn import linear_model
 from imageio import imread
@@ -43,6 +44,20 @@ def scalerStandard(X_train, X_test, z_train, z_test):
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
+def scalerMean(X_train, X_test, z_train, z_test):
+    mean_X = np.mean(X_train, axis=0)
+    X_train_scaled = X_train - mean_X
+    X_test_scaled = X_test - mean_X
+    mean_z = np.mean(z_train)
+    z_train_scaled = z_train - mean_z
+    z_test_scaled = z_test - mean_z
+    
+    
+    return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
+
+def scalerNone(X_train, X_test, z_train, z_test):
+    return X_train, X_test, z_train, z_test
+
 #Scales the features to a given range, here [0,1]
 def scalerMinMax(X_train, X_test, z_train, z_test):
     scaler = MinMaxScaler(feature_range=(0,1))
@@ -52,29 +67,29 @@ def scalerMinMax(X_train, X_test, z_train, z_test):
     X_test_scaled = scaler.transform(X_test)
     #Scale the response variable
     z_train = z_train.reshape((-1,1))
-    z_test = z_test.reshape((1,-1))
+    z_test = z_test.reshape((-1,1))
     scaler = MinMaxScaler(feature_range=(0,1)).fit(z_train)
     z_train_scaled = scaler.transform(z_train)
-    scaler = MinMaxScaler(feature_range=(0,1)).fit(z_test)
+    scaler = MinMaxScaler(feature_range=(0,1)).fit(z_train)
     z_test_scaled = scaler.transform(z_test)
 
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
 
-#Scales samples so that L2 = 1
-def scalerNormalizer(X_train, X_test, z_train, z_test):
-    scaler = Normalizer().fit(X_train)
-    X_train_scaled = scaler.transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+# #Scales samples so that L2 = 1
+# def scalerNormalizer(X_train, X_test, z_train, z_test):
+#     scaler = Normalizer().fit(X_train)
+#     X_train_scaled = scaler.transform(X_train)
+#     X_test_scaled = scaler.transform(X_test)
 
-    #Scale the response variable
-    z_train = z_train.reshape((1,-1))
-    z_test = z_test.reshape((1,-1))
-    scaler = Normalizer().fit(z_train)
-    z_train_scaled = scaler.transform(z_train)
-    scaler = Normalizer().fit(z_test)
-    z_test_scaled = scaler.transform(z_test)
+#     #Scale the response variable
+#     z_train = z_train.reshape((1,-1))
+#     z_test = z_test.reshape((1,-1))
+#     scaler = Normalizer().fit(z_train)
+#     z_train_scaled = scaler.transform(z_train)
+#     scaler = Normalizer().fit(z_train)
+#     z_test_scaled = scaler.transform(z_test)
 
-    return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
+#     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
 
 #Scale features using statistics that are robust to outliers
 def scalerRobust(X_train, X_test, z_train, z_test):
@@ -87,7 +102,7 @@ def scalerRobust(X_train, X_test, z_train, z_test):
     z_test = z_test.reshape((-1,1))
     scaler = RobustScaler().fit(z_train)
     z_train_scaled = scaler.transform(z_train)
-    scaler = RobustScaler().fit(z_test)
+    scaler = RobustScaler().fit(z_train)
     z_test_scaled = scaler.transform(z_test)
 
     return X_train_scaled, X_test_scaled, z_train_scaled.flatten(), z_test_scaled.flatten()
