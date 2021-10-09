@@ -18,6 +18,7 @@ from sklearn.utils import resample
 from sklearn.model_selection import KFold
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from plotly.offline import plot
 from sklearn import linear_model
 from imageio import imread
