@@ -101,7 +101,7 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
-    RegLasso = linear_model.Lasso(lamb, tol=3e-1, max_iter=1e6)   #tol=1e-1, max_iter=1e7
+    RegLasso = linear_model.Lasso(lamb, tol=4e-1, max_iter=1e6)   #tol=1e-1, max_iter=1e7
 
     RegLasso.fit(X_train_scaled, z_train_scaled)
 
@@ -174,7 +174,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
     elif dependency == "lambda":
 
         n_lambdas = 200
-        lambdas = np.logspace(-10, 1, n_lambdas)   #list of values
+        lambdas = np.logspace(-7, 1, n_lambdas)   #list of values
 
         MSE = []
         LAMBDA = []
