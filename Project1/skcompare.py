@@ -21,8 +21,8 @@ y_flat = np.ravel(y)
 z_flat = np.ravel(z)
 
 # Manualy calculate the mse for a given polynomial and lambda by 
-scaler = "none"
-poly = 10
+scaler = "scalerNone"
+poly = 20
 k_fold = 5
 reg_method = "Ridge"
 n_lambda = 200
@@ -36,8 +36,8 @@ X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size = 0.2)
 
 def OLS_compare(X_train, X_test, z_train, z_test, scaler, poly):
     # Our function
-    n = int((p+1) * (p+2)/2)
-    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train[:, :n], X_test[:, :n], z_train,
+    n_feat = int((poly+1) * (poly+2)/2)
+    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train[:, :n_feat], X_test[:, :n_feat], z_train,
                                                                 z_test, scaler, 0,
                                                                 poly, plot="false")
     man_mse = MSE(z_test_scaled, z_predict)
@@ -71,18 +71,17 @@ def OLS_compare(X_train, X_test, z_train, z_test, scaler, poly):
     #print("sk: ", sk_mse)
     return man_mse, sk_mse, man_r2, sk_r2
 
-def ridge_compare(x, y, z, scaler, lamb, poly):
+def ridge_compare(X_train, X_test, z_train, z_test, scaler, lamb, poly):
     
-    X = design_matrix(x, y, poly)
-    X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
-    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train,
+    n_feat = int((poly+1) * (poly+2)/2)
+    z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train[:,:n_feat], X_test[:,:n_feat], z_train,
                                                                 z_test, scaler, lamb,
                                                                 poly, plot="false")
     man_mse = MSE(z_test_scaled, z_predict)
 
     model = linear_model.Ridge(alpha = lamb, fit_intercept = False)
-    model.fit(X_train, z_train)
-    zpred = model.predict(X_test)
+    model.fit(X_train[:,:n_feat], z_train)
+    zpred = model.predict(X_test[:,:n_feat])
 
     sk_mse = MSE(z_test, zpred)
 
@@ -132,24 +131,31 @@ for i in range(poly):
 
 ## Ridge comparison
 
-ridge_man = np.zeros((5, 5))
-ridge_sk = np.zeros((5, 5))
+ls = np.logspace(-4, 1, 500)
+ridge_man = np.zeros((poly, len(ls)))
+ridge_sk = np.zeros((poly, len(ls)))
 #lasso_man = np.zeros((5, 5))
 #lasso_sk = np.zeros((5, 5))
 
-ls = np.logspace(-4, 1, 5)
-for p in range(5):              # Husk å bruke en fornuftig scaler
+for p in range(1, poly+1):              # Husk å bruke en fornuftig scaler
     for l in range(len(ls)):
-        man_mse, sk_mse = ridge_compare(x_flat, y_flat, z_flat, scaler, ls[l], p)
-        ridge_man[p, l] = man_mse
-        ridge_sk[p, l] = sk_mse
+        man_mse, sk_mse = ridge_compare(X_train, X_test, z_train, z_test, scaler, ls[l], p)
+        ridge_man[p-1, l] = man_mse
+        ridge_sk[p-1, l] = sk_mse
         '''
         man_mse, sk_mse = lasso_compare(x_flat, y_flat, z_flat, scaler, ls[l], p)
         lasso_man[p, l] = man_mse
         lasso_sk[p, l] = sk_mse
         '''
 
-print(ridge_man)
-print(ridge_sk)          # Denne sammenlikningen gir lignende resultater men sklearn er en størrelsesorden bedre. DETTE KOMMER AV SKALERING!! MÅ ALDRI SKALERE!! IKKE MED STANDARD I ALLE FALL
+#print(ridge_man)
+#print(ridge_sk)          # Denne sammenlikningen gir lignende resultater men sklearn er en størrelsesorden bedre. DETTE KOMMER AV SKALERING!! MÅ ALDRI SKALERE!! IKKE MED STANDARD I ALLE FALL
 #print(lasso_man)
 #print(lasso_sk)
+
+arg = np.argmax(np.abs(ridge_man - ridge_sk))
+arg = np.unravel_index(arg, (ridge_man - ridge_sk).shape)
+print(f"Max poly: {poly}, numb lambdas: {len(ls)}")
+print(arg, " polydeg: ", arg[0]+1, ", lambda value: ", ls[arg[1]])
+print((ridge_man - ridge_sk)[arg])
+
