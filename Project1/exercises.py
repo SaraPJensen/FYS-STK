@@ -32,7 +32,7 @@ def main(exercise):
 
     x, y = np.meshgrid(x, y)
 
-    z = FrankeFunction(x, y) + 0.4*np.random.randn(n, n)
+    z = FrankeFunction(x, y) + 0.5*np.random.randn(n, n)
 
     x_flat = np.ravel(x)
     y_flat = np.ravel(y)
@@ -85,7 +85,7 @@ def main(exercise):
         dependency = "bias_variance"
 
 
-
+        '''
         #np.random.seed(123)
 
         #Generate figure 2.11: see how MSE changes as a function of the degree of the polynomial
@@ -119,11 +119,11 @@ def main(exercise):
         #plot(fig)
         fig.show()
 
+        '''
 
 
 
-
-        #np.random.seed(123)
+        np.random.seed(123)
 
 
         #Generate fig. 2.11 with bootstrapping
@@ -160,7 +160,7 @@ def main(exercise):
         fig.show()
 
 
-
+        '''
 
 
         np.random.seed(123)
@@ -204,6 +204,7 @@ def main(exercise):
              legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
              )
         fig.show()
+        '''
 
 
 
@@ -266,12 +267,11 @@ def main(exercise):
         reg_method = "Ridge"
         lamb = 0.001
         scaler = "none"
-        #scaler = "none"
         k_fold = 0
         dependency = "bias_variance"
 
-
         '''
+
         MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
 
@@ -301,11 +301,11 @@ def main(exercise):
             )
         #plot(fig)
         fig.show()
-
-
-
+        '''
 
         dependency = "bias_variance"
+
+        B_runs= 10
 
         poly = 15
 
@@ -371,7 +371,6 @@ def main(exercise):
 
         '''
 
-
         np.random.seed(123)
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
@@ -404,6 +403,50 @@ def main(exercise):
         print("Optimal lambda: ", min_lamb)
 
 
+        #Bootstrapping
+        poly = 20
+        B_runs = 100
+        scaler = "none"
+        dependency = "bias_variance"
+        lamb = 0.15703
+        np.random.seed(123)
+
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        deg_poly = [i for i in range(1, poly+1)]
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=deg_poly, y=Bias,
+             mode='lines+markers',
+             line=dict(width=4, color="darkgoldenrod"),
+             marker=dict(size=9),
+             name="Bias"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=Variance,
+             mode='lines+markers',
+             line=dict(width=4, color = "firebrick"),
+             marker=dict(size=9),
+             name="Variance"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
+             mode='lines+markers',
+             line=dict(width=4, color = "darkcyan"),
+             marker=dict(size=9),
+             name="MSE"))
+
+
+        fig.update_layout(
+             font_family="Garamond",
+             font_size=33,
+             title=f"Bias-variance tradeoff for incresing complexity for {reg_method} regression",
+             xaxis_title="Degrees of polynomial",
+             yaxis_title="",
+             legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.6)
+             )
+        fig.show()
+
+        '''
+
+
 
 
 
@@ -416,7 +459,7 @@ def main(exercise):
         k_fold = 0
 
 
-
+        '''
         #Plot MSE_test for 5 different lambdas
         dependency = "bias_variance"
 
@@ -475,7 +518,7 @@ def main(exercise):
             title=f"MSE as a function of complexity for {reg_method} regression",
             xaxis_title="Degrees of polynomial",
             yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.2, y=0.85)
+            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
             )
 
         fig.show()
@@ -517,7 +560,7 @@ def main(exercise):
         print("Minimum MSE: ", min(MSE))
         print("Optimal lambda: ", min_lamb)
 
-        '''
+
 
 
 
