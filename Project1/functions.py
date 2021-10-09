@@ -37,31 +37,32 @@ def design_matrix(x_flat, y_flat, poly):
     return X
 
 
-def scaling(X_train, X_test, z_train, z_test, scaler):
+# def scaling(X_train, X_test, z_train, z_test, scaler):
 
-    if scaler == "standard" :
-        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerStandard(X_train, X_test, z_train, z_test)
+#     if scaler == "standard" :
+#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerStandard(X_train, X_test, z_train, z_test)
 
-    elif scaler == "minmax" :
-        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMinMax(X_train, X_test, z_train, z_test)
+#     elif scaler == "minmax" :
+#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMinMax(X_train, X_test, z_train, z_test)
 
-    elif scaler == "normalise" :
-        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerNormalizer(X_train, X_test, z_train, z_test)
+#     elif scaler == "normalise" :
+#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerNormalizer(X_train, X_test, z_train, z_test)
 
-    elif scaler == "robust" :
-        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerRobust(X_train, X_test, z_train, z_test)
+#     elif scaler == "robust" :
+#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerRobust(X_train, X_test, z_train, z_test)
 
-    else:
-        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = X_train, X_test, z_train, z_test
+#     else:
+#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = X_train, X_test, z_train, z_test
 
 
-    return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
+#     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
 
 
 def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #Gjør Ridge, hvis lambda != 0
 
-    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
+    scaling = eval(scaler)
+    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test)
 
     I = np.eye(len(X_train_scaled[0,:]))
 
@@ -117,7 +118,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
     X = design_matrix(x, y, poly)
 
     #np.random.seed(123)   #make sure we use the same split of the design matrix for each lambda
-    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
+    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2, random_state=2018)
 
     if dependency == "bias_variance":
 
@@ -211,22 +212,22 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependency=None):
 
     X = design_matrix(x.ravel(),y.ravel(),poly)
-    print(X)
     mse_cv = np.zeros(poly)
-
+    scaling = eval(scaler)
+    
     deg = 1
-    for i in range(poly): #mulig poly+1?
+    for i in range(poly): 
 
         X_current_poly = X[:, :int((deg + 1) * (deg + 2) / 2)]
 
 
         kfolds = KFold(n_splits=k_fold)
         scores_KFold = np.zeros(k_fold)
+        
+        #Permute the data
         perm = rng.permuted(np.arange(0, X_current_poly.shape[0]))
-
         X_current_poly = X_current_poly[perm, :]
-        z_ = z[perm]
-
+        z_ = z.ravel()[perm]
 
         k = 0
         for train_inds, test_inds in kfolds.split(X_current_poly):
@@ -235,18 +236,20 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependenc
             z_train = z_[train_inds]
             X_test = X_current_poly[test_inds, :]
             z_test = z_[test_inds]
+            
+            #Scale the data
+            X_train_sc, X_test_sc, z_train_sc, z_test_sc = scaling(X_train, X_test, z_train, z_test)
 
             #OLS av X_train og z_train
-            betas = np.linalg.pinv(X_train.T @ X_train + n_lambda * np.eye(X_train.shape[1])) @ X_train.T @ z_train
+            betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + n_lambda * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
 
-            z_tilde = X_test @ betas
+            z_tilde = X_test_sc @ betas
 
-            scores_KFold[k] = mean_squared_error(z_test.ravel(), z_tilde.ravel())
+            scores_KFold[k] = mean_squared_error(z_test_sc.ravel(), z_tilde.ravel())
             k += 1
+            
         mse_cv[i] = np.mean(scores_KFold)
-
         deg += 1
-
 
     return mse_cv
 

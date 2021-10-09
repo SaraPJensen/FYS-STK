@@ -26,7 +26,7 @@ def main(exercise):
     '''
 
     n = 20
-    noise = 0.05
+    noise = 0.5
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -44,7 +44,7 @@ def main(exercise):
         Exercise 1
         '''
         poly = 5
-        scaler = "none"
+        scaler = "scalerRobust"
         lamb = 0
 
         X = design_matrix(x_flat, y_flat, poly)
@@ -56,8 +56,14 @@ def main(exercise):
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "plot_prediction")
-
+        
+        mse_train = mean_squared_error(z_train_scaled, z_model)
+        print(f"MSE, train: {mse_train:.5}")
         print('')
+        mse_test = mean_squared_error(z_test_scaled, z_predict)
+        print(f"MSE, test: {mse_test:.5}")
+        print('')
+      
         r2_train = r2_score(z_train_scaled, z_model)
         print(f"R2, train: {r2_train:.5}")
         print('')
@@ -65,12 +71,7 @@ def main(exercise):
         print(f"R2, test: {r2_test:.5}")
         print('')
 
-        mse_train = mean_squared_error(z_train_scaled, z_model)
-        print(f"MSE, train: {mse_train:.5}")
-        print('')
-        mse_test = mean_squared_error(z_test_scaled, z_predict)
-        print(f"MSE, test: {mse_test:.5}")
-        print('')
+        
 
         '''
         scaler = StandardScaler()
@@ -234,111 +235,139 @@ def main(exercise):
         fig.show()
 
 
-
-
-
-
-
-
     elif exercise == 3:
-        scaler = "none"
-        poly = 10
+        scaler = "scalerNone"
+        poly = 20
         k_fold = 5
         reg_method = "OLS"
         lamb = 0
         dependency = "bias_variance"
-        B_runs = 1
+        B_runs = 400
+        seed = int(time())#2018
+        rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-        #Calculate MSE values for test set with single validation set
-        #MSE_train, MSE_test = Bootstrap(x_flat, y_flat, z_flat, scaler, poly+1, B_runs, reg_method, 0, dependency)
-        #Calcualte MSE for xval with k_fold folds
-        mse = CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
+        
+        mse_cv = CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
+        mse_cv_ = CrossVal(x, y, z, scaler, poly, 10, reg_method, lamb, rng, dependency)
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly-1, B_runs, reg_method, lamb, dependency)
+
+        # plt.plot(np.arange(1,poly+1), mse_cv, label="CV, kfold = 5")
+        # plt.plot(np.arange(1,poly+1), mse_cv_, label="CV, kfold = 10")
+        # plt.plot(np.arange(1,poly+1), MSE_test, label="BS")
+        # plt.legend()
+        
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=np.arange(1,poly+1), y=mse_cv,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color="darkcyan"),
+            marker=dict(size=9),
+            name="Cross Validation, k_fold = 5"))
 
 
-        plt.plot(np.arange(1,poly+1), mse, label="Ny")
+        fig.add_trace(go.Scatter(x=np.arange(1,poly+1), y=mse_cv_,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color = "firebrick"),
+            marker=dict(size=9),
+            name="Cross Validation, k_fold = 10"))
+        
+        fig.add_trace(go.Scatter(x=np.arange(1,poly+1), y=MSE_test,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4),
+            marker=dict(size=9),
+            name="Bootstrapping, b_runs = 400"))
+
+        fig.update_layout(
+            font_family="Garamond",
+            font_size=33,
+            title=f"Mean squared error as a function of complexity for {reg_method} regression",
+            xaxis_title="Degree of polynomial",
+            yaxis_title="Mean Squared Error",
+            legend=dict(yanchor="top", xanchor="center", x=0.5, y=0.99)
+            )
+        plot(fig)
+        fig.show()
+        
+
+    elif exercise == 4:
+
+        poly = 15
+        reg_method = "Ridge"
+        scaler = "scalerNone"
+        #scaler = "none"
+        k_fold = 0
+        B_runs=100
+        dependency = "bias_variance"
+
+
+        lambdas = 5
+        lambdas_ = np.logspace(-10,0,lambdas)
+        
+       
+      
+        
+        mse = np.zeros((poly, lambdas))
+        for p in range(poly):
+            for l, lamb in enumerate(lambdas_):
+                _, mse_temp , _, _ = Bootstrap(x_flat, y_flat, z_flat, scaler, p, B_runs, reg_method, lamb, dependency)
+                mse[p, l] = np.mean(mse_temp)
+        
+        
+        min_mse = np.where(mse == np.min(mse))
+        
+        min_p = int(min_mse[0])
+        min_l = int(min_mse[1])
+        
+        
+        
+        plt.figure(f"bootstrap", figsize=(11, 9), dpi=80)
+        plt.plot(np.log10(lambdas_)[min_l], np.arange(1,poly+1)[min_p], "or", label="min", markersize=20)
+        plt.contourf(np.log10(lambdas_), np.arange(1,poly+1), mse)
+        plt.ylabel("degree",fontsize=14)
+        plt.xlabel("log10(lambda)",fontsize=14)
+        plt.colorbar()
         plt.legend()
-        #Plotting
-        # deg_poly = [i for i in range(1, poly+2)]
+        
+
+        # MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+
+
+        # deg_poly = [i for i in range(1, poly+1)]
 
         # fig = go.Figure()
         # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
         #     mode='lines+markers',
         #     line=dict(dash='solid', width=4, color="darkcyan"),
         #     marker=dict(size=9),
-        #     name="No validation"))
+        #     name="Testing data"))
 
 
-        # fig.add_trace(go.Scatter(x=deg_poly, y=mse.ravel(),
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_train,
         #     mode='lines+markers',
         #     line=dict(dash='solid', width=4, color = "firebrick"),
         #     marker=dict(size=9),
-        #     name="Cross-validation"))
+        #     name="Training data"))
 
         # fig.update_layout(
         #     font_family="Garamond",
         #     font_size=33,
-        #     title=f"MSE for training set with Cross-validation (k-fold = " + str(k_fold) + ") and no validation",
+        #     title=f"Mean squared error as a function of complexity for {reg_method} regression",
         #     xaxis_title="Degrees of polynomial",
         #     yaxis_title="Mean Squared Error",
-        #     legend=dict(yanchor="top", xanchor="left", x=0.5, y=0.99)
+        #     legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
         #     )
-        # plot(fig)
+        # #plot(fig)
         # fig.show()
 
 
-
-    elif exercise == 4:
-
-        poly = 20
-        B_runs = 100
-        reg_method = "Ridge"
-        lamb = 0.001
-        scaler = "none"
-        #scaler = "none"
-        k_fold = 0
-        dependency = "bias_variance"
-
-
         '''
-        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
-
-        deg_poly = [i for i in range(1, poly+1)]
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color="darkcyan"),
-            marker=dict(size=9),
-            name="Testing data"))
-
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_train,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "firebrick"),
-            marker=dict(size=9),
-            name="Training data"))
-
-        fig.update_layout(
-            font_family="Garamond",
-            font_size=33,
-            title=f"Mean squared error as a function of complexity for {reg_method} regression",
-            xaxis_title="Degrees of polynomial",
-            yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
-            )
-        #plot(fig)
-        fig.show()
-
-
-
-
+        
         dependency = "bias_variance"
-
+        
         poly = 15
-
+        
         deg_poly = [i for i in range(1, poly+1)]
-
+        
         #Plot MSE_test for 5 different lambdas
         np.random.seed(123)
         MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
@@ -350,42 +379,42 @@ def main(exercise):
         MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
         np.random.seed(123)
         MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 10, dependency)
-
-
+        
+        
         fig = go.Figure()
-
+        
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "orange"),
             marker=dict(size=9),
             name="Lambda = 0"))
-
-
+        
+        
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color="darkcyan"),
             marker=dict(size=9),
             name="Lambda = 1E-5"))
-
+        
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "firebrick"),
             marker=dict(size=9),
             name="Lambda = 1E-3"))
-
+        
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "green"),
             marker=dict(size=9),
             name="Lambda = 0.1"))
-
+        
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "blue"),
             marker=dict(size=9),
             name="Lambda = 10"))
-
-
+        
+        
         fig.update_layout(
             font_family="Garamond",
             font_size=33,
@@ -394,27 +423,27 @@ def main(exercise):
             yaxis_title="Mean Squared Error",
             legend=dict(yanchor="top", xanchor="left", x=0.2, y=0.99)
             )
-
+        
         fig.show()
-
-        '''
-
-
+        
+        
+        
+        
         np.random.seed(123)
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
         poly = 7
-
+        
         MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
+        
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=np.log10(LAMBDA), y=MSE,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color="firebrick"),
             marker=dict(size=9),
             name="Testing data"))
-
-
+        
+        
         fig.update_layout(
             font_family="Garamond",
             font_size=33,
@@ -424,35 +453,29 @@ def main(exercise):
             legend=dict(yanchor="top", xanchor="center", x=0.01, y=0.99)
             )
         fig.show()
-
+        
         min_pos = np.argmin(MSE)
         min_lamb = LAMBDA[min_pos]
-
+        
         print("Minimum MSE: ", min(MSE))
         print("Optimal lambda: ", min_lamb)
-
-
-
-
-
-
+        '''
+        
     elif exercise == 5:
-
+    
         B_runs = 100
         reg_method = "Lasso"
         scaler = "none"
         k_fold = 0
-
-
-
+    
         #Plot MSE_test for 5 different lambdas
         dependency = "bias_variance"
-
+    
         poly = 10
-
+    
         deg_poly = [i for i in range(1, poly+1)]
-
-
+    
+    
         np.random.seed(123)
         MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, "OLS", 0, dependency)
         np.random.seed(123)
@@ -463,40 +486,40 @@ def main(exercise):
         MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.01, dependency)
         np.random.seed(123)
         MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
-
-
+    
+    
         fig = go.Figure()
-
+    
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "orange"),
             marker=dict(size=9),
             name="OLS"))
-
+    
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color="darkcyan"),
             marker=dict(size=9),
             name="Lambda = 1E-6"))
-
+    
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "firebrick"),
             marker=dict(size=9),
             name="Lambda = 1E-4"))
-
+    
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "green"),
             marker=dict(size=9),
             name="Lambda = 0.01"))
-
+    
         fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color = "blue"),
             marker=dict(size=9),
             name="Lambda = 0.1"))
-
+    
         fig.update_layout(
             font_family="Garamond",
             font_size=33,
@@ -505,30 +528,30 @@ def main(exercise):
             yaxis_title="Mean Squared Error",
             legend=dict(yanchor="top", xanchor="left", x=0.2, y=0.85)
             )
-
+    
         fig.show()
-
-
-
+        
+        
+        
         '''
-
+        
         np.random.seed(123)
-
+        
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
         poly = 7
         lamb = 0
-
+        
         MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
+        
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=np.log10(LAMBDA), y=MSE,
             mode='lines+markers',
             line=dict(dash='solid', width=4, color="firebrick"),
             marker=dict(size=9),
             name="Testing data"))
-
-
+        
+        
         fig.update_layout(
             font_family="Garamond",
             font_size=33,
@@ -538,17 +561,17 @@ def main(exercise):
             legend=dict(yanchor="top", xanchor="center", x=0.01, y=0.99)
             )
         fig.show()
-
+        
         min_pos = np.argmin(MSE)
         min_lamb = LAMBDA[min_pos]
-
+        
         print("Minimum MSE: ", min(MSE))
         print("Optimal lambda: ", min_lamb)
-
+        
         '''
 
 
-main(1)
+main(4)
 
 def terrain():
 
