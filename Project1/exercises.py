@@ -5,7 +5,7 @@ from functions import *
 #seed = 2018
 #rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-np.random.seed(2018)
+np.random.seed(123)
 
 
 
@@ -16,6 +16,8 @@ def main(exercise):
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
+    #x = np.random.rand(n)
+    #y = np.random.rand(n)
 
     x, y = np.meshgrid(x, y)
 
@@ -228,25 +230,37 @@ def main(exercise):
 
     elif exercise == 3:
         scaler = "scalerNone"
-        poly = 20
+        poly = 25
         k_fold = 5
         reg_method = "OLS"
         lamb = 0
         dependency = "bias_variance"
-        B_runs = 400
-        seed = int(time())#2018
+        B_runs = 100
+        #seed = int(time())#2018
+        seed = 123
         rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
+        #print("Starting CV, k=5")
+        mse_cv = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
+        #print("Starting CV, k=10")
+        mse_cv_ = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, lamb, rng, dependency)
+        #print("Starting Bootstrap")
 
-        mse_cv = CrossVal(x, y, z, scaler, poly, k_fold, reg_method, lamb, rng, dependency)
-        mse_cv_ = CrossVal(x, y, z, scaler, poly, 10, reg_method, lamb, rng, dependency)
-        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly-1, B_runs, reg_method, lamb, dependency)
+        #mse_cv_2 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 200, reg_method, lamb, rng, dependency)
+        np.random.seed(123)
+        #perm = rng.permutation(np.arange(0, 400))
 
-        # plt.plot(np.arange(1,poly+1), mse_cv, label="CV, kfold = 5")
-        # plt.plot(np.arange(1,poly+1), mse_cv_, label="CV, kfold = 10")
-        # plt.plot(np.arange(1,poly+1), MSE_test, label="BS")
-        # plt.legend()
+        MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
+        '''
+        #plt.plot(np.arange(0, poly+1), olss, label="ols")
+        plt.plot(np.arange(0,poly+1), mse_cv, label="CV, kfold = 5")
+        plt.plot(np.arange(0,poly+1), mse_cv_, label="CV, kfold = 10")
+        plt.plot(np.arange(0,poly+1), mse_cv_2, label="CV, kfold = 200")
+        #plt.plot(np.arange(0,poly+1), MSE_test, label="BS")
+        plt.legend()
+        plt.show()
+        '''
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=np.arange(1,poly+1), y=mse_cv,
@@ -266,7 +280,7 @@ def main(exercise):
             mode='lines+markers',
             line=dict(dash='solid', width=4),
             marker=dict(size=9),
-            name="Bootstrapping, b_runs = 400"))
+            name=f"Bootstrapping, b_runs = {B_runs}"))
 
         fig.update_layout(
             font_family="Garamond",
@@ -278,6 +292,7 @@ def main(exercise):
             )
         plot(fig)
         fig.show()
+
 
 
 
@@ -545,6 +560,8 @@ def main(exercise):
 
         '''
 
+    elif exercise == 4.5:
+
 
 
 
@@ -660,10 +677,7 @@ def main(exercise):
         print("Optimal lambda: ", min_lamb)
 
 
-main(1)
-
-
-#main(4.1)
+#main(3)
 
 def terrain(part):
 
@@ -1018,4 +1032,4 @@ def terrain(part):
 
 
 
-terrain("OLS_tradeoff")
+#terrain("OLS_tradeoff")

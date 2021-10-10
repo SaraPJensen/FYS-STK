@@ -117,7 +117,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     X = design_matrix(x, y, poly)
 
-    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2, random_state=2018)
+    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)#, random_state=2018)
 
     if dependency == "bias_variance":
 
@@ -208,43 +208,54 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
 
 
-def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependency=None):
+def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng, dependency=None):
 
-    X = design_matrix(x.ravel(),y.ravel(),poly)
-    mse_cv = np.zeros(poly)
+    X = design_matrix(x_flat, y_flat, poly)
+    mse_cv = np.zeros(poly+1)
     scaling = eval(scaler)
 
-    deg = 1
-    for i in range(poly):
+    deg = 0
+    #Permute the data
+    perm = rng.permutation(np.arange(0, X.shape[0]))
+    X_ = X[perm, :]
+    z_ = z_flat[perm]
+    for i in range(poly+1):
 
-        X_current_poly = X[:, :int((deg + 1) * (deg + 2) / 2)]
+        X_current_poly = X_[:, :int((deg + 1) * (deg + 2) / 2)]
 
 
         kfolds = KFold(n_splits=k_fold)
         scores_KFold = np.zeros(k_fold)
 
         #Permute the data
-        perm = rng.permuted(np.arange(0, X_current_poly.shape[0]))
-        X_current_poly = X_current_poly[perm, :]
-        z_ = z.ravel()[perm]
+        #perm = rng.permutation(np.arange(0, X_current_poly.shape[0]))
+        #X_current_poly = X_current_poly[perm, :]
+        #z_ = z_flat[perm]
 
         k = 0
         for train_inds, test_inds in kfolds.split(X_current_poly):
 
             X_train = X_current_poly[train_inds, :]
             z_train = z_[train_inds]
+            #z_train = z_flat[train_inds]
             X_test = X_current_poly[test_inds, :]
             z_test = z_[test_inds]
+            #z_test = z_flat[test_inds]
 
             #Scale the data
-            X_train_sc, X_test_sc, z_train_sc, z_test_sc = scaling(X_train, X_test, z_train, z_test)
+            #X_train_sc, X_test_sc, z_train_sc, z_test_sc = scaling(X_train, X_test, z_train, z_test)
 
             #OLS av X_train og z_train
-            betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + n_lambda * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
+            #betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + lamb * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
+            z_train_sc, z_test_sc, z_pred, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, i, plot=None)
 
-            z_tilde = X_test_sc @ betas
+            #z_tilde = X_test_sc @ betas
+            #print(f"polydeg : {deg}, k iter : {k}")
+            #print(f"CV predict shape : {z_tilde.shape}")
+            #print(f"CV test shape : {z_test.shape}")
+            
 
-            scores_KFold[k] = mean_squared_error(z_test_sc.ravel(), z_tilde.ravel())
+            scores_KFold[k] = mean_squared_error(z_test_sc, z_pred)
             k += 1
 
         mse_cv[i] = np.mean(scores_KFold)
