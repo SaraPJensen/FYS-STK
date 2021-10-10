@@ -8,6 +8,7 @@ from functions import *
 np.random.seed(123)
 
 
+
 def main(exercise):
     # Generate data
     n = 20
@@ -56,8 +57,6 @@ def main(exercise):
         print(f"R2, test: {r2_test:.5}")
         print('')
 
-
-
         '''
         scaler = StandardScaler()
         scaler.fit(X_train)
@@ -78,20 +77,21 @@ def main(exercise):
         n = len(X_train)    # Number of samples
 
         for i in range(k):
-            ste_beta[i] = noise * np.sqrt( np.linalg.pinv(X_train.T @ X_train)[i, i] )
+            ste_beta[i] = noise * np.sqrt((np.linalg.pinv(X_train.T @ X_train))[i, i])
             #print(ste_beta[i])
             width[i] = ste_beta[i] * 1.6499     # t-value for a = 0.1, df = 304 # n - (k+1)
 
+        #plt.figure(i)
         plt.scatter(np.arange(len(beta)), beta)
         plt.errorbar(np.arange(len(beta)), beta, xerr = 0, yerr = width, linestyle='')
 
         plt.title("90% Confidense Intervals for $\\beta_i$\nwith noise = " + str(noise) + "$\\mathcal{N}$(0, 1)")
         plt.xlabel("$i$")
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
-        plt.savefig("90CI_poly5.png")
+        #plt.savefig("90CI_poly5.png")
+
         plt.show()
         '''
-
 
     elif exercise == 2:
         '''
@@ -662,7 +662,10 @@ def main(exercise):
         print("Optimal lambda: ", min_lamb)
 
 
+
 main(2)
+
+
 
 
 #main(4.1)
