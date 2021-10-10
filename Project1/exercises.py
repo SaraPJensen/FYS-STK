@@ -8,6 +8,7 @@ from functions import *
 np.random.seed(2018)
 
 
+
 def main(exercise):
     # Generate data
     '''
@@ -26,11 +27,7 @@ def main(exercise):
     '''
 
     n = 20
-<<<<<<< HEAD
-    noise = 0.5
-=======
     noise = 0.15
->>>>>>> d09665c863ce8c96438e9a4945d304a832bfc94f
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -75,8 +72,6 @@ def main(exercise):
         print(f"R2, test: {r2_test:.5}")
         print('')
 
-        
-
         '''
         scaler = StandardScaler()
         scaler.fit(X_train)
@@ -95,20 +90,23 @@ def main(exercise):
         a = 0.10            # 100(1-a)% CI
         n = len(X_train)    # Number of samples
         
+        #ste_beta = noise * np.sqrt(np.diag(np.linalg.pinv(X_train.T @ X_train)))
+        #width = 2* ste_beta
         for i in range(k):
-            ste_beta[i] = noise * np.sqrt( np.linalg.pinv(X_train.T @ X_train)[i, i] )
+            ste_beta[i] = noise * np.sqrt((np.linalg.pinv(X_train.T @ X_train))[i, i])
             #print(ste_beta[i])
             width[i] = ste_beta[i] * 1.6499     # t-value for a = 0.1, df = 304 # n - (k+1)
 
+        #plt.figure(i)
         plt.scatter(np.arange(len(beta)), beta)
         plt.errorbar(np.arange(len(beta)), beta, xerr = 0, yerr = width, linestyle='')
 
         plt.title("90% Confidense Intervals for $\\beta_i$\nwith noise = " + str(noise) + "$\\mathcal{N}$(0, 1)")
         plt.xlabel("$i$")
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
-        plt.savefig("90CI_poly5.png")
+        #plt.savefig("90CI_poly5.png")
+    
         plt.show()
-
 
     elif exercise == 2:
         '''
@@ -580,7 +578,7 @@ def main(exercise):
         '''
 
 
-main(4)
+main(1)
 
 def terrain():
 
