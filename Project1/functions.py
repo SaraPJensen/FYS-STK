@@ -117,7 +117,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     X = design_matrix(x, y, poly)
 
-    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2, random_state=2018)
+    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
 
     if dependency == "bias_variance":
 
@@ -173,7 +173,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        n_lambdas = 200
+        n_lambdas = 20
         lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
 
         MSE = []

@@ -5,13 +5,13 @@ from functions import *
 #seed = 2018
 #rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-np.random.seed(2018)
+np.random.seed(123)
 
 
 def main(exercise):
     # Generate data
     n = 20
-    noise = 0.5
+    noise = 0.15
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -28,8 +28,8 @@ def main(exercise):
         '''
         Exercise 1
         '''
-        poly = 5
-        scaler = "scalerRobust"
+        poly = 15
+        scaler = "none"
         lamb = 0
 
         X = design_matrix(x_flat, y_flat, poly)
@@ -37,7 +37,7 @@ def main(exercise):
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 
         #Plot the graph
-        ThreeD_plot(x, y, z, "Function")
+        ThreeD_plot(x, y, z, "Franke function with low noise")
 
         #Plot prediction and calculate errors
         z_train_scaled, z_test_scaled, z_predict, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, "plot_prediction")
@@ -67,6 +67,7 @@ def main(exercise):
         z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
         #print(np.shape(z_train_sc))
         '''
+        '''
         beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
         #print(beta)
         k = len(beta)       # number of parameters
@@ -89,6 +90,7 @@ def main(exercise):
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
         plt.savefig("90CI_poly5.png")
         plt.show()
+        '''
 
 
     elif exercise == 2:
@@ -100,7 +102,7 @@ def main(exercise):
         lamb = 0
         B_runs = 1
         k_fold = 0
-        poly = 20
+        poly = 25
         dependency = "bias_variance"
 
 
@@ -660,6 +662,7 @@ def main(exercise):
         print("Optimal lambda: ", min_lamb)
 
 
+main(2)
 
 
 #main(4.1)
@@ -670,8 +673,8 @@ def terrain(part):
     terrain1 = imread("SRTM_data_Norway_1.tif")
     #Dimensions of entire image: 3601 x 1801
 
-    N = 200
-    start = 2100
+    N = 100
+    start = 2200
     end = start + N
     poly = 5
     terrain = terrain1[start:end, :N]
@@ -702,7 +705,7 @@ def terrain(part):
         MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
 
-        deg_poly = [i for i in range(1, poly+1)]
+        deg_poly = [i for i in range(5, poly+1)]
 
         min_pos = np.argmin(MSE_test)
         min_poly = deg_poly[min_pos]
@@ -736,7 +739,7 @@ def terrain(part):
              title=f"Bias-variance tradeoff for terrain data using {reg_method} regression",
              xaxis_title="Degrees of polynomial",
              yaxis_title="",
-             legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
+             legend=dict(yanchor="top", xanchor="left", x=0.85, y=0.99)
              )
         fig.show()
 
@@ -745,25 +748,31 @@ def terrain(part):
         #look at dependency on lambda
         dependency = "bias_variance"
         scaler = "minmax"
-        poly = 10
-        B_runs = 100
-        reg_method = "RIDGE"
+        poly = 20
+        B_runs = 10
+        reg_method = "Ridge"
         dependency = "bias_variance"
 
 
-        deg_poly = [i for i in range(1, poly+1)]
+        '''
+        deg_poly = [i for i in range(5, poly+1)]
 
         #Plot MSE_test for 5 different lambdas
         np.random.seed(123)
         MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
+        print("0")
         np.random.seed(123)
         MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.00001, dependency)
+        print("0.000001")
         np.random.seed(123)
         MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.001, dependency)
+        print("0.001")
         np.random.seed(123)
         MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
+        print("0.1")
         np.random.seed(123)
         MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 10, dependency)
+        print("10")
 
 
         fig = go.Figure()
@@ -806,17 +815,18 @@ def terrain(part):
             title=f"MSE as a function of complexity for {reg_method} regression",
             xaxis_title="Degrees of polynomial",
             yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.2, y=0.99)
+            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
             )
 
         fig.show()
 
-
+        '''
 
         np.random.seed(123)
+        lamb = 0
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
-        poly = 7
+        poly = 25
 
         MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
 
@@ -845,11 +855,11 @@ def terrain(part):
         print("Optimal lambda: ", min_lamb)
 
 
+
     if part == "Ridge_contour":
         #find the optimal combination of lambda and poly
 
-
-        poly = 10
+        poly = 15
         reg_method = "Ridge"
         scaler = "minmax"
         #scaler = "none"
@@ -859,11 +869,12 @@ def terrain(part):
 
 
         lambdas = 10
-        lambdas_ = np.logspace(-10,0,lambdas)
+        lambdas_ = np.logspace(-7,2,lambdas)
 
         #np.random.seed(123)
         mse = np.zeros((poly, lambdas))
         for p in range(poly):
+            print("Poly: ", p)
             for l, lamb in enumerate(lambdas_):
                 _, mse_temp , _, _ = Bootstrap(x_flat, y_flat, z_flat, scaler, p, B_runs, reg_method, lamb, dependency)
                 mse[p, l] = np.mean(mse_temp)
@@ -890,6 +901,79 @@ def terrain(part):
         plt.show()
 
 
+    if part == "Lasso":
+
+        B_runs = 100
+        reg_method = "Lasso"
+        scaler = "minmax"
+        k_fold = 0
+
+
+
+        #Plot MSE_test for 5 different lambdas
+        dependency = "bias_variance"
+
+        poly = 20
+
+        deg_poly = [i for i in range(5, poly+1)]
+
+        np.random.seed(123)
+        MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, "OLS", 0, dependency)
+        print("0")
+        np.random.seed(123)
+        MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.000001, dependency)
+        print("1E-6")
+        np.random.seed(123)
+        MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.0001, dependency)
+        print("1E-4")
+        np.random.seed(123)
+        MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.01, dependency)
+        np.random.seed(123)
+        MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
+
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color = "orange"),
+            marker=dict(size=9),
+            name="OLS"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color="darkcyan"),
+            marker=dict(size=9),
+            name="Lambda = 1E-6"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color = "firebrick"),
+            marker=dict(size=9),
+            name="Lambda = 1E-4"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color = "green"),
+            marker=dict(size=9),
+            name="Lambda = 0.01"))
+
+        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
+            mode='lines+markers',
+            line=dict(dash='solid', width=4, color = "blue"),
+            marker=dict(size=9),
+            name="Lambda = 0.1"))
+
+        fig.update_layout(
+            font_family="Garamond",
+            font_size=33,
+            title=f"MSE as a function of complexity for {reg_method} regression",
+            xaxis_title="Degrees of polynomial",
+            yaxis_title="Mean Squared Error",
+            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
+            )
+
+        fig.show()
 
 
 
@@ -897,15 +981,17 @@ def terrain(part):
 
 
     if part == "plots":
-        ThreeD_plot(x_mesh, y_mesh, z, "Terreng")
 
+        ThreeD_plot(x_mesh, y_mesh, z, "Terrain")
 
         # Show the terrain
         plt.figure()
         plt.title("Terrain over Norway 1")
         plt.imshow(terrain, cmap="gray")
-        plt.xlabel("X")
-        plt.ylabel("Y")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.zlabel("z")
+        plt.legend()
         plt.show()
 
 
@@ -1014,7 +1100,4 @@ def terrain(part):
 
 
 
-
-
-
-terrain("OLS_tradeoff")
+#terrain("Ridge_lambda")
