@@ -37,32 +37,32 @@ def design_matrix(x_flat, y_flat, poly):
     return X
 
 
-# def scaling(X_train, X_test, z_train, z_test, scaler):
+def scaling(X_train, X_test, z_train, z_test, scaler):
 
-#     if scaler == "standard" :
-#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerStandard(X_train, X_test, z_train, z_test)
+    if scaler == "standard" :
+         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerStandard(X_train, X_test, z_train, z_test)
 
-#     elif scaler == "minmax" :
-#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMinMax(X_train, X_test, z_train, z_test)
+    elif scaler == "minmax" :
+         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMinMax(X_train, X_test, z_train, z_test)
 
-#     elif scaler == "normalise" :
-#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerNormalizer(X_train, X_test, z_train, z_test)
+    elif scaler == "mean" :
+         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerMean(X_train, X_test, z_train, z_test)
 
-#     elif scaler == "robust" :
-#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerRobust(X_train, X_test, z_train, z_test)
+    elif scaler == "robust" :
+         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scalerRobust(X_train, X_test, z_train, z_test)
 
-#     else:
-#         X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = X_train, X_test, z_train, z_test
+    else:
+        X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = X_train, X_test, z_train, z_test
 
 
-#     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
+    return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
 
 
 def OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot):    #Gjør Ridge, hvis lambda != 0
 
-    scaling = eval(scaler)
-    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test)
+    #scaling = eval(scaler)
+    X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
     I = np.eye(len(X_train_scaled[0,:]))
 
@@ -102,7 +102,7 @@ def Lasso(X_train, X_test, z_train, z_test, scaler, lamb, poly, plot = False):
 
     X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled = scaling(X_train, X_test, z_train, z_test, scaler)
 
-    RegLasso = linear_model.Lasso(lamb, tol=3e-1, max_iter=1e6)   #tol=1e-1, max_iter=1e7
+    RegLasso = linear_model.Lasso(lamb, tol=4e-1, max_iter=1e6)   #tol=1e-1, max_iter=1e7
 
     RegLasso.fit(X_train_scaled, z_train_scaled)
 
@@ -117,7 +117,6 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     X = design_matrix(x, y, poly)
 
-    #np.random.seed(123)   #make sure we use the same split of the design matrix for each lambda
     X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2, random_state=2018)
 
     if dependency == "bias_variance":
@@ -175,7 +174,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
     elif dependency == "lambda":
 
         n_lambdas = 200
-        lambdas = np.logspace(-10, 1, n_lambdas)   #list of values
+        lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
 
         MSE = []
         LAMBDA = []
@@ -214,16 +213,16 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependenc
     X = design_matrix(x.ravel(),y.ravel(),poly)
     mse_cv = np.zeros(poly)
     scaling = eval(scaler)
-    
+
     deg = 1
-    for i in range(poly): 
+    for i in range(poly):
 
         X_current_poly = X[:, :int((deg + 1) * (deg + 2) / 2)]
 
 
         kfolds = KFold(n_splits=k_fold)
         scores_KFold = np.zeros(k_fold)
-        
+
         #Permute the data
         perm = rng.permuted(np.arange(0, X_current_poly.shape[0]))
         X_current_poly = X_current_poly[perm, :]
@@ -236,7 +235,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependenc
             z_train = z_[train_inds]
             X_test = X_current_poly[test_inds, :]
             z_test = z_[test_inds]
-            
+
             #Scale the data
             X_train_sc, X_test_sc, z_train_sc, z_test_sc = scaling(X_train, X_test, z_train, z_test)
 
@@ -247,7 +246,7 @@ def CrossVal(x, y, z, scaler, poly, k_fold, reg_method, n_lambda, rng, dependenc
 
             scores_KFold[k] = mean_squared_error(z_test_sc.ravel(), z_tilde.ravel())
             k += 1
-            
+
         mse_cv[i] = np.mean(scores_KFold)
         deg += 1
 
