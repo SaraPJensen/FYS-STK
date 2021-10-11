@@ -224,7 +224,7 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
     perm = rng.permutation(np.arange(0, X.shape[0]))
     X_ = X[perm, :]
     z_ = z_flat[perm]
-    for i in range(poly+1):
+    for p in range(poly+1):
 
         X_current_poly = X_[:, :int((deg + 1) * (deg + 2) / 2)]
 
@@ -252,7 +252,7 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
 
             #OLS av X_train og z_train
             #betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + lamb * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
-            z_train_sc, z_test_sc, z_pred, z_model = REGFUNC(X_train, X_test, z_train, z_test, scaler, lamb, i, plot=None)
+            z_train_sc, z_test_sc, z_pred, z_model = REGFUNC(X_train, X_test, z_train, z_test, scaler, lamb, p, plot=None)
 
             #z_tilde = X_test_sc @ betas
             #print(f"polydeg : {deg}, k iter : {k}")
@@ -263,7 +263,7 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
             scores_KFold[k] = mean_squared_error(z_test_sc, z_pred)
             k += 1
 
-        mse_cv[i] = np.mean(scores_KFold)
+        mse_cv[p] = np.mean(scores_KFold)
         deg += 1
 
     return mse_cv

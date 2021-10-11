@@ -1,0 +1,5 @@
+Max Poly: 25
+n_lambdas: 50
+Bootstrap iterations: 100
+Scaler: scalerNone
+Regression method: Lasso
