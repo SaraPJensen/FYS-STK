@@ -126,7 +126,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
         Bias = []
         Variance = []
 
-        for degree in range(0, poly+1):
+        for degree in range(5, poly+1):
 
             n = int((degree + 1)*(degree + 2)/2) + 1
 
@@ -217,47 +217,32 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
 
     X = design_matrix(x_flat, y_flat, poly)
     mse_cv = np.zeros(poly+1)
-    scaling = eval(scaler)
+    #scaling = eval(scaler)
 
     deg = 0
     #Permute the data
     perm = rng.permutation(np.arange(0, X.shape[0]))
     X_ = X[perm, :]
     z_ = z_flat[perm]
-    for p in range(poly+1):
-
-        X_current_poly = X_[:, :int((deg + 1) * (deg + 2) / 2)]
+    
+    for p in range(5, poly+1):
+        
+        X_current_poly = X_[:, :int((p + 1) * (p + 2) / 2)]
 
 
         kfolds = KFold(n_splits=k_fold)
         scores_KFold = np.zeros(k_fold)
 
-        #Permute the data
-        #perm = rng.permutation(np.arange(0, X_current_poly.shape[0]))
-        #X_current_poly = X_current_poly[perm, :]
-        #z_ = z_flat[perm]
-
+     
         k = 0
         for train_inds, test_inds in kfolds.split(X_current_poly):
 
             X_train = X_current_poly[train_inds, :]
             z_train = z_[train_inds]
-            #z_train = z_flat[train_inds]
             X_test = X_current_poly[test_inds, :]
             z_test = z_[test_inds]
-            #z_test = z_flat[test_inds]
 
-            #Scale the data
-            #X_train_sc, X_test_sc, z_train_sc, z_test_sc = scaling(X_train, X_test, z_train, z_test)
-
-            #OLS av X_train og z_train
-            #betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + lamb * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
             z_train_sc, z_test_sc, z_pred, z_model = REGFUNC(X_train, X_test, z_train, z_test, scaler, lamb, p, plot=None)
-
-            #z_tilde = X_test_sc @ betas
-            #print(f"polydeg : {deg}, k iter : {k}")
-            #print(f"CV predict shape : {z_tilde.shape}")
-            #print(f"CV test shape : {z_test.shape}")
             
 
             scores_KFold[k] = mean_squared_error(z_test_sc, z_pred)
@@ -265,6 +250,26 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
 
         mse_cv[p] = np.mean(scores_KFold)
         deg += 1
+        
+    if dependency == "lambda":
+        X = design_matrix(x_flat, y_flat, poly)
+        perm = rng.permutation(np.arange(0, X.shape[0]))
+        X_ = X[perm, :]
+        z_ = z_flat[perm]
+        kfolds = KFold(n_splits=k_fold)
+        scores_KFold = np.zeros(k_fold)
+        k = 0
+        for train_inds, test_inds in kfolds.split(X_):
+            X_train = X_[train_inds, :]
+            z_train = z_[train_inds]
+            X_test = X_[test_inds, :]
+            z_test = z_[test_inds]
+
+            z_train_sc, z_test_sc, z_pred, z_model = REGFUNC(X_train, X_test, z_train, z_test, scaler, lamb, p, plot=None)
+            
+            scores_KFold[k] = mean_squared_error(z_test_sc, z_pred)
+            k += 1
+        return np.mean(scores_KFold)
 
     return mse_cv
 
