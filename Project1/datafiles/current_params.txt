@@ -2,5 +2,5 @@ Max Poly: 20
 n_lambdas: 50
 Bootstrap iterations: 100
 Scaler: scalerNone
-Regression method: Lasso
+Regression method: Ridge
 Noise: 0.5

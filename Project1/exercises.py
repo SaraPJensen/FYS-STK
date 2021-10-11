@@ -12,7 +12,7 @@ np.random.seed(2018)
 def main(exercise, write_data = False):
     # Generate data
     n = 20
-    noise = 0.05
+    noise = 0.5
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -564,7 +564,7 @@ def main(exercise, write_data = False):
         print("Comparison of the Ridge regession started.")
 
         scaler = "scalerNone"
-        poly = 25
+        poly = 20
         k_fold = 5
         reg_method = "Ridge"
         dependency = "bias_variance"
@@ -594,21 +594,21 @@ def main(exercise, write_data = False):
             np.random.seed(123)
             #perm = rng.permutation(np.arange(0, 400))
 
-            MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
+            #MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
 
             cv5[i, :] = mse_cv5
             cv10[i, :] = mse_cv10
-            boot[i, :] = MSE_test
+            #boot[i, :] = MSE_test
 
 
         print("Lambda loop completed.")
 
         if write_data == True:
             with open("datafiles/current_params.txt", "w") as file:
-                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}")
+                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}\nNoise: {noise}")
             np.savetxt("datafiles/ex4_cv5.csv", cv5, delimiter = ',')
             np.savetxt("datafiles/ex4_cv10.csv", cv10, delimiter = ',')
-            np.savetxt("datafiles/ex4_boot.csv", boot, delimiter = ',')
+            #np.savetxt("datafiles/ex4_boot.csv", boot, delimiter = ',')
             print("Datafiles written/overwritten.")
         '''
         #plt.plot(np.arange(0, poly+1), olss, label="ols")
@@ -636,7 +636,7 @@ def main(exercise, write_data = False):
         print("Comparison of the Lasso regession started.")
 
         scaler = "scalerNone"
-        poly = 25
+        poly = 20
         k_fold = 5
         reg_method = "Lasso"
         dependency = "bias_variance"
@@ -666,21 +666,21 @@ def main(exercise, write_data = False):
             np.random.seed(123)
             #perm = rng.permutation(np.arange(0, 400))
 
-            MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
+            #MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
 
             cv5[i, :] = mse_cv5
             cv10[i, :] = mse_cv10
-            boot[i, :] = MSE_test
+            #boot[i, :] = MSE_test
 
 
         print("Lambda loop completed.")
 
         if write_data == True:
             with open("datafiles/ex5_current_params.txt", "w") as file:
-                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}")
+                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}\nNoise: {noise}")
             np.savetxt("datafiles/ex5_cv5.csv", cv5, delimiter = ',')
             np.savetxt("datafiles/ex5_cv10.csv", cv10, delimiter = ',')
-            np.savetxt("datafiles/ex5_boot.csv", boot, delimiter = ',')
+            #np.savetxt("datafiles/ex5_boot.csv", boot, delimiter = ',')
             print("Datafiles written/overwritten.")
         '''
         #plt.plot(np.arange(0, poly+1), olss, label="ols")
@@ -732,22 +732,27 @@ def main(exercise, write_data = False):
     elif exercise == "plot":
         
         for ex in ["ex4", "ex5"]:
+            if ex == "ex4":
+                print("\nExercise 4: Ridge Regression")
+            if ex == "ex5":
+                print("\nExercise 5: Lasso Regression")
+
             cv5 = np.loadtxt(f"datafiles/{ex}_cv5.csv", delimiter = ',')
             cv10 = np.loadtxt(f"datafiles/{ex}_cv10.csv", delimiter = ',')
             boot = np.loadtxt(f"datafiles/{ex}_boot.csv", delimiter = ',')
 
-            for method in ["cv5", "cv10", "boot"]:
+            for method in ["cv5", "cv10"]:#, "boot"]:
                 result = eval(method)
                 minarg = np.argmin(result)
                 minarg = np.unravel_index(minarg, result.shape)
                 #print(minarg)
                 min_val = result[minarg]
 
-                print(f"Minimum {method}, poly : {minarg[1]}, lambda : {minarg[0]}")
-                print("min value: ", min_val)
-
-                x_ax = np.linspace(0, 25, result.shape[1])
+                x_ax = np.linspace(0, 20, result.shape[1])
                 y_ax = np.linspace(-5, 1, result.shape[0])
+
+                print(f"Minimum {method}, poly : {x_ax[minarg[1]]}, lambda : {np.exp(y_ax[minarg[0]])}")
+                print("min value: ", min_val)
 
                 plt.scatter(x_ax[minarg[1]], y_ax[minarg[0]], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
                 plt.pcolormesh(x_ax, y_ax, result)
@@ -775,7 +780,7 @@ def main(exercise, write_data = False):
                 plt.show()
 
 
-main("plot", write_data = False)
+main("plot", write_data = True)
 
 def terrain(part):
 
