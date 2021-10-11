@@ -12,7 +12,9 @@ np.random.seed(2018)
 def main(exercise, write_data = False):
     # Generate data
     n = 20
-    noise = 0.5
+
+    noise = 0.05
+
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -31,7 +33,7 @@ def main(exercise, write_data = False):
         '''
         Exercise 1
         '''
-        poly = 15
+        poly = 5
         scaler = "none"
         lamb = 0
 
@@ -68,7 +70,6 @@ def main(exercise, write_data = False):
         z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
         #print(np.shape(z_train_sc))
         '''
-        '''
         beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
         #print(beta)
         k = len(beta)       # number of parameters
@@ -90,10 +91,9 @@ def main(exercise, write_data = False):
         plt.title("90% Confidense Intervals for $\\beta_i$\nwith noise = " + str(noise) + "$\\mathcal{N}$(0, 1)")
         plt.xlabel("$i$")
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
-        #plt.savefig("90CI_poly5.png")
+        plt.savefig(f"90CI_poly5_noise{noise}.png")
 
         plt.show()
-        '''
 
     elif exercise == 2:
         '''
@@ -748,8 +748,11 @@ def main(exercise, write_data = False):
                 print(f"Minimum {method}, poly : {minarg[1]}, lambda : {minarg[0]}")
                 print("min value: ", min_val)
 
-                plt.scatter(minarg[1], minarg[0], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
-                plt.pcolormesh(result)
+                x_ax = np.linspace(0, 25, result.shape[1])
+                y_ax = np.linspace(-5, 1, result.shape[0])
+
+                plt.scatter(x_ax[minarg[1]], y_ax[minarg[0]], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
+                plt.pcolormesh(x_ax, y_ax, result)
                 #plt.contourf(result)       # Nicer looking, but less informative
                 plt.colorbar() 
 
@@ -768,6 +771,7 @@ def main(exercise, write_data = False):
                 plt.legend()
                 plt.xlabel("Polynomial degree")
                 plt.ylabel("$\log{\lambda}$")
+                #plt.yticks(y_ticks)
 
                 plt.savefig(f"datafiles/{ex}{method}compare.png")
                 plt.show()
