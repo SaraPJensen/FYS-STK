@@ -737,9 +737,9 @@ def main(exercise, write_data = False):
             if ex == "ex5":
                 print("\nExercise 5: Lasso Regression")
 
-            cv5 = np.loadtxt(f"datafiles/{ex}_cv5.csv", delimiter = ',')
-            cv10 = np.loadtxt(f"datafiles/{ex}_cv10.csv", delimiter = ',')
-            boot = np.loadtxt(f"datafiles/{ex}_boot.csv", delimiter = ',')
+            cv5 = np.loadtxt(f"datafiles-noise005/{ex}_cv5.csv", delimiter = ',')
+            cv10 = np.loadtxt(f"datafiles-noise005/{ex}_cv10.csv", delimiter = ',')
+            boot = np.loadtxt(f"datafiles-noise005/{ex}_boot.csv", delimiter = ',')
 
             for method in ["cv5", "cv10"]:#, "boot"]:
                 result = eval(method)
@@ -751,7 +751,9 @@ def main(exercise, write_data = False):
                 x_ax = np.linspace(0, 20, result.shape[1])
                 y_ax = np.linspace(-5, 1, result.shape[0])
 
-                print(f"Minimum {method}, poly : {x_ax[minarg[1]]}, lambda : {np.exp(y_ax[minarg[0]])}")
+                lambdas = np.logspace(-5, 1, 50)
+
+                print(f"Minimum {method}, poly : {x_ax[minarg[1]]}, lambda : {lambdas[minarg[0]]}")
                 print("min value: ", min_val)
 
                 plt.scatter(x_ax[minarg[1]], y_ax[minarg[0]], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
@@ -776,7 +778,7 @@ def main(exercise, write_data = False):
                 plt.ylabel("$\log{\lambda}$")
                 #plt.yticks(y_ticks)
 
-                plt.savefig(f"datafiles/{ex}{method}compare.png")
+                #plt.savefig(f"datafiles/{ex}{method}compare.png")
                 plt.show()
 
 
