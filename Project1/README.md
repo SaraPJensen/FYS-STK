@@ -1,5 +1,5 @@
 # FYS-STK
 
-##Regression analysis and resampling methods.
+## Regression analysis and resampling methods.
 
 
