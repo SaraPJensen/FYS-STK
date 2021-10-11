@@ -117,11 +117,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     X = design_matrix(x, y, poly)
 
-<<<<<<< HEAD
     X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)#, random_state=2018)
-=======
-    X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z, test_size = 0.2)
->>>>>>> 8e31a197ff090e88570d9f9c1e1af3fbb36d827d
 
     if dependency == "bias_variance":
 
@@ -177,7 +173,7 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
     elif dependency == "lambda":
 
-        n_lambdas = 20
+        n_lambdas = 200
         lambdas = np.logspace(-10, 5, n_lambdas)   #list of values
 
         MSE = []
@@ -213,6 +209,11 @@ def Bootstrap(x, y, z, scaler, poly, B_runs, reg_method, lamb, dependency):
 
 
 def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng, dependency=None):
+
+    if reg_method == "OLS" or reg_method == "Ridge":
+        REGFUNC = OLS_Ridge
+    elif reg_method == "Lasso":
+        REGFUNC = Lasso
 
     X = design_matrix(x_flat, y_flat, poly)
     mse_cv = np.zeros(poly+1)
@@ -251,7 +252,7 @@ def CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, lamb, rng
 
             #OLS av X_train og z_train
             #betas = np.linalg.pinv(X_train_sc.T @ X_train_sc + lamb * np.eye(X_train_sc.shape[1])) @ X_train_sc.T @ z_train_sc
-            z_train_sc, z_test_sc, z_pred, z_model = OLS_Ridge(X_train, X_test, z_train, z_test, scaler, lamb, i, plot=None)
+            z_train_sc, z_test_sc, z_pred, z_model = REGFUNC(X_train, X_test, z_train, z_test, scaler, lamb, i, plot=None)
 
             #z_tilde = X_test_sc @ betas
             #print(f"polydeg : {deg}, k iter : {k}")

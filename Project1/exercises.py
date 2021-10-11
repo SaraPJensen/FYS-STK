@@ -9,7 +9,7 @@ np.random.seed(123)
 
 
 
-def main(exercise):
+def main(exercise, write_data = False):
     # Generate data
     n = 20
     noise = 0.15
@@ -562,7 +562,66 @@ def main(exercise):
 
         '''
 
-    elif exercise == 4.5:
+    elif exercise == 4.5:       # Ridge
+        print("Comparison of the Ridge regession started.")
+
+        scaler = "scalerNone"
+        poly = 25
+        k_fold = 5
+        reg_method = "Ridge"
+        dependency = "bias_variance"
+        B_runs = 100
+        #seed = int(time())#2018
+        seed = 123
+        rng = np.random.default_rng(np.random.MT19937(seed=seed))
+
+        n_lambdas = 50
+        ls = np.logspace(-5, 1, n_lambdas)
+        
+        cv5 = np.zeros((n_lambdas, poly+1))
+        cv10 = np.zeros((n_lambdas, poly+1))
+        boot = np.zeros((n_lambdas, poly+1))
+
+        print("Completed necessary initializations.")
+
+        for i, l in enumerate(ls):
+            print(f"Iteration {i+1}/{n_lambdas}, lambda = {l}")
+            #print("Starting CV, k=5")
+            mse_cv5 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, l, rng)
+            #print("Starting CV, k=10")
+            mse_cv10 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, l, rng)
+            #print("Starting Bootstrap")
+
+            #mse_cv_2 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 200, reg_method, lamb, rng, dependency)
+            np.random.seed(123)
+            #perm = rng.permutation(np.arange(0, 400))
+
+            MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
+
+            cv5[i, :] = mse_cv5
+            cv10[i, :] = mse_cv10
+            boot[i, :] = MSE_test
+
+
+        print("Lambda loop completed.")
+
+        if write_data == True:
+            with open("datafiles/current_params.txt", "w") as file:
+                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}")
+            np.savetxt("datafiles/ex4_cv5.csv", cv5, delimiter = ',')
+            np.savetxt("datafiles/ex4_cv10.csv", cv10, delimiter = ',')
+            np.savetxt("datafiles/ex4_boot.csv", boot, delimiter = ',')
+            print("Datafiles written/overwritten.")
+        '''
+        #plt.plot(np.arange(0, poly+1), olss, label="ols")
+        plt.plot(np.arange(0,poly+1), mse_cv, label="CV, kfold = 5")
+        plt.plot(np.arange(0,poly+1), mse_cv_, label="CV, kfold = 10")
+        plt.plot(np.arange(0,poly+1), mse_cv_2, label="CV, kfold = 200")
+        #plt.plot(np.arange(0,poly+1), MSE_test, label="BS")
+        plt.legend()
+        plt.show()
+        '''
+        print("Task ended succesfully.")
 
 
 
@@ -679,12 +738,7 @@ def main(exercise):
         print("Optimal lambda: ", min_lamb)
 
 
-main(2)
-
-
-
-
-#main(4.1)
+main(4.5, write_data = True)
 
 def terrain(part):
 
