@@ -5,14 +5,14 @@ from functions import *
 #seed = 2018
 #rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-np.random.seed(123)
+np.random.seed(2018)
 
 
 
 def main(exercise, write_data = False):
     # Generate data
     n = 20
-    noise = 0.15
+    noise = 0.05
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -31,7 +31,7 @@ def main(exercise, write_data = False):
         '''
         Exercise 1
         '''
-        poly = 15
+        poly = 5
         scaler = "none"
         lamb = 0
 
@@ -68,7 +68,6 @@ def main(exercise, write_data = False):
         z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
         #print(np.shape(z_train_sc))
         '''
-        '''
         beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
         #print(beta)
         k = len(beta)       # number of parameters
@@ -90,10 +89,9 @@ def main(exercise, write_data = False):
         plt.title("90% Confidense Intervals for $\\beta_i$\nwith noise = " + str(noise) + "$\\mathcal{N}$(0, 1)")
         plt.xlabel("$i$")
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
-        #plt.savefig("90CI_poly5.png")
+        plt.savefig(f"90CI_poly5_noise{noise}.png")
 
         plt.show()
-        '''
 
     elif exercise == 2:
         '''
@@ -773,7 +771,7 @@ def main(exercise, write_data = False):
                 plt.show()
 
 
-main("plot", write_data = False)
+main(1, write_data = False)
 
 def terrain(part):
 
