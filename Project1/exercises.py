@@ -746,8 +746,11 @@ def main(exercise, write_data = False):
                 print(f"Minimum {method}, poly : {minarg[1]}, lambda : {minarg[0]}")
                 print("min value: ", min_val)
 
-                plt.scatter(minarg[1], minarg[0], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
-                plt.pcolormesh(result)
+                x_ax = np.linspace(0, 25, result.shape[1])
+                y_ax = np.linspace(-5, 1, result.shape[0])
+
+                plt.scatter(x_ax[minarg[1]], y_ax[minarg[0]], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
+                plt.pcolormesh(x_ax, y_ax, result)
                 #plt.contourf(result)       # Nicer looking, but less informative
                 plt.colorbar() 
 
@@ -766,12 +769,13 @@ def main(exercise, write_data = False):
                 plt.legend()
                 plt.xlabel("Polynomial degree")
                 plt.ylabel("$\log{\lambda}$")
+                #plt.yticks(y_ticks)
 
                 plt.savefig(f"datafiles/{ex}{method}compare.png")
                 plt.show()
 
 
-main(1, write_data = False)
+main("plot", write_data = False)
 
 def terrain(part):
 
