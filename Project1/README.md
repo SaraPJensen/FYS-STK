@@ -21,7 +21,7 @@ Exercises 1-5 can be ran by calling
 ```
 main(x, writeData)
 ```
-where x is an integer corresponding to the exercise, and writeData is a boolean value used by exercise 4 and 5. Exercise 4 and 5 will make datafiles is writeData is set to true. This data can be plotted by calling
+where x is an integer corresponding to the exercise, and writeData is a boolean value used by exercise 4 and 5. Exercise 4 and 5 will make datafiles if writeData is set to true. This data can be plotted by calling
 ```
 main("plot", False)
 ```
