@@ -5,14 +5,17 @@ from functions import *
 #seed = 2018
 #rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-np.random.seed(123)
+np.random.seed(2018)
 
 
 
 def main(exercise, write_data = False):
     # Generate data
     n = 20
-    noise = 0.15
+
+    noise = 0.5
+
+
 
     x = np.arange(0,1,1/n)
     y = np.arange(0,1,1/n)
@@ -31,7 +34,7 @@ def main(exercise, write_data = False):
         '''
         Exercise 1
         '''
-        poly = 15
+        poly = 5
         scaler = "none"
         lamb = 0
 
@@ -68,7 +71,6 @@ def main(exercise, write_data = False):
         z_train_sc = scaler.fit_transform(z_train.reshape(-1, 1))
         #print(np.shape(z_train_sc))
         '''
-        '''
         beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
         #print(beta)
         k = len(beta)       # number of parameters
@@ -90,10 +92,9 @@ def main(exercise, write_data = False):
         plt.title("90% Confidense Intervals for $\\beta_i$\nwith noise = " + str(noise) + "$\\mathcal{N}$(0, 1)")
         plt.xlabel("$i$")
         plt.ylabel("$\hat{\\beta}_i \pm t_{\\alpha/2, n-(k+1)} \cdot s_{\hat{\\beta}_i}$")
-        #plt.savefig("90CI_poly5.png")
+        plt.savefig(f"90CI_poly5_noise{noise}.png")
 
         plt.show()
-        '''
 
     elif exercise == 2:
         '''
@@ -232,12 +233,12 @@ def main(exercise, write_data = False):
 
     elif exercise == 3:
         scaler = "scalerNone"
-        poly = 25
+        poly = 20
         k_fold = 5
         reg_method = "OLS"
         lamb = 0
         dependency = "bias_variance"
-        B_runs = 100
+        B_runs = 400
         #seed = int(time())#2018
         seed = 123
         rng = np.random.default_rng(np.random.MT19937(seed=seed))
@@ -286,7 +287,7 @@ def main(exercise, write_data = False):
 
         fig.update_layout(
             font_family="Garamond",
-            font_size=33,
+            font_size=50,
             title=f"Mean squared error as a function of complexity for {reg_method} regression",
             xaxis_title="Degree of polynomial",
             yaxis_title="Mean Squared Error",
@@ -566,7 +567,7 @@ def main(exercise, write_data = False):
         print("Comparison of the Ridge regession started.")
 
         scaler = "scalerNone"
-        poly = 25
+        poly = 20
         k_fold = 5
         reg_method = "Ridge"
         dependency = "bias_variance"
@@ -596,21 +597,21 @@ def main(exercise, write_data = False):
             np.random.seed(123)
             #perm = rng.permutation(np.arange(0, 400))
 
-            MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
+            #MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
 
             cv5[i, :] = mse_cv5
             cv10[i, :] = mse_cv10
-            boot[i, :] = MSE_test
+            #boot[i, :] = MSE_test
 
 
         print("Lambda loop completed.")
 
         if write_data == True:
             with open("datafiles/current_params.txt", "w") as file:
-                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}")
+                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}\nNoise: {noise}")
             np.savetxt("datafiles/ex4_cv5.csv", cv5, delimiter = ',')
             np.savetxt("datafiles/ex4_cv10.csv", cv10, delimiter = ',')
-            np.savetxt("datafiles/ex4_boot.csv", boot, delimiter = ',')
+            #np.savetxt("datafiles/ex4_boot.csv", boot, delimiter = ',')
             print("Datafiles written/overwritten.")
         '''
         #plt.plot(np.arange(0, poly+1), olss, label="ols")
@@ -630,80 +631,73 @@ def main(exercise, write_data = False):
 
     elif exercise == 5:
 
-        B_runs = 100
+        #B_runs = 100
+        #reg_method = "Lasso"
+        #scaler = "none"
+        #k_fold = 0
+
+        print("Comparison of the Lasso regession started.")
+
+        scaler = "scalerNone"
+        poly = 20
+        k_fold = 5
         reg_method = "Lasso"
-        scaler = "none"
-        k_fold = 0
-
-
-        '''
-        #Plot MSE_test for 5 different lambdas
         dependency = "bias_variance"
+        B_runs = 100
+        #seed = int(time())#2018
+        seed = 123
+        rng = np.random.default_rng(np.random.MT19937(seed=seed))
 
-        poly = 10
+        n_lambdas = 50
+        ls = np.logspace(-5, 1, n_lambdas)
+        
+        cv5 = np.zeros((n_lambdas, poly+1))
+        cv10 = np.zeros((n_lambdas, poly+1))
+        boot = np.zeros((n_lambdas, poly+1))
 
-        deg_poly = [i for i in range(1, poly+1)]
+        print("Completed necessary initializations.")
+
+        for i, l in enumerate(ls):
+            print(f"Iteration {i+1}/{n_lambdas}, lambda = {l}")
+            #print("Starting CV, k=5")
+            mse_cv5 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, k_fold, reg_method, l, rng)
+            #print("Starting CV, k=10")
+            mse_cv10 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, l, rng)
+            #print("Starting Bootstrap")
+
+            #mse_cv_2 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 200, reg_method, lamb, rng, dependency)
+            np.random.seed(123)
+            #perm = rng.permutation(np.arange(0, 400))
+
+            #MSE_train, MSE_test, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, l, dependency)
+
+            cv5[i, :] = mse_cv5
+            cv10[i, :] = mse_cv10
+            #boot[i, :] = MSE_test
 
 
-        np.random.seed(123)
-        MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, "OLS", 0, dependency)
-        np.random.seed(123)
-        MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.000001, dependency)
-        np.random.seed(123)
-        MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.0001, dependency)
-        np.random.seed(123)
-        MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.01, dependency)
-        np.random.seed(123)
-        MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
+        print("Lambda loop completed.")
 
-
-        fig = go.Figure()
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "orange"),
-            marker=dict(size=9),
-            name="OLS"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color="darkcyan"),
-            marker=dict(size=9),
-            name="Lambda = 1E-6"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "firebrick"),
-            marker=dict(size=9),
-            name="Lambda = 1E-4"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "green"),
-            marker=dict(size=9),
-            name="Lambda = 0.01"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "blue"),
-            marker=dict(size=9),
-            name="Lambda = 0.1"))
-
-        fig.update_layout(
-            font_family="Garamond",
-            font_size=33,
-            title=f"MSE as a function of complexity for {reg_method} regression",
-            xaxis_title="Degrees of polynomial",
-            yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
-            )
-
-        fig.show()
-
+        if write_data == True:
+            with open("datafiles/ex5_current_params.txt", "w") as file:
+                file.write(f"Max Poly: {poly}\nn_lambdas: {n_lambdas}\nBootstrap iterations: {B_runs}\nScaler: {scaler}\nRegression method: {reg_method}\nNoise: {noise}")
+            np.savetxt("datafiles/ex5_cv5.csv", cv5, delimiter = ',')
+            np.savetxt("datafiles/ex5_cv10.csv", cv10, delimiter = ',')
+            #np.savetxt("datafiles/ex5_boot.csv", boot, delimiter = ',')
+            print("Datafiles written/overwritten.")
+        '''
+        #plt.plot(np.arange(0, poly+1), olss, label="ols")
+        plt.plot(np.arange(0,poly+1), mse_cv, label="CV, kfold = 5")
+        plt.plot(np.arange(0,poly+1), mse_cv_, label="CV, kfold = 10")
+        plt.plot(np.arange(0,poly+1), mse_cv_2, label="CV, kfold = 200")
+        #plt.plot(np.arange(0,poly+1), MSE_test, label="BS")
+        plt.legend()
+        plt.show()
+        '''
+        print("Task ended succesfully.")
 
 
         '''
-
         np.random.seed(123)
 
         #Look at dependence on lambda for a given polynomial
@@ -736,9 +730,64 @@ def main(exercise, write_data = False):
 
         print("Minimum MSE: ", min(MSE))
         print("Optimal lambda: ", min_lamb)
+        '''
+
+    elif exercise == "plot":
+        
+        for ex in ["ex4", "ex5"]:
+            if ex == "ex4":
+                print("\nExercise 4: Ridge Regression")
+            if ex == "ex5":
+                print("\nExercise 5: Lasso Regression")
+
+            cv5 = np.loadtxt(f"datafiles-noise005/{ex}_cv5.csv", delimiter = ',')
+            cv10 = np.loadtxt(f"datafiles-noise005/{ex}_cv10.csv", delimiter = ',')
+            boot = np.loadtxt(f"datafiles-noise005/{ex}_boot.csv", delimiter = ',')
+
+            for method in ["cv5", "cv10"]:#, "boot"]:
+                result = eval(method)
+                minarg = np.argmin(result)
+                minarg = np.unravel_index(minarg, result.shape)
+                #print(minarg)
+                min_val = result[minarg]
+
+                x_ax = np.linspace(0, 20, result.shape[1])
+                y_ax = np.linspace(-5, 1, result.shape[0])
+
+                lambdas = np.logspace(-5, 1, 50)
+
+                print(f"Minimum {method}, poly : {x_ax[minarg[1]]}, lambda : {lambdas[minarg[0]]}")
+                print("min value: ", min_val)
+
+                plt.scatter(x_ax[minarg[1]], y_ax[minarg[0]], c='r', zorder = 5, label = f"Min MSE = {min_val:e}")
+                plt.pcolormesh(x_ax, y_ax, result)
+                #plt.contourf(result)       # Nicer looking, but less informative
+                plt.colorbar() 
+
+                if ex == "ex4":
+                    reg = "Ridge regression"
+                if ex == "ex5":
+                    reg = "Lasso regression"
+
+                if method == "cv5":
+                    lalala = "Crossvalidation k = 5"
+                if method == "cv10":
+                    lalala = "Crossvalidation k = 10"
+                if method == "boot":
+                    lalala = "Bootstrap B = 100"
+                plt.title(f"Mean Squared Error values\n{reg}, {lalala}")
+                plt.legend()
+                plt.xlabel("Polynomial degree")
+                plt.ylabel("$\log{\lambda}$")
+                #plt.yticks(y_ticks)
+
+                #plt.savefig(f"datafiles/{ex}{method}compare.png")
+                plt.show()
 
 
-main(4.5, write_data = True)
+
+main("plot", write_data = True)
+
 
 def terrain(part):
 
@@ -818,114 +867,154 @@ def terrain(part):
 
     if part == "Ridge_lambda":
 
+        seed = 2018
+        rng = np.random.default_rng(np.random.MT19937(seed=seed))
         #look at dependency on lambda
         dependency = "bias_variance"
         scaler = "minmax"
-        poly = 20
+        poly = 25
         B_runs = 10
-        reg_method = "Ridge"
+        reg_method = "Lasso"
         dependency = "bias_variance"
 
 
-        '''
-        deg_poly = [i for i in range(5, poly+1)]
+        
+        # deg_poly = [i for i in range(5, poly+1)]
 
-        #Plot MSE_test for 5 different lambdas
-        np.random.seed(123)
-        MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
-        print("0")
-        np.random.seed(123)
-        MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.00001, dependency)
-        print("0.000001")
-        np.random.seed(123)
-        MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.001, dependency)
-        print("0.001")
-        np.random.seed(123)
-        MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
-        print("0.1")
-        np.random.seed(123)
-        MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 10, dependency)
-        print("10")
-
-
-        fig = go.Figure()
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "orange"),
-            marker=dict(size=9),
-            name="Lambda = 0"))
+        # #Plot MSE_test for 5 different lambdas
+        # np.random.seed(123)
+        # MSE_train0, MSE_test0, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0, dependency)
+        # print("0")
+        # np.random.seed(123)
+        # MSE_train1, MSE_test1, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.00001, dependency)
+        # print("0.000001")
+        # np.random.seed(123)
+        # MSE_train2, MSE_test2, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.001, dependency)
+        # print("0.001")
+        # np.random.seed(123)
+        # MSE_train3, MSE_test3, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 0.1, dependency)
+        # print("0.1")
+        # np.random.seed(123)
+        # MSE_train4, MSE_test4, Bias, Variance = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, 10, dependency)
+        # print("10")
 
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color="darkcyan"),
-            marker=dict(size=9),
-            name="Lambda = 1E-5"))
+        # fig = go.Figure()
 
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "firebrick"),
-            marker=dict(size=9),
-            name="Lambda = 1E-3"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "green"),
-            marker=dict(size=9),
-            name="Lambda = 0.1"))
-
-        fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
-            mode='lines+markers',
-            line=dict(dash='solid', width=4, color = "blue"),
-            marker=dict(size=9),
-            name="Lambda = 10"))
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test0,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "orange"),
+        #     marker=dict(size=9),
+        #     name="Lambda = 0"))
 
 
-        fig.update_layout(
-            font_family="Garamond",
-            font_size=33,
-            title=f"MSE as a function of complexity for {reg_method} regression",
-            xaxis_title="Degrees of polynomial",
-            yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
-            )
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test1,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color="darkcyan"),
+        #     marker=dict(size=9),
+        #     name="Lambda = 1E-5"))
 
-        fig.show()
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test2,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "firebrick"),
+        #     marker=dict(size=9),
+        #     name="Lambda = 1E-3"))
 
-        '''
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test3,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "green"),
+        #     marker=dict(size=9),
+        #     name="Lambda = 0.1"))
+
+        # fig.add_trace(go.Scatter(x=deg_poly, y=MSE_test4,
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4, color = "blue"),
+        #     marker=dict(size=9),
+        #     name="Lambda = 10"))
+
+
+        # fig.update_layout(
+        #     font_family="Garamond",
+        #     font_size=33,
+        #     title=f"MSE as a function of complexity for {reg_method} regression",
+        #     xaxis_title="Degrees of polynomial",
+        #     yaxis_title="Mean Squared Error",
+        #     legend=dict(yanchor="top", xanchor="left", x=0.01, y=0.99)
+        #     )
+
+        # fig.show()
+        # plot(fig)
+
+        
 
         np.random.seed(123)
         lamb = 0
         #Look at dependence on lambda for a given polynomial
         dependency = "lambda"
-        poly = 25
+        poly = 20
+        
+        # lambdas = [1e-6, 1e-4, 0.01, 0.1]
 
-        MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
-
+        # #MSE, LAMBDA = Bootstrap(x_flat, y_flat, z_flat, scaler, poly, B_runs, reg_method, lamb, dependency)
+        # fig = go.Figure()
+        # fig.add_trace(go.Scatter(x=np.arange(5,poly+1), y=CrossVal(x_flat, y_flat, z_flat, scaler, 25, 10, "OLS", 0, rng)[5:],
+        #     mode='lines+markers',
+        #     line=dict(dash='solid', width=4),
+        #     marker=dict(size=10),
+        #     name="OLS")
+        #             )
+        # for i, l in enumerate(lambdas):
+        #     print(l)
+        #     MSE_CV_5 = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, l, rng)
+        #     #MSE_CV_10[i,:] = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, l, rng)
+        #     fig.add_trace(go.Scatter(x=np.arange(5,poly+1), y=MSE_CV_5[5:],
+        #         mode='lines+markers',
+        #         line=dict(dash='solid', width=4),
+        #         marker=dict(size=10),
+        #         name="Lambda = " + str(l))
+        #                   )
+            
+        # fig.update_layout(
+        #     font_family="Garamond",
+        #     font_size=55,
+        #     title=f"Mean squared error as a function of complexity for {reg_method} regression",
+        #     xaxis_title="Degree of polynomial",
+        #     yaxis_title="Mean Squared Error",
+        #     legend=dict(yanchor="top", xanchor="center", x=0.15, y=0.8)
+        #     )
+        # fig.show()
+        # plot(fig)
+        
+        lambdas = np.logspace(-10,5,50)
+        mse = np.zeros(len(lambdas))
+        for i, l in enumerate(lambdas):
+            print(l)
+            mse[i] = CrossVal(x_flat, y_flat, z_flat, scaler, poly, 10, reg_method, l, rng, "lambda")
+        
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=np.log10(LAMBDA), y=MSE,
+        fig.add_trace(go.Scatter(x=np.log(lambdas), y=mse,
             mode='lines+markers',
-            line=dict(dash='solid', width=4, color="firebrick"),
+            line=dict(dash='solid', width=4, color = "blue"),
             marker=dict(size=9),
-            name="Testing data"))
-
-
+            name="MSE"))
         fig.update_layout(
             font_family="Garamond",
-            font_size=33,
-            title=f"Mean squared error as a function of lambda for {reg_method} regression",
-            xaxis_title="log10(lambda)",
+            font_size=55,
+            title=f"Mean squared error as a function of Lambda using Lasso regression with Cross Validation",
+            xaxis_title="log10(Lambda)",
             yaxis_title="Mean Squared Error",
-            legend=dict(yanchor="top", xanchor="center", x=0.01, y=0.99)
+            legend=dict(yanchor="top", xanchor="center", x=0.15, y=0.8)
             )
         fig.show()
+        plot(fig)
 
-        min_pos = np.argmin(MSE)
-        min_lamb = LAMBDA[min_pos]
+        
+        
+        # min_pos = np.argmin(MSE)
+        # min_lamb = LAMBDA[min_pos]
 
-        print("Minimum MSE: ", min(MSE))
-        print("Optimal lambda: ", min_lamb)
+        # print("Minimum MSE: ", min(MSE))
+        # print("Optimal lambda: ", min_lamb)
 
 
 
@@ -1173,4 +1262,4 @@ def terrain(part):
 
 
 
-#terrain("Ridge_lambda")
+terrain("Ridge_lambda")

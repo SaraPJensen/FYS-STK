@@ -1,44 +1,32 @@
 # FYS-STK
 
-Overleaf: https://www.overleaf.com/project/61434511c27ecb747adb108b
- 
+## Regression analysis and resampling methods.
 
-Hva gjenstår på koden?
-* Lasso
-* CrossVal
-* Confidence intervals
-* Sammenligne med Sklearn sine egne metoder for OLS og Ridge
-* Terrengdata 
- 
- 
-Pseudokode:
+Requirements
+```
+numpy
+matplotlib
+plotly
+scikit-learn
+imageio
+time
+mpl_toolkits.mplot3d
+random
+```
 
-* OLS-funksjon: (x, y, z, string="scaler", lambda) #Gjør Ridge, hvis lambda =/= 0
-	return z_train_scaled, z_test_scaled, z_predict, z_model
+Functions for regression methods and other is contained in the file Functions.py. Scalers.py contains functions for the different kinds of scaling that is done the data.
+The files exercises.py contain if/else block for generating data and calling appropriate functions, corresponding to the problem in the project text (found [here](https://github.com/CompPhysics/MachineLearning/tree/master/doc/Projects/2021/Project1)). The main block need to be calling with appropriate parameters:
 
-* Bootstrap-funksjon: (string="metode", b_runs, poly, x, y, z, #string="scaler")
-	return mse, bias, variance
-
-* xVal: (string="metode", k_fold, poly, x, y , z, #string="scaler")
-	return mse, bias, variance
-
-* Lasso: (x,y,x, string="scaler")
-	return z_train_scaled, z_test_scaled, z_predict, z_model
-
-* Scaling-funksjoner: (X_train, X_test, z_train, z_test)
-	return skalerte inputs
-	
-* MSE
-
-* R2
-	
-	
-MAIN:
-Exercise 2:
-OPPGAVE 1: Løkke som kjører OLS flere ganger og genererer figur 2.11
-OPPGAVE 2: Bootstrap av OLS-test-data, analyse MSE
-Exercise 3:
-OPPGAVE 1: xVal av OLS-test-data, analyse MSE
-Exercise 4: 
-OPPGAVE 1: Bootstrap med Ridge, for ulike grader av polynom
-
+Exercises 1-5 can be ran by calling
+```
+main(x, writeData)
+```
+where x is an integer corresponding to the exercise, and writeData is a boolean value used by exercise 4 and 5. Exercise 4 and 5 will make datafiles if writeData is set to true. This data can be plotted by calling
+```
+main("plot", False)
+```
+Exercise 6 can be executed by calling the function terrain.
+```
+terrain(part)
+```
+where part is a string which can take the following values: "OLS_tradeoff", "Ridge_lambda", "Ridge_contour", "Lasso", "plots", "scaler".
