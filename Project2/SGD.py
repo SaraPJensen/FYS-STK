@@ -68,16 +68,16 @@ X_test = X_test_tot[:, :features]
 
 #To find the optimal eta, find the eigenvalues of XTX
 matrix = X_train.T @ X_train
-print(np.shape(matrix))
-e_vals = np.linalg.eig(matrix)
-print(shape(e_vals))
+#print(np.shape(matrix))
+eig_vals, eig_vecs = np.linalg.eig(matrix)
 
 #Our own Stochastic gradient descent without minibatches
 #Necessary variables for SGD
 max_iter = 50
 penalty = None
 theta = np.random.randn(features, 1)
-eta = 0.025
+#eta = 0.025
+eta = 1 / np.max(eig_vals)
 n_iterations = 100000
 
 z_train = z_train.reshape(-1, 1)
