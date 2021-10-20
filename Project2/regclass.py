@@ -32,8 +32,10 @@ class Regression:
         Possible args: Standard, MinMax, Mean, Robust
         """
         if lower(str_arg) == "none":
+            self.scaled = False
             return None
         elif str_arg in ["Standard", "MinMax", "Mean", "Robust"]:
+            self.scaled = True
             if str_arg in ["Standard", "MinMax", "Mean"]:
                 scalefunc = eval( str_arg + "Scaler")
             if str_arg == "Normalizer":
@@ -47,18 +49,20 @@ class Regression:
             quit(1)
                     
 
-    def beta(self, lamb, scale = False):
+    def beta(self, lamb):
         I = np.eye( len( X_train[0, :]) )
-        if scale == False:
+        if self.scaled == False:
             beta = np.linalg.pinv(self.X_train.T @ self.X_train + lamb*I) @\
                     self.X_train.T @ self.z_train
-        elif scale == True:
+        elif self.scaled == True:
             beta = np.linalg.pinv(self.X_train_scaled.T @ self.X_train_scaled + lamb*I) @\
                     self.X_train_scaled.T @ self.z_train_scaled
 
         return beta
 
-    def OLS(self, scale = True):
+    def OLS(self, scale_arg = "none", scale = True):
+        scale(scale_arg)
+
 
         pass
 
