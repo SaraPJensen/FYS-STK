@@ -65,7 +65,7 @@ def Softmax():
 
 
 #---------------------------------------
-#Initial architecture of neural network
+#Initial architecture of neural network - based on Morten's code
 #---------------------------------------
 #Variables:
 n_inputs = len(X_train[:, 0])
@@ -136,6 +136,11 @@ def backpropagation(X_train, z_train):
     return output_weights_gradient, output_bias_gradient, hidden_weights_gradient, hidden_bias_gradient
 
 
+
+#-----------------------------------------------
+#This is what we actually want to get working!!
+#-----------------------------------------------
+
 class NeuralNetwork:
     def __init__(self, X_train, z_train, n_hidden_nodes, n_hidden_layers, n_output_nodes, epochs, batch_size, eta, lamb):
 
@@ -151,15 +156,57 @@ class NeuralNetwork:
         self.eta = eta
         self.lamb = lamb
 
+        self.layers = []  #list of layer-objects
 
-class hidden_layer:
+        #Let X_train be the first layer in the NN
+        X = hidden_layer(0, 0)   #doesn't need weights and biases
+
+        X.z_out = X_train
+        self.layers.append(X)
+
+        #Første layer må ha andre dimensjoner på vektene enn de andre siden antall datapunkter i X_train kan være annerledes enn antall noder senere
+        layer1 = hidden_layer(self.n_hidden_nodes, self.n_features)
+
+        self.layers.append(X)
+        self.layers.append(layer1)
+
+
+        for i in range (2, self.n_hidden_layers):
+            i = hidden_layer(self.n_hidden_nodes, self.n_nodes)   #Er dette riktig dimensjon??
+
+            self.layers.append(i)   #a list of layer-objects
+
+
+    def feed_forward():
+        previous = self.layers[0]
+
+        for layer in (self.layers[1:]):
+            for n in range(1, self.n_hidden_nodes):  #calculate z at each node in each layer
+                z_hidden = previous.z_out @ layer.hidden_weights + layer.hidden_bias  #each z is a matrix?
+                output = activation(z_hidden)
+
+                layer.z_out[n] = output  #update each element in the list of z's
+
+            previous = layer
+
+
+    def backpropagation():
+        
+
+        pass
+
+
+class hidden_layer:   #let each layer be associated with the weights and biases that come before it
     def __init__(self, n_hidden_nodes, n_features):
         self.n_hidden_nodes = n_hidden_nodes
         self.n_features = n_features
 
         #Initialise weights and biases
-        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_nodes)  #initialise the weights according to a norman distribution
+        #initialise the weights according to a normal distribution
+        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_nodes)
         self.hidden_bias = np.zeros(self.n_hidden_nodes)   #initialise all biases to 0
+
+        self.z_out = []   #z_out is a list of matrices
 
 
         #Update the weights and biases
