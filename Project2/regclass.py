@@ -70,7 +70,11 @@ class Regression:
 
 
 
-    def Ridge(self):
+    def Ridge(self):  #We don't need this
+        pass
+
+    def eta(self):
+        #Add some optionality for changing the learning rate
         pass
 
     def GD(self, n_iterations, eta): # Gradient descent
