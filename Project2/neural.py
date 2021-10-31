@@ -5,6 +5,7 @@ from math import exp, sqrt
 from random import random, seed
 import matplotlib.pyplot as plt
 from numpy import linalg
+from autograd import elementwise_grad
 
 
 def FrankeFunction(x,y):
@@ -56,12 +57,156 @@ X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
 def sigmoid(z):
     return 1/(1 + np.exp(-z))
 
+def relu(z):
+    if z < 0:
+        return 0
+    else:
+        return z
 
-def RELU():
+
+def softmax(z):
     pass
 
-def Softmax():
-    pass
+
+
+#-----------------------------------------------
+#This is what we actually want to get working!!
+#-----------------------------------------------
+
+class NeuralNetwork:
+    def __init__(self, X_train, z_train, X_test, z_test, n_hidden_nodes, n_hidden_layers, n_output_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE"):
+
+        self.X_train = X_train
+        self.z_train = z_train
+        self.X_test = X_test
+        self.z_test = z_test
+
+        self.n_hidden_nodes = n_hidden_nodes
+        self.n_hidden_layers = n_hidden_layers
+
+        self.n_output_nodes = n_output_nodes
+        self.epochs = epochs
+        self.batch_size = batch_size
+
+        self.eta = eta
+        self.lamb = lamb
+
+        self.activation_func = activation_func
+
+        self.cost = cost_func
+
+        self.layers = []  #list of layer-objects
+
+        #Let X_train be the first layer in the NN
+        #What shape should X be? Isn't each input meant to be a number, not a vector?
+        X = hidden_layer(0, 0)   #doesn't need weights and biases
+
+        X.z_out = X_train
+
+        #The first layer must have different dimensions since the number of features in X is (likely) different from the number of nodes
+        layer1 = hidden_layer(self.n_hidden_nodes, self.n_features)
+
+        output_layer = hidden_layer(self.n_hidden_nodes, self.n_output_nodes)
+
+        self.layers.append(X)
+        self.layers.append(layer1)
+
+        for i in range (2, self.n_hidden_layers):
+            i = hidden_layer(self.n_hidden_nodes, self.n_hidden_nodes)   #Assuming all layers have the same number of nodes
+            self.layers.append(i)   #a list of layer-objects
+
+
+
+
+
+    def activation(self, z):
+        if self.activation_func == "sigmoid" or self.activation_func == "Sigmoid":
+            return sigmoid(z)
+
+        elif self.activation_func == "RELU" or self.activation_func == "relu" or self.activation_func == "Relu":
+            return relu(z)
+
+        elif self.activation_func == "softmax" or self.activation_func == "Softmax":
+            return softmax(z)
+
+
+    def cost(self, a_out, z_train):
+
+        if self.cost == "MSE":
+            return (a_out - z_train)**2
+
+        elif self.cost == "accuracy"
+            pass
+
+
+    def feed_forward(self):
+        previous = self.layers[0]
+
+        for layer in (self.layers[1:]):
+            #In z_hidden, each row represents the outputs for a given layer
+            z_hidden = previous.z_out @ layer.hidden_weights + layer.hidden_bias
+            a_hidden = activation(z_hidden)
+
+            layer.a_out = a_hidden  #update the matrix of z_values, containing all the inputs for the next layer
+
+            previous = layer
+
+
+    def backpropagation(self):
+        #for layer in self.layers[1::-1]:
+        for layer in reverse(self.layers[1:]):
+            #calculate some gradients and errors and update the weighst and biases
+
+            elementwise_grad()
+
+
+
+            layer.update_parameters()
+
+            pass
+
+
+class hidden_layer:   #let each layer be associated with the weights and biases that come before it
+    def __init__(self, n_hidden_nodes, n_features):
+        self.n_hidden_nodes = n_hidden_nodes
+        self.n_features = n_features
+
+        #Initialise weights and biases
+        #initialise the weights according to a normal distribution
+        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_nodes)
+        #The weigts should be a matrix where each column is the weights for a given node
+        #Only one weights matrix per layer
+
+        #the bias is a vector, where each element is the bias for one node
+        self.hidden_bias = np.zeros(self.n_hidden_nodes) + 0.01   #initialise all biases to a small number
+
+        self.a_out = [[]]  #this should just be a matrix of indefinite size, just want to initialise it...
+
+
+        #Update the weights and biases
+        def update_parameters(self, weights_gradient, bias_gradient, eta):
+            self.hidden_weights -= eta*weights_gradient
+            self.hidden_bias -= eta*bias_gradient
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #---------------------------------------
@@ -134,82 +279,3 @@ def backpropagation(X_train, z_train):
     '''
 
     return output_weights_gradient, output_bias_gradient, hidden_weights_gradient, hidden_bias_gradient
-
-
-
-#-----------------------------------------------
-#This is what we actually want to get working!!
-#-----------------------------------------------
-
-class NeuralNetwork:
-    def __init__(self, X_train, z_train, n_hidden_nodes, n_hidden_layers, n_output_nodes, epochs, batch_size, eta, lamb):
-
-        self.X_train = X_train
-        self.z_train = z_train
-
-        self.n_hidden_nodes = n_hidden_nodes
-        self.n_hidden_layers = n_hidden_layers
-        self.n_output_nodes = n_output_nodes
-        self.epochs = epochs
-        self.batch_size = batch_size
-
-        self.eta = eta
-        self.lamb = lamb
-
-        self.layers = []  #list of layer-objects
-
-        #Let X_train be the first layer in the NN
-        X = hidden_layer(0, 0)   #doesn't need weights and biases
-
-        X.z_out = X_train
-        self.layers.append(X)
-
-        #Første layer må ha andre dimensjoner på vektene enn de andre siden antall datapunkter i X_train kan være annerledes enn antall noder senere
-        layer1 = hidden_layer(self.n_hidden_nodes, self.n_features)
-
-        self.layers.append(X)
-        self.layers.append(layer1)
-
-
-        for i in range (2, self.n_hidden_layers):
-            i = hidden_layer(self.n_hidden_nodes, self.n_nodes)   #Er dette riktig dimensjon??
-
-            self.layers.append(i)   #a list of layer-objects
-
-
-    def feed_forward():
-        previous = self.layers[0]
-
-        for layer in (self.layers[1:]):
-            for n in range(1, self.n_hidden_nodes):  #calculate z at each node in each layer
-                z_hidden = previous.z_out @ layer.hidden_weights + layer.hidden_bias  #each z is a matrix?
-                output = activation(z_hidden)
-
-                layer.z_out[n] = output  #update each element in the list of z's
-
-            previous = layer
-
-
-    def backpropagation():
-        
-
-        pass
-
-
-class hidden_layer:   #let each layer be associated with the weights and biases that come before it
-    def __init__(self, n_hidden_nodes, n_features):
-        self.n_hidden_nodes = n_hidden_nodes
-        self.n_features = n_features
-
-        #Initialise weights and biases
-        #initialise the weights according to a normal distribution
-        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_nodes)
-        self.hidden_bias = np.zeros(self.n_hidden_nodes)   #initialise all biases to 0
-
-        self.z_out = []   #z_out is a list of matrices
-
-
-        #Update the weights and biases
-        def update_params(self, weights_gradient, bias_gradient, eta):
-            self.hidden_weights -= eta*weights_gradient
-            self.hidden_bias -= eta*bias_gradient
