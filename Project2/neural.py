@@ -88,7 +88,7 @@ class NeuralNetwork:
         self.epochs = epochs
         self.batch_size = batch_size
 
-        self.eta = eta
+        self.eta = eta   #add a function which updates this for changing learning rate?
         self.lamb = lamb
 
         self.activation_func = activation_func
@@ -118,7 +118,6 @@ class NeuralNetwork:
 
 
 
-
     def activation(self, z):
         if self.activation_func == "sigmoid" or self.activation_func == "Sigmoid":
             return sigmoid(z)
@@ -143,6 +142,7 @@ class NeuralNetwork:
         previous = self.layers[0]
 
         for layer in (self.layers[1:]):
+            layer.a_in = previous.a_out
             #In z_hidden, each row represents the outputs for a given layer
             z_hidden = previous.z_out @ layer.hidden_weights + layer.hidden_bias
             a_hidden = activation(z_hidden)
@@ -154,16 +154,20 @@ class NeuralNetwork:
 
     def backpropagation(self):
         #for layer in self.layers[1::-1]:
-        for layer in reverse(self.layers[1:]):
-            #calculate some gradients and errors and update the weighst and biases
+        error_output = output_layer.a_out - self.z_train
 
-            elementwise_grad()
+        weights = output_layer.a_out.T @ error_output
+        bias_gradient = np.sum(error_output)
 
+        for layer in self.layers[-2:0:-1]:  #don't include the output layer or input layer
 
+            error = error_output @ layer.hidden_weights.T * layer.a_out * (1 - layer.a_out)
 
-            layer.update_parameters()
+            weights_gradient = (layer.a_in, error)   #should it be a_in or a_out here??
+            bias_gradient = np.sum(error) #, axis=0)
 
-            pass
+            layer.update_parameters(weights_gradient, bias_gradient, self.eta)
+
 
 
 class hidden_layer:   #let each layer be associated with the weights and biases that come before it
@@ -175,11 +179,12 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
         #initialise the weights according to a normal distribution
         self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_nodes)
         #The weigts should be a matrix where each column is the weights for a given node
-        #Only one weights matrix per layer
+        #Only one weight matrix per layer
 
         #the bias is a vector, where each element is the bias for one node
         self.hidden_bias = np.zeros(self.n_hidden_nodes) + 0.01   #initialise all biases to a small number
 
+        self.a_in = [[]]
         self.a_out = [[]]  #this should just be a matrix of indefinite size, just want to initialise it...
 
 
