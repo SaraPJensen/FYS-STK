@@ -36,7 +36,7 @@ np.random.seed(2018)
 
 n_dpoints = 40
 
-noise = 0
+noise = 0.2
 
 x = np.arange(0,1,1/n_dpoints)
 y = np.arange(0,1,1/n_dpoints)
@@ -137,7 +137,7 @@ print('')
 #-----------------------------
 
 #Parameters
-epochs = 1000
+epochs = 100
 batch_size = 5
 batches = int(len(X_train[:, 0])/batch_size)
 eta = 0.0025   #need to add some algorithm to scale the learning rate
