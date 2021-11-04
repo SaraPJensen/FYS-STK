@@ -20,6 +20,12 @@ def FrankeFunction(x,y):
 
 
 
+#Add momentum to the SGD
+#Get mini-batching to work correctly
+
+
+
+
 #---------------------
 #Activation functions
 #---------------------
@@ -43,12 +49,13 @@ def classify(z):
 #-----------------------------------------------
 
 class NeuralNetwork:
-    def __init__(self, X_train, z_train, hidden_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE", dataset = "function"):
+    def __init__(self, X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE", dataset = "function"):
 
         self.X_train = X_train
         self.z_train_full = z_train
         self.z_train = z_train   #Use this when training on the whole dataset. This variable is redefined for each round when using SGD
-
+        self.X_test = X_test
+        self.z_test = z_test
 
         self.hidden_nodes = hidden_nodes
 
@@ -124,6 +131,8 @@ class NeuralNetwork:
             return sigmoid(z)*(1-sigmoid(z))
 
         elif self.activation_func.lower() == "relu":
+            #print("Activation function derivative: ")
+            #print(np.where(z > 0, 1, 0))
             return np.where(z > 0, 1, 0)
 
         elif self.activation_func.lower() == "leaky_relu":
@@ -137,6 +146,8 @@ class NeuralNetwork:
             return (-2/self.n_datapoints)*(self.z_train.reshape(z_model.shape) - z_model)
 
         elif self.cost_func.lower() == "accuracy":
+            #print("Cost function derivative: ")
+            #print((z_model - self.z_train.reshape(z_model.shape))/(z_model*(1-z_model)))
             return (z_model - self.z_train.reshape(z_model.shape))/(z_model*(1-z_model))
 
 
@@ -159,6 +170,10 @@ class NeuralNetwork:
         if self.dataset == "function":
             layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
 
+        #elif self.dataset.lower() == "classificaiton":
+            #layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
+
+
 
     def backpropagation(self):
 
@@ -168,7 +183,21 @@ class NeuralNetwork:
         elif self.dataset == "classification":
             grad_cost = self.cost_derivative(self.output_layer.a_out)
             grad_activation = self.activation_derivative(self.output_layer.z_hidden)
-            error_output = grad_cost*grad_activation
+            error_output = grad_cost * grad_activation
+            # print("grad cost: ")
+            # print(grad_cost)
+            # print('')
+            # print("grad_activation: ")
+            # print(grad_activation)
+            # print('')
+            # print("z hidden: ")
+            # print(self.output_layer.z_hidden)
+            # print('')
+
+            #print("Error output: ")
+            #print(error_output)
+            #input()
+
 
         self.output_layer.error = error_output
         next_layer = self.output_layer
@@ -183,13 +212,9 @@ class NeuralNetwork:
 
 
         for layer in self.layers[-1:0:-1]:  #don't include the input layer, which has no weights and biases
-            weights_gradient = np.matmul(layer.a_in.T, layer.error)
+            weights_gradient = np.matmul(layer.a_in.T, layer.error) + self.lamb * layer.hidden_weights    #is this correct?? Shouldn't this just be added in the cost function at the last layer?
 
             bias_gradient = np.sum(layer.error, axis=0)
-
-
-            if self.lamb > 0.0:
-                weights_gradient += self.lamb * layer.hidden_weights   #is this correct??
 
             layer.update_parameters(weights_gradient, bias_gradient, self.eta)
 
@@ -197,18 +222,83 @@ class NeuralNetwork:
 
     def model_training(self, method = "SGD"):
 
-        if method == "SGD":
+        if method == "SGD" and self.dataset == "classification":
             #indices = np.arange(self.n_datapoints)
 
-            for e in range(self.epochs):
+            Epochs = []
+            train_accuracy = []
+            test_accuracy = []
+
+            for e in range(0, self.epochs):
                 #shuffle X_train
                 #Split X_train i batcher k_folds split/array split
+
 
                 for b in range(self.batches):
                     #plukk minibatch uten replacement
                     #Minibatching uten replacement er muligens bedre
 
-                    indices = np.random.randint(0, high = self.n_datapoints-1, size = batch_size)
+                    indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
+                    #current_datapoints = np.random.choice(indices, size=self.batch_size, replace=False)
+
+                    self.input.a_out = self.X_train[indices,:]   #pick out what rows to use
+                    self.z_train = self.z_train_full[indices]
+
+
+                    self.feed_forward()
+                    self.backpropagation()
+                    #print(self.output_layer.hidden_weights)
+                    #input()
+
+
+                z_model = self.prediction(self.X_train)
+                z_predict = self.prediction(self.X_test)
+
+                z_classified = classify(z_model)
+                results = np.column_stack((self.z_train_full, z_classified))
+                accuracy = np.abs(self.z_train_full.ravel() - z_classified.ravel())
+                total_wrong = sum(accuracy)
+                percentage = (len(accuracy) - total_wrong)/len(accuracy)
+
+                z_predict_class = classify(z_predict)
+                results_test = np.column_stack((self.z_test, z_predict_class))
+                accuracy_test = np.abs(self.z_test.ravel() - z_predict_class.ravel())
+                total_wrong_test = sum(accuracy_test)
+                percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
+
+
+                Epochs.append(e)
+                train_accuracy.append(percentage)
+                test_accuracy.append(percentage_test)
+
+
+            plt.plot(Epochs, train_accuracy, label = "Accuracy train")
+            plt.plot(Epochs, test_accuracy, label = "Accuracy test")
+            plt.xlabel("Epochs")
+            plt.ylabel("Accuracy")
+            plt.title(f"Accuracy using {self.activation_func} as activation function")
+            plt.legend()
+            plt.show()
+
+
+        elif method == "SGD" and self.dataset == "function":
+
+            Epochs = []
+            mse_train = []
+            mse_test = []
+            r2_train = []
+            r2_test = []
+
+            for e in range(50, self.epochs):
+                #shuffle X_train
+                #Split X_train i batcher k_folds split/array split
+
+
+                for b in range(self.batches):
+                    #plukk minibatch uten replacement
+                    #Minibatching uten replacement er muligens bedre
+
+                    indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
                     #current_datapoints = np.random.choice(indices, size=self.batch_size, replace=False)
 
                     self.input.a_out = self.X_train[indices,:]   #pick out what rows to use
@@ -219,7 +309,39 @@ class NeuralNetwork:
                     self.feed_forward()
                     self.backpropagation()
 
-            return self.output_layer.a_out #z_model
+
+
+
+                z_model = self.prediction(self.X_train)
+                z_predict = self.prediction(self.X_test)
+
+                mse_train.append(mean_squared_error(self.z_train_full, z_model))
+                mse_test.append(mean_squared_error(self.z_test, z_predict))
+
+                r2_train.append(r2_score(self.z_train_full, z_model))
+                r2_test.append(r2_score(self.z_test, z_predict))
+
+                Epochs.append(e)
+
+
+
+            plt.plot(Epochs, mse_train, label = "MSE train")
+            plt.plot(Epochs, mse_test, label = "MSE test")
+            plt.xlabel("Epochs")
+            plt.ylabel("MSE")
+            plt.title(f"MSE using {self.activation_func} as activation function")
+            plt.legend()
+            plt.show()
+
+
+            plt.plot(Epochs, r2_train, label = "R2 train")
+            plt.plot(Epochs, r2_test, label = "R2 test")
+            plt.xlabel("Epochs")
+            plt.ylabel("R2")
+            plt.title(f"R2 score using {self.activation_func} as activation function")
+            plt.legend()
+            plt.show()
+
 
 
         if method == "GD":
@@ -228,16 +350,11 @@ class NeuralNetwork:
                 self.feed_forward()
                 self.backpropagation()
 
-                #if np.abs(self.weights_gradient) < 0.01:
-                #    break
-
-        return self.output_layer.a_out #z_model
 
 
 
-
-    def prediction(self, test_data):
-        self.input.a_out = test_data   #The input layer is replaced with the test data
+    def prediction(self, data):
+        self.input.a_out = data   #The input layer is replaced with the test data
         self.feed_forward()
 
         return self.output_layer.a_out  #z_prediction
@@ -253,7 +370,7 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
         #Initialise weights and biases
         #Initialise the weights according to a normal distribution - should probably scale the values with
-        self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)#/n_hidden_nodes
+        self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)  /n_hidden_nodes
 
         #the bias is a vector, where each element is the bias for one node
         self.hidden_bias = np.zeros(self.n_hidden_nodes) + 0.01   #initialise all biases to a small number
@@ -284,8 +401,10 @@ def main(data):
         #------------------------------
         #Franke function analysis
         #------------------------------
-        n_dpoints = 20
-        noise = 0.02
+        np.random.seed(123)
+
+        n_dpoints = 30
+        noise = 0
 
         x = np.arange(0,1,1/n_dpoints)
         y = np.arange(0,1,1/n_dpoints)
@@ -305,82 +424,34 @@ def main(data):
 
 
         hidden_nodes = [50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.001
+        eta = 0.05    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
         batch_size = 32
-        #iterations = 1000
         epochs = 5000
         lamb = 0
 
         activation_func = "sigmoid"
         cost_func = "mse"
         dataset = "function"
-        training_method = "GD"
+        training_method = "SGD"
 
-        np.random.seed(1234)
-        Neural = NeuralNetwork(X_train, z_train, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
-        z_model = Neural.model_training(training_method)
+        np.random.seed(123)
+        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
+        Neural.model_training("SGD")
+
+
+        z_model = Neural.prediction(X_train)
         z_predict = Neural.prediction(X_test)
 
         results = np.column_stack((z_train, z_model))
         #print(results)
 
-        print("Train MSE: ", mean_squared_error(z_model, z_train))
-        print("Train R2 score: ", r2_score(z_model, z_train))
+        print("Train MSE: ", mean_squared_error(z_train, z_model))
+        print("Train R2 score: ", r2_score(z_train, z_model))
         print('')
-        print("Test MSE: ", mean_squared_error(z_predict, z_test))
-        print("Test R2 score: ", r2_score(z_predict, z_test))
+        print("Test MSE: ", mean_squared_error(z_test, z_predict))
+        print("Test R2 score: ", r2_score(z_test, z_predict))
 
 
-
-        Epochs = []
-        mse_train = []
-        mse_test = []
-        r2_train = []
-        r2_test = []
-
-        for i in range(1000, 20000, 1000):
-            np.random.seed(1234)
-            epochs = i
-            Neural = NeuralNetwork(X_train, z_train, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
-            z_model = Neural.model_training(training_method)
-            z_predict = Neural.prediction(X_test)
-
-            mse_train.append(mean_squared_error(z_model, z_train))
-            mse_test.append(mean_squared_error(z_predict, z_test))
-
-            r2_train.append(r2_score(z_model, z_train))
-            r2_test.append(r2_score(z_predict, z_test))
-            print("Epochs: ", epochs)
-            print('')
-            print("Train MSE: ", mean_squared_error(z_model, z_train))
-            print("Train R2 score: ", r2_score(z_model, z_train))
-            print('')
-            print("Test MSE: ", mean_squared_error(z_predict, z_test))
-            print("Test R2 score: ", r2_score(z_predict, z_test))
-            print('')
-
-            Epochs.append(i)
-
-
-
-        plt.plot(Epochs, mse_train, label = "MSE train")
-        plt.plot(Epochs, mse_test, label = "MSE test")
-        #plt.scatter(x, y, label="Testing data", color='b')
-        plt.xlabel("Epochs")
-        plt.ylabel("MSE")
-        plt.title(f"MSE using {activation_func} as activation function")
-        plt.legend()
-        plt.show()
-
-
-        plt.plot(Epochs, r2_train, label = "R2 train")
-        plt.plot(Epochs, r2_test, label = "R2 test")
-        #plt.scatter(x, y, label="Testing data", color='b')
-        plt.xlabel("Epochs")
-        plt.ylabel("R2")
-        plt.title(f"R2 score using {activation_func} as activation function")
-        plt.legend()
-        plt.show()
 
 
 
@@ -390,8 +461,7 @@ def main(data):
         #-------------------------------------
         #Breast cancer analysis
         #-------------------------------------
-
-        np.random.seed(1234)
+        #np.random.seed(1234)
         cancer = load_breast_cancer(return_X_y=False, as_frame=False)
 
         #cancer.data is the design matrix, dimensions 569x30
@@ -404,20 +474,22 @@ def main(data):
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
 
-        hidden_nodes = [50, 50, 50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.00001
+        hidden_nodes = [50, 50, 50]   #This is a list of the number of nodes in each hidden layer
+        eta = 0.01    #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu
         batch_size = 32
-        #iterations = 1000
-        epochs = 500
-        lamb = 0
+        epochs = 1000
+        lamb = 0.05
 
-        activation_func = "sigmoid"
-        cost_func = "accuracy"
+        activation_func = "relu"
+        cost_func = "mse"     #relu and leaky_relu only works with mse
         dataset = "classification"
 
 
-        Neural = NeuralNetwork(X_train, z_train, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
-        z_model = Neural.model_training("GD")
+        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
+        Neural.model_training("SGD")
+
+        z_model = Neural.prediction(X_train)
+
 
         z_classified = classify(z_model)
         results = np.column_stack((z_train, z_classified))
@@ -426,8 +498,9 @@ def main(data):
         percentage = (len(accuracy) - total_wrong)/len(accuracy)
 
         #print("Training results")
-        #print(results)
+        print(results)
         print('')
+
 
         z_predict = Neural.prediction(X_test)
         z_predict_class = classify(z_predict)
