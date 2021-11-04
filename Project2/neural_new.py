@@ -114,7 +114,7 @@ class NeuralNetwork:
             return (z_model - self.z_train)**2
 
         elif self.cost.lower() == "accuracy":
-            return self.z_train * np.log(z_model) + (1 - self.z_train) * np.log(1 - z_model)
+            return - self.z_train * np.log(z_model) + (1 - self.z_train) * np.log(1 - z_model)
 
 
 
@@ -189,7 +189,7 @@ class NeuralNetwork:
 
 
             if self.lamb > 0.0:
-                weights_gradient += self.lamb * weights_gradient   #is this correct??
+                weights_gradient += self.lamb * layer.hidden_weights   #is this correct??
 
             layer.update_parameters(weights_gradient, bias_gradient, self.eta)
 
@@ -391,6 +391,7 @@ def main(data):
         #Breast cancer analysis
         #-------------------------------------
 
+        np.random.seed(1234)
         cancer = load_breast_cancer(return_X_y=False, as_frame=False)
 
         #cancer.data is the design matrix, dimensions 569x30
@@ -403,11 +404,11 @@ def main(data):
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
 
-        hidden_nodes = [50, 50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.0001
+        hidden_nodes = [50, 50, 50, 50]   #This is a list of the number of nodes in each hidden layer
+        eta = 0.00001
         batch_size = 32
         #iterations = 1000
-        epochs = 200
+        epochs = 500
         lamb = 0
 
         activation_func = "sigmoid"
@@ -445,4 +446,4 @@ def main(data):
 
 
 
-main("franke")
+main("cancer")
