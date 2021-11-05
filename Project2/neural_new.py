@@ -21,7 +21,7 @@ def FrankeFunction(x,y):
 
 
 #Add momentum to the SGD
-#Get mini-batching to work correctly
+#Add HE and Xavier initialisations of the weights
 
 
 
@@ -49,7 +49,7 @@ def classify(z):
 #-----------------------------------------------
 
 class NeuralNetwork:
-    def __init__(self, X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE", dataset = "function"):
+    def __init__(self, X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE", dataset = "function", weight_init_method = "he"):
 
         self.X_train = X_train
         self.z_train_full = z_train
@@ -74,6 +74,7 @@ class NeuralNetwork:
         self.activation_func = activation_func
         self.cost_func = cost_func
         self.dataset = dataset
+        self.init_method = weight_init_method
 
         self.layers = []  #list of layer-objects, containing all the hidden layers plus the input and output layers
 
@@ -82,12 +83,12 @@ class NeuralNetwork:
         #Setting up the architecture of the network
         #------------------------------------------
         #Let X_train be the first layer in the NN
-        self.input = hidden_layer(0, 0)   #doesn't need weights and biases
+        self.input = hidden_layer(1, 1, self.init_method)   #doesn't need weights and biases
         self.input.a_out = self.X_train
 
         #The first layer must have different dimensions since the number of features in X is (likely) different from the number of nodes
-        self.layer1 = hidden_layer(self.n_features, self.hidden_nodes[0])   #The input layer has two nodes, each containing a vector of all the datapoints
-        self.output_layer = hidden_layer(self.hidden_nodes[-1], 1)
+        self.layer1 = hidden_layer(self.n_features, self.hidden_nodes[0], self.init_method)   #The input layer has two nodes, each containing a vector of all the datapoints
+        self.output_layer = hidden_layer(self.hidden_nodes[-1], 1, self.init_method)
 
 
         self.layers.append(self.input)
@@ -95,7 +96,7 @@ class NeuralNetwork:
 
 
         for i in range(1, len(self.hidden_nodes)):  #Want (n_hidden_layers + 2) layers in total, start at 1, since the first layer is already made
-            layer = hidden_layer(self.hidden_nodes[i-1], self.hidden_nodes[i])   #Assuming all layers have the same number of nodes
+            layer = hidden_layer(self.hidden_nodes[i-1], self.hidden_nodes[i], self.init_method)   #Assuming all layers have the same number of nodes
             self.layers.append(layer)   #list of layer-objects
 
 
@@ -184,6 +185,8 @@ class NeuralNetwork:
             grad_cost = self.cost_derivative(self.output_layer.a_out)
             grad_activation = self.activation_derivative(self.output_layer.z_hidden)
             error_output = grad_cost * grad_activation
+
+            #error_output = self.output_layer.a_out - self.z_train.reshape(self.output_layer.a_out.shape)
             # print("grad cost: ")
             # print(grad_cost)
             # print('')
@@ -229,26 +232,20 @@ class NeuralNetwork:
             train_accuracy = []
             test_accuracy = []
 
-            for e in range(0, self.epochs):
-                #shuffle X_train
-                #Split X_train i batcher k_folds split/array split
 
+            for e in range(0, self.epochs):
+                indices = np.random.permutation(self.n_datapoints)
+                indices = np.array_split(indices, self.batches)
 
                 for b in range(self.batches):
-                    #plukk minibatch uten replacement
-                    #Minibatching uten replacement er muligens bedre
+                    index = np.random.randint(self.batches)
 
-                    indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
-                    #current_datapoints = np.random.choice(indices, size=self.batch_size, replace=False)
-
-                    self.input.a_out = self.X_train[indices,:]   #pick out what rows to use
-                    self.z_train = self.z_train_full[indices]
-
+                    self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
+                    self.z_train = self.z_train_full[indices[index]]
 
                     self.feed_forward()
                     self.backpropagation()
-                    #print(self.output_layer.hidden_weights)
-                    #input()
+
 
 
                 z_model = self.prediction(self.X_train)
@@ -289,27 +286,20 @@ class NeuralNetwork:
             r2_train = []
             r2_test = []
 
-            for e in range(50, self.epochs):
-                #shuffle X_train
-                #Split X_train i batcher k_folds split/array split
+            for e in range(1, self.epochs):
+                indices = np.random.permutation(self.n_datapoints)
+                indices = np.array_split(indices, self.batches)
 
 
                 for b in range(self.batches):
-                    #plukk minibatch uten replacement
-                    #Minibatching uten replacement er muligens bedre
+                    index = np.random.randint(self.batches)
+                    #indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
 
-                    indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
-                    #current_datapoints = np.random.choice(indices, size=self.batch_size, replace=False)
-
-                    self.input.a_out = self.X_train[indices,:]   #pick out what rows to use
-                    self.z_train = self.z_train_full[indices]
-
-                    #print("X_train shape :", self.input.a_out.shape)
+                    self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
+                    self.z_train = self.z_train_full[indices[index]]
 
                     self.feed_forward()
                     self.backpropagation()
-
-
 
 
                 z_model = self.prediction(self.X_train)
@@ -322,7 +312,6 @@ class NeuralNetwork:
                 r2_test.append(r2_score(self.z_test, z_predict))
 
                 Epochs.append(e)
-
 
 
             plt.plot(Epochs, mse_train, label = "MSE train")
@@ -364,13 +353,29 @@ class NeuralNetwork:
 
 
 class hidden_layer:   #let each layer be associated with the weights and biases that come before it
-    def __init__(self, n_previous_nodes, n_hidden_nodes):
+    def __init__(self, n_previous_nodes, n_hidden_nodes, init_method):
         self.n_hidden_nodes = n_hidden_nodes
         self.n_previous_nodes = n_previous_nodes
+        self.init_method = init_method
 
         #Initialise weights and biases
-        #Initialise the weights according to a normal distribution - should probably scale the values with
-        self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)  /n_hidden_nodes
+        #The weights can be initialised according to different functions
+
+        if self.init_method.lower() == "he":
+            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) * np.sqrt(2)/np.sqrt(self.n_hidden_nodes)
+
+        elif self.init_method.lower() == "xavier":
+            bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes + self.n_hidden_nodes))
+
+            self.hidden_weights = np.random.uniform(-bound, bound, size = (self.n_previous_nodes, self.n_hidden_nodes))
+
+        elif self.init_method.lower() == "none":
+            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)
+
+        elif self.init_method.lower() == "homemade":
+            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / self.n_hidden_nodes
+
+
 
         #the bias is a vector, where each element is the bias for one node
         self.hidden_bias = np.zeros(self.n_hidden_nodes) + 0.01   #initialise all biases to a small number
@@ -391,7 +396,7 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
 
 def main(data):
-    np.random.seed(1234)
+    #np.random.seed(1234)
     print('')
     print('')
     print('')
@@ -401,7 +406,7 @@ def main(data):
         #------------------------------
         #Franke function analysis
         #------------------------------
-        np.random.seed(123)
+        #np.random.seed(123)
 
         n_dpoints = 30
         noise = 0
@@ -425,17 +430,18 @@ def main(data):
 
         hidden_nodes = [50, 50]   #This is a list of the number of nodes in each hidden layer
         eta = 0.05    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
-        batch_size = 32
-        epochs = 5000
+        batch_size = 20
+        epochs = 1000
         lamb = 0
 
         activation_func = "sigmoid"
         cost_func = "mse"
         dataset = "function"
         training_method = "SGD"
+        weight_init_method = "none"
 
-        np.random.seed(123)
-        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
+        #np.random.seed(123)
+        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
         Neural.model_training("SGD")
 
 
@@ -456,19 +462,14 @@ def main(data):
 
 
 
-
     elif data.lower() == "cancer":
         #-------------------------------------
         #Breast cancer analysis
         #-------------------------------------
         #np.random.seed(1234)
         cancer = load_breast_cancer(return_X_y=False, as_frame=False)
-
-        #cancer.data is the design matrix, dimensions 569x30
-        #cancer.target is the target values, 1=Malign, 0=Benign
-
-        X = cancer.data
-        z = cancer.target
+        X = cancer.data   #cancer.data is the design matrix, dimensions 569x30
+        z = cancer.target  #cancer.target is the target values, 1=Malign, 0=Benign
 
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
@@ -476,16 +477,17 @@ def main(data):
 
         hidden_nodes = [50, 50, 50]   #This is a list of the number of nodes in each hidden layer
         eta = 0.01    #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu
-        batch_size = 32
+        batch_size = 30
         epochs = 1000
         lamb = 0.05
 
         activation_func = "relu"
         cost_func = "mse"     #relu and leaky_relu only works with mse
         dataset = "classification"
+        weight_init_method = "homemade"     #use homemade for relu and leaky_relu
 
 
-        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset)
+        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
         Neural.model_training("SGD")
 
         z_model = Neural.prediction(X_train)
@@ -518,5 +520,69 @@ def main(data):
         print("Test accuracy: ", percentage_test)
 
 
+    elif data.lower() == "test":
+        #X_train =[[0, 0], [0, 1], [1, 0], [1, 1]]
 
-main("cancer")
+        x1 = [0, 0, 1, 1]
+        x2 = [0, 1, 0, 1]
+        X_train = np.column_stack((x1, x2))
+        z_train = [0, 0, 0, 1]
+
+        z_train = np.array(z_train)
+
+
+        X_test = X_train
+        z_test = z_train
+
+        hidden_nodes = [2]   #This is a list of the number of nodes in each hidden layer
+        eta = 0.0001    #0.1 or 0.01 works well for sigmoid, same for relu and leaky_relu
+        batch_size = 4
+        epochs = 10000
+        lamb = 0
+
+        activation_func = "relu"
+        cost_func = "accuracy"     #relu and leaky_relu only works with mse
+        dataset = "classification"
+        weight_init_method = "none"
+
+
+        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
+        Neural.model_training("GD")
+
+        z_model = Neural.prediction(X_train)
+
+        print(z_model)
+
+
+        z_classified = classify(z_model)
+        results = np.column_stack((z_train, z_classified))
+        accuracy = np.abs(z_train.ravel() - z_classified.ravel())
+        total_wrong = sum(accuracy)
+        percentage = (len(accuracy) - total_wrong)/len(accuracy)
+
+        #print("Training results")
+        print(results)
+        print('')
+
+        '''
+        z_predict = Neural.prediction(X_test)
+        z_predict_class = classify(z_predict)
+        results_test = np.column_stack((z_test, z_predict_class))
+        accuracy_test = np.abs(z_test.ravel() - z_predict_class.ravel())
+        total_wrong_test = sum(accuracy_test)
+        percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
+
+        '''
+        #print("Test results")
+        #print(results_test)
+
+        print("Train accuracy: ", percentage)
+
+        #print("Test accuracy: ", percentage_test)
+
+
+
+
+
+
+main("test")
