@@ -1,4 +1,6 @@
 import numpy as np
+
+from sklearn.linear_model import SGDRegressor #,LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer# scalerStandard, scalerMinMax, scalerMean, scalerRobust
 from sklearn.metrics import mean_squared_error as MSE, r2_score as R2
@@ -178,6 +180,21 @@ class Regression:
             self.predicts['SGD_lamb'] = self.SGDpred
             self.models['SGD_lamb'] = self.SGDmodel
 
+    def sk_SGD(self, lamb = 0):
+        SGDReg = SGDRegressor(max_iter = 10000, alpha=lamb,\
+                learning_rate = 'constant')
+        SGDReg.fit(self.X_train, self.z_train)
+
+        self.sk_SGDpred = SGDReg.predict(self.X_test)
+        self.sk_SGDmodel = SGDReg.predict(self.X_train)
+
+        if lamb == 0:
+            self.predicts['sk_SGD'] = self.sk_SGDpred
+            self.models['sk_SGD'] = self.sk_SGDmodel
+        elif lamb > 0:
+            self.predicts['sk_SGD_lamb'] = self.sk_SGDpred
+            self.models['sk_SGD_lamb'] = self.sk_SGDmodel
+
 
     def get_error(self):
         for i in self.predicts:
@@ -222,13 +239,14 @@ if __name__ == "__main__":
     maxpoly = 10
     reg = Regression(x, y, z, maxpoly)
 
-    #reg.OLS_Ridge()
-    #reg.OLS_Ridge(lamb = 0.001)
-    #reg.GD()
+    reg.OLS_Ridge()
+    reg.OLS_Ridge(lamb = 0.001)
+    reg.GD()
     epochs = 1000
     batch_size = 5
     reg.SGD(epochs = epochs, batch_size = batch_size, lamb = 0.01)
 
     #print(f"epochs = {epochs}, batch size = {batch_size}")
     reg.SGD(epochs = epochs, batch_size = batch_size)
+    reg.sk_SGD()
     reg.get_error()
