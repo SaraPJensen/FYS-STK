@@ -270,7 +270,6 @@ class NeuralNetwork:
     def model_training(self, method = "SGD"):
 
         if method == "SGD" and self.dataset == "classification":
-            #indices = np.arange(self.n_datapoints)
 
             Epochs = []
             train_accuracy = []
@@ -290,16 +289,11 @@ class NeuralNetwork:
                     self.feed_forward()
                     self.backpropagation()
 
-
-
                 z_model = self.prediction(self.X_train)
                 z_predict = self.prediction(self.X_test)
 
-                #print(z_model)
-                #print()
-                #input()
 
-                model_sum = np.sum(z_model)
+                model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
                 if np.isnan(model_sum):
                     break
 
@@ -372,10 +366,6 @@ class NeuralNetwork:
 
                 Epochs.append(e)
 
-                if np.nan in z_model:
-                    break
-
-
 
             plt.plot(Epochs, mse_train, label = "MSE train")
             plt.plot(Epochs, mse_test, label = "MSE test")
@@ -429,7 +419,6 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
         if self.init_method.lower() == "he":
             self.hidden_weights = np.random.normal(scale=(np.sqrt(2)/np.sqrt(self.n_hidden_nodes)), size=(self.n_previous_nodes, self.n_hidden_nodes))
 
-            #self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / (np.sqrt(2)*np.sqrt(self.n_hidden_nodes))    #this is the wrong expression, but it works bloody well....
 
         elif self.init_method.lower() == "xavier":
             bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes + self.n_hidden_nodes))
@@ -440,7 +429,9 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
             self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)
 
         elif self.init_method.lower() == "homemade":
-            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / self.n_hidden_nodes
+            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / (np.sqrt(2)*np.sqrt(self.n_hidden_nodes))    #this is the wrong expression for he, but it works bloody well....
+
+            #self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / self.n_hidden_nodes
 
 
 
@@ -543,45 +534,19 @@ def main(data):
 
 
         hidden_nodes = [20, 20]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.0001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
+        eta = 0.00001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
         batch_size = 32
-        epochs = 2000
-        lamb = 0.5
+        epochs = 500
+        lamb = 1
 
-        activation_func = "sigmoid"
+        activation_func = "leaky_relu"
         cost_func = "accuracy"     #relu and leaky_relu only works with mse
         dataset = "classification"
-        weight_init_method = "xavier"     #use homemade for relu and leaky_relu
+        weight_init_method = "homemade"     #use homemade for relu and leaky_relu
 
 
         Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
         percentage_train, percentage_test = Neural.model_training("SGD")
-        '''
-        z_model = Neural.prediction(X_train)
-
-
-        z_classified = classify(z_model)
-        results = np.column_stack((z_train, z_classified))
-        accuracy = np.abs(z_train.ravel() - z_classified.ravel())
-        total_wrong = sum(accuracy)
-        percentage = (len(accuracy) - total_wrong)/len(accuracy)
-
-        #print("Training results")
-        print(results)
-        print('')
-
-
-        z_predict = Neural.prediction(X_test)
-        z_predict_class = classify(z_predict)
-        results_test = np.column_stack((z_test, z_predict_class))
-        accuracy_test = np.abs(z_test.ravel() - z_predict_class.ravel())
-        total_wrong_test = sum(accuracy_test)
-        percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
-        '''
-
-
-        #print("Test results")
-        #print(results_test)
 
         print("Train accuracy: ", percentage_train)
 
@@ -653,4 +618,4 @@ def main(data):
 
 
 
-main("franke")
+main("cancer")
