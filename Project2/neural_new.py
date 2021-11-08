@@ -21,8 +21,25 @@ def FrankeFunction(x,y):
 
 
 #Add momentum to the SGD
-#Add HE and Xavier initialisations of the weights
 
+def scalerStandard(X_train, X_test, z_train, z_test):
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    #scale the response variable
+    z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
+    z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
+    '''
+    X_train_scaled = scaler.fit_transform(X_train, with_std = False) #æææ
+    X_test_scaled = scaler.fit_transform(X_test)
+    z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
+    z_test_scaled = (z_test - np.mean(z_test))/np.std(z_test)
+    '''
+
+    return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
 
 
@@ -33,8 +50,6 @@ def sigmoid(z):
     return 1/(1 + np.exp(-z))
 
 def relu(z):
-    #print("input: ", z)
-    #print("RElU returns :", np.where(z > 0, z, 0))
     return np.where(z > 0, z, 0)
 
 def leaky_relu(z):
@@ -157,49 +172,78 @@ class NeuralNetwork:
     def feed_forward(self):
         previous = self.layers[0]
 
+
         for layer in (self.layers[1:]):
             layer.a_in = previous.a_out
 
             #In z_hidden, each column represents a node, each row a datapoint
-            layer.z_hidden = previous.a_out @ layer.hidden_weights + layer.hidden_bias
-            a_hidden = self.activation(layer.z_hidden)
+            layer.z_hidden = layer.a_in @ layer.hidden_weights + layer.hidden_bias
 
-            layer.a_out = a_hidden  #update the matrix of z_values, containing all the inputs for the next layer
+            output = self.activation(layer.z_hidden)
+
+            layer.a_out = output  #update the matrix of z_values, containing all the inputs for the next layer
 
             previous = layer
+
+            # print("Hidden weights: ")
+            # print(layer.hidden_weights)
+            # print()
+            #
+            #
+            # print("Hidden layer:")
+            # print(layer.z_hidden)
+            # print()
+            #
+            #
+            # print("Layer output: ")
+            # print(output)
+            # print()
+            #
+            # input()
+
+
 
         if self.dataset == "function":
             layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
 
-        #elif self.dataset.lower() == "classificaiton":
-            #layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
-
+        elif self.dataset.lower() == "classification":
+            layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
+            #layer.a_out = layer.z_hidden
 
 
     def backpropagation(self):
 
+        grad_cost = self.cost_derivative(self.output_layer.a_out)
+        grad_activation = self.activation_derivative(self.output_layer.z_hidden)
+
         if self.dataset == "function":
-            error_output = self.cost_derivative(self.output_layer.a_out)  #No activation function used in the last layer
+            grad_activation = 1
 
-        elif self.dataset == "classification":
-            grad_cost = self.cost_derivative(self.output_layer.a_out)
-            grad_activation = self.activation_derivative(self.output_layer.z_hidden)
-            error_output = grad_cost * grad_activation
+        error_output = grad_cost * grad_activation
 
-            #error_output = self.output_layer.a_out - self.z_train.reshape(self.output_layer.a_out.shape)
-            # print("grad cost: ")
-            # print(grad_cost)
-            # print('')
-            # print("grad_activation: ")
-            # print(grad_activation)
-            # print('')
-            # print("z hidden: ")
-            # print(self.output_layer.z_hidden)
-            # print('')
+        # print("z hidden: ")
+        # print(self.output_layer.z_hidden)
+        # print()
+        #
+        # print("output: ")
+        # print(self.output_layer.a_out)
+        # print()
+        #
+        # print("grad cost: ")
+        # print(grad_cost)
+        # print('')
+        # print("grad_activation: ")
+        # print(grad_activation)
+        # print('')
+        #
+        # print("Error output: ")
+        # print(error_output)
+        #
+        #
+        #
+        # input()
 
-            #print("Error output: ")
-            #print(error_output)
-            #input()
+
 
 
         self.output_layer.error = error_output
@@ -251,6 +295,15 @@ class NeuralNetwork:
                 z_model = self.prediction(self.X_train)
                 z_predict = self.prediction(self.X_test)
 
+                #print(z_model)
+                #print()
+                #input()
+
+                model_sum = np.sum(z_model)
+                if np.isnan(model_sum):
+                    break
+
+
                 z_classified = classify(z_model)
                 results = np.column_stack((self.z_train_full, z_classified))
                 accuracy = np.abs(self.z_train_full.ravel() - z_classified.ravel())
@@ -269,6 +322,10 @@ class NeuralNetwork:
                 test_accuracy.append(percentage_test)
 
 
+                #print(self.output_layer.hidden_weights)
+                #input()
+
+
             plt.plot(Epochs, train_accuracy, label = "Accuracy train")
             plt.plot(Epochs, test_accuracy, label = "Accuracy test")
             plt.xlabel("Epochs")
@@ -276,6 +333,8 @@ class NeuralNetwork:
             plt.title(f"Accuracy using {self.activation_func} as activation function")
             plt.legend()
             plt.show()
+
+            return(train_accuracy[-1], test_accuracy[-1])
 
 
         elif method == "SGD" and self.dataset == "function":
@@ -312,6 +371,10 @@ class NeuralNetwork:
                 r2_test.append(r2_score(self.z_test, z_predict))
 
                 Epochs.append(e)
+
+                if np.nan in z_model:
+                    break
+
 
 
             plt.plot(Epochs, mse_train, label = "MSE train")
@@ -361,8 +424,12 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
         #Initialise weights and biases
         #The weights can be initialised according to different functions
 
+        np.random.seed(123)
+
         if self.init_method.lower() == "he":
-            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) * np.sqrt(2)/np.sqrt(self.n_hidden_nodes)
+            self.hidden_weights = np.random.normal(scale=(np.sqrt(2)/np.sqrt(self.n_hidden_nodes)), size=(self.n_previous_nodes, self.n_hidden_nodes))
+
+            #self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / (np.sqrt(2)*np.sqrt(self.n_hidden_nodes))    #this is the wrong expression, but it works bloody well....
 
         elif self.init_method.lower() == "xavier":
             bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes + self.n_hidden_nodes))
@@ -388,7 +455,7 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
     #Update the weights and biases
     def update_parameters(self, weights_gradient, bias_gradient, eta):
-        self.hidden_weights -= eta*weights_gradient
+        self.hidden_weights -= eta*weights_gradient   #This has been done wrong!!!
         self.hidden_bias -= eta*bias_gradient
 
 
@@ -430,15 +497,15 @@ def main(data):
 
         hidden_nodes = [50, 50]   #This is a list of the number of nodes in each hidden layer
         eta = 0.05    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
-        batch_size = 20
-        epochs = 1000
+        batch_size = 30
+        epochs = 200
         lamb = 0
 
-        activation_func = "sigmoid"
+        activation_func = "relu"
         cost_func = "mse"
         dataset = "function"
         training_method = "SGD"
-        weight_init_method = "none"
+        weight_init_method = "he"
 
         #np.random.seed(123)
         Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
@@ -460,8 +527,6 @@ def main(data):
 
 
 
-
-
     elif data.lower() == "cancer":
         #-------------------------------------
         #Breast cancer analysis
@@ -474,22 +539,24 @@ def main(data):
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
+        X_train, X_test, z_train_useless, z_test_useless = scalerStandard(X_train, X_test, z_train, z_test)
 
-        hidden_nodes = [50, 50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.01    #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu
-        batch_size = 30
-        epochs = 1000
-        lamb = 0.05
 
-        activation_func = "relu"
-        cost_func = "mse"     #relu and leaky_relu only works with mse
+        hidden_nodes = [20, 20]   #This is a list of the number of nodes in each hidden layer
+        eta = 0.0001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
+        batch_size = 32
+        epochs = 2000
+        lamb = 0.5
+
+        activation_func = "sigmoid"
+        cost_func = "accuracy"     #relu and leaky_relu only works with mse
         dataset = "classification"
-        weight_init_method = "homemade"     #use homemade for relu and leaky_relu
+        weight_init_method = "xavier"     #use homemade for relu and leaky_relu
 
 
         Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
-        Neural.model_training("SGD")
-
+        percentage_train, percentage_test = Neural.model_training("SGD")
+        '''
         z_model = Neural.prediction(X_train)
 
 
@@ -510,12 +577,13 @@ def main(data):
         accuracy_test = np.abs(z_test.ravel() - z_predict_class.ravel())
         total_wrong_test = sum(accuracy_test)
         percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
+        '''
 
 
         #print("Test results")
         #print(results_test)
 
-        print("Train accuracy: ", percentage)
+        print("Train accuracy: ", percentage_train)
 
         print("Test accuracy: ", percentage_test)
 
@@ -540,7 +608,7 @@ def main(data):
         epochs = 10000
         lamb = 0
 
-        activation_func = "relu"
+        activation_func = "sigmoid"
         cost_func = "accuracy"     #relu and leaky_relu only works with mse
         dataset = "classification"
         weight_init_method = "none"
@@ -585,4 +653,4 @@ def main(data):
 
 
 
-main("test")
+main("franke")
