@@ -221,27 +221,28 @@ class NeuralNetwork:
 
         error_output = grad_cost * grad_activation
 
-        # print("z hidden: ")
-        # print(self.output_layer.z_hidden)
-        # print()
-        #
-        # print("output: ")
-        # print(self.output_layer.a_out)
-        # print()
-        #
-        # print("grad cost: ")
-        # print(grad_cost)
-        # print('')
-        # print("grad_activation: ")
-        # print(grad_activation)
-        # print('')
-        #
-        # print("Error output: ")
-        # print(error_output)
-        #
-        #
-        #
-        # input()
+        print("z hidden: ")
+        print(self.output_layer.z_hidden)
+        print()
+
+        print("output: ")
+        print(self.output_layer.a_out)
+        print()
+
+        print("grad cost: ")
+        print(grad_cost)
+        print('')
+
+        print("grad_activation: ")
+        print(grad_activation)
+        print('')
+
+        print("Error output: ")
+        print(error_output)
+
+
+
+        input()
 
 
 
@@ -292,10 +293,11 @@ class NeuralNetwork:
                 z_model = self.prediction(self.X_train)
                 z_predict = self.prediction(self.X_test)
 
-
+                '''
                 model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
                 if np.isnan(model_sum):
                     break
+                '''
 
 
                 z_classified = classify(z_model)
@@ -419,7 +421,6 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
         if self.init_method.lower() == "he":
             self.hidden_weights = np.random.normal(scale=(np.sqrt(2)/np.sqrt(self.n_hidden_nodes)), size=(self.n_previous_nodes, self.n_hidden_nodes))
 
-
         elif self.init_method.lower() == "xavier":
             bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes + self.n_hidden_nodes))
 
@@ -533,16 +534,16 @@ def main(data):
         X_train, X_test, z_train_useless, z_test_useless = scalerStandard(X_train, X_test, z_train, z_test)
 
 
-        hidden_nodes = [20, 20]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.00001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
+        hidden_nodes = [30, 30]   #This is a list of the number of nodes in each hidden layer
+        eta = 0.0001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
         batch_size = 32
         epochs = 500
         lamb = 1
 
-        activation_func = "leaky_relu"
+        activation_func = "relu"
         cost_func = "accuracy"     #relu and leaky_relu only works with mse
         dataset = "classification"
-        weight_init_method = "homemade"     #use homemade for relu and leaky_relu
+        weight_init_method = "he"     #use homemade for relu and leaky_relu
 
 
         Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
