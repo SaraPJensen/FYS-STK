@@ -9,6 +9,7 @@ from autograd import elementwise_grad
 from sklearn.metrics import mean_squared_error, r2_score
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
+import seaborn as sns
 
 
 def FrankeFunction(x,y):
@@ -221,30 +222,28 @@ class NeuralNetwork:
 
         error_output = grad_cost * grad_activation
 
-        print("z hidden: ")
-        print(self.output_layer.z_hidden)
-        print()
-
-        print("output: ")
-        print(self.output_layer.a_out)
-        print()
-
-        print("grad cost: ")
-        print(grad_cost)
-        print('')
-
-        print("grad_activation: ")
-        print(grad_activation)
-        print('')
-
-        print("Error output: ")
-        print(error_output)
-
-
-
-        input()
-
-
+        # print("z hidden: ")
+        # print(self.output_layer.z_hidden)
+        # print()
+        #
+        # print("output: ")
+        # print(self.output_layer.a_out)
+        # print()
+        #
+        # print("grad cost: ")
+        # print(grad_cost)
+        # print('')
+        #
+        # print("grad_activation: ")
+        # print(grad_activation)
+        # print('')
+        #
+        # print("Error output: ")
+        # print(error_output)
+        #
+        #
+        #
+        # input()
 
 
         self.output_layer.error = error_output
@@ -268,14 +267,13 @@ class NeuralNetwork:
 
 
 
-    def model_training(self, method = "SGD"):
+    def model_training(self, method = "SGD", plot = "yes"):
 
         if method == "SGD" and self.dataset == "classification":
-
-            Epochs = []
-            train_accuracy = []
-            test_accuracy = []
-
+            if plot == "yes":
+                Epochs = []
+                train_accuracy = []
+                test_accuracy = []
 
             for e in range(0, self.epochs):
                 indices = np.random.permutation(self.n_datapoints)
@@ -290,60 +288,65 @@ class NeuralNetwork:
                     self.feed_forward()
                     self.backpropagation()
 
-                z_model = self.prediction(self.X_train)
-                z_predict = self.prediction(self.X_test)
+                if plot == "yes":
 
-                '''
-                model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
-                if np.isnan(model_sum):
-                    break
-                '''
+                    z_model = self.prediction(self.X_train)
+                    z_predict = self.prediction(self.X_test)
 
+                    '''
+                    model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
+                    if np.isnan(model_sum):
+                        break
+                    '''
 
-                z_classified = classify(z_model)
-                results = np.column_stack((self.z_train_full, z_classified))
-                accuracy = np.abs(self.z_train_full.ravel() - z_classified.ravel())
-                total_wrong = sum(accuracy)
-                percentage = (len(accuracy) - total_wrong)/len(accuracy)
+                    z_classified = classify(z_model)
+                    results = np.column_stack((self.z_train_full, z_classified))
+                    accuracy = np.abs(self.z_train_full.ravel() - z_classified.ravel())
+                    total_wrong = sum(accuracy)
+                    percentage = (len(accuracy) - total_wrong)/len(accuracy)
 
-                z_predict_class = classify(z_predict)
-                results_test = np.column_stack((self.z_test, z_predict_class))
-                accuracy_test = np.abs(self.z_test.ravel() - z_predict_class.ravel())
-                total_wrong_test = sum(accuracy_test)
-                percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
-
-
-                Epochs.append(e)
-                train_accuracy.append(percentage)
-                test_accuracy.append(percentage_test)
+                    z_predict_class = classify(z_predict)
+                    results_test = np.column_stack((self.z_test, z_predict_class))
+                    accuracy_test = np.abs(self.z_test.ravel() - z_predict_class.ravel())
+                    total_wrong_test = sum(accuracy_test)
+                    percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
 
 
-                #print(self.output_layer.hidden_weights)
-                #input()
+                    Epochs.append(e)
+                    train_accuracy.append(percentage)
+                    test_accuracy.append(percentage_test)
 
 
-            plt.plot(Epochs, train_accuracy, label = "Accuracy train")
-            plt.plot(Epochs, test_accuracy, label = "Accuracy test")
-            plt.xlabel("Epochs")
-            plt.ylabel("Accuracy")
-            plt.title(f"Accuracy using {self.activation_func} as activation function")
-            plt.legend()
-            plt.show()
+                    #print(self.output_layer.hidden_weights)
+                    #input()
+
+            if plot == "yes":
+                plt.plot(Epochs, train_accuracy, label = "Accuracy train")
+                plt.plot(Epochs, test_accuracy, label = "Accuracy test")
+                plt.xlabel("Epochs")
+                plt.ylabel("Accuracy")
+                plt.title(f"Accuracy using {self.activation_func} as activation function")
+                plt.legend()
+                plt.show()
+
 
             return(train_accuracy[-1], test_accuracy[-1])
 
 
         elif method == "SGD" and self.dataset == "function":
 
-            Epochs = []
-            mse_train = []
-            mse_test = []
-            r2_train = []
-            r2_test = []
+            if plot == "yes":
+                Epochs = []
+                mse_train = []
+                mse_test = []
+                r2_train = []
+                r2_test = []
 
             for e in range(1, self.epochs):
                 indices = np.random.permutation(self.n_datapoints)
                 indices = np.array_split(indices, self.batches)
+
+                #maybe add a test for convergence of errors?
 
 
                 for b in range(self.batches):
@@ -356,35 +359,50 @@ class NeuralNetwork:
                     self.feed_forward()
                     self.backpropagation()
 
+                if plot == "yes":
 
-                z_model = self.prediction(self.X_train)
-                z_predict = self.prediction(self.X_test)
+                    z_model = self.prediction(self.X_train)
+                    z_predict = self.prediction(self.X_test)
 
-                mse_train.append(mean_squared_error(self.z_train_full, z_model))
-                mse_test.append(mean_squared_error(self.z_test, z_predict))
+                    mse_train.append(mean_squared_error(self.z_train_full, z_model))
+                    mse_test.append(mean_squared_error(self.z_test, z_predict))
 
-                r2_train.append(r2_score(self.z_train_full, z_model))
-                r2_test.append(r2_score(self.z_test, z_predict))
+                    r2_train.append(r2_score(self.z_train_full, z_model))
+                    r2_test.append(r2_score(self.z_test, z_predict))
 
-                Epochs.append(e)
-
-
-            plt.plot(Epochs, mse_train, label = "MSE train")
-            plt.plot(Epochs, mse_test, label = "MSE test")
-            plt.xlabel("Epochs")
-            plt.ylabel("MSE")
-            plt.title(f"MSE using {self.activation_func} as activation function")
-            plt.legend()
-            plt.show()
+                    Epochs.append(e)
 
 
-            plt.plot(Epochs, r2_train, label = "R2 train")
-            plt.plot(Epochs, r2_test, label = "R2 test")
-            plt.xlabel("Epochs")
-            plt.ylabel("R2")
-            plt.title(f"R2 score using {self.activation_func} as activation function")
-            plt.legend()
-            plt.show()
+            if plot == "yes":
+                plt.plot(Epochs, mse_train, label = "MSE train")
+                plt.plot(Epochs, mse_test, label = "MSE test")
+                plt.xlabel("Epochs")
+                plt.ylabel("MSE")
+                plt.title(f"MSE using {self.activation_func} as activation function")
+                plt.legend()
+                plt.show()
+
+
+                plt.plot(Epochs, r2_train, label = "R2 train")
+                plt.plot(Epochs, r2_test, label = "R2 test")
+                plt.xlabel("Epochs")
+                plt.ylabel("R2")
+                plt.title(f"R2 score using {self.activation_func} as activation function")
+                plt.legend()
+                plt.show()
+
+
+            z_model = self.prediction(self.X_train)
+            z_predict = self.prediction(self.X_test)
+
+            mse_train = (mean_squared_error(self.z_train_full, z_model))
+            mse_test = (mean_squared_error(self.z_test, z_predict))
+
+            r2_train = (r2_score(self.z_train_full, z_model))
+            r2_test = (r2_score(self.z_test, z_predict))
+
+
+            return mse_train, mse_test, r2_train, r2_test
 
 
 
@@ -402,6 +420,20 @@ class NeuralNetwork:
         self.feed_forward()
 
         return self.output_layer.a_out  #z_prediction
+
+
+
+    def grid_search(self, eta, lamb):
+
+        if self.dataset == "function":
+
+            self.eta = eta
+            self.lamb = lamb
+
+
+
+
+
 
 
 
@@ -445,6 +477,7 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
         self.error = None
 
+
     #Update the weights and biases
     def update_parameters(self, weights_gradient, bias_gradient, eta):
         self.hidden_weights -= eta*weights_gradient   #This has been done wrong!!!
@@ -468,7 +501,7 @@ def main(data):
         #np.random.seed(123)
 
         n_dpoints = 30
-        noise = 0
+        noise = 0.2
 
         x = np.arange(0,1,1/n_dpoints)
         y = np.arange(0,1,1/n_dpoints)
@@ -488,9 +521,9 @@ def main(data):
 
 
         hidden_nodes = [50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.05    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
+        eta = 0.07    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
         batch_size = 30
-        epochs = 200
+        epochs = 100
         lamb = 0
 
         activation_func = "relu"
@@ -499,9 +532,12 @@ def main(data):
         training_method = "SGD"
         weight_init_method = "he"
 
+
+
+        '''
         #np.random.seed(123)
         Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
-        Neural.model_training("SGD")
+        Neural.model_training(training_method)
 
 
         z_model = Neural.prediction(X_train)
@@ -515,6 +551,73 @@ def main(data):
         print('')
         print("Test MSE: ", mean_squared_error(z_test, z_predict))
         print("Test R2 score: ", r2_score(z_test, z_predict))
+        '''
+
+
+
+        #gridsearch for lambda and eta
+
+        eta_min = 1e-7
+        eta_max = 1
+        eta_n = 5
+        eta = np.logspace(-7, 0, eta_n)
+        #eta = np.linspace(eta_min, eta_max, eta_n)
+
+        lamb_min = 1e-7
+        lamb_max = 10
+        lamb_n = 5
+
+        #lamb = np.linspace(lamb_min, lamb_max, lamb_n)
+        lamb = np.logspace(-7, 0, lamb_n)
+
+        mse_results = np.zeros((len(lamb), len(eta)))   #each row corresponds to one value of lambda, each column to a value of eta
+        r2_results = np.zeros((len(lamb), len(eta)))
+
+
+        for e in range(len(eta)):
+            for l in range(len(lamb)):
+                np.random.seed(123)
+                NN = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta[e], lamb[l], activation_func, cost_func, dataset, weight_init_method)
+                mse_train, mse_test, r2_train, r2_test = NN.model_training(training_method, "no")
+
+                mse_results[l, e] = mse_test  #row l, column e
+                r2_results[l, e] = r2_test
+
+                print(e, l)
+
+
+        min = np.min(mse_results)
+        index = np.where(mse_results == min)
+        print("Min MSE: ", min)
+        print("Min eta: ", eta[index[1]])
+        print("Min lambda: ", lamb[index[0]])
+
+        results = [eta, lamb, mse_results]
+
+        print(lamb)
+        print(eta)
+
+        eta = np.round(np.log10(eta), 3)
+        lamb = np.round(np.log10(lamb), 3)
+
+
+        ax = sns.heatmap(mse_results, xticklabels = eta, yticklabels = lamb,  annot=True, cmap="YlGnBu")
+        #ax.set_xticks(eta)
+        #ax.set_yticks(lamb)
+
+        ax.set_xlabel(r"log10$\eta$")
+        ax.set_ylabel(r"log10$\lambda$")
+
+        plt.show()
+
+
+
+
+
+
+
+
+
 
 
 
@@ -554,69 +657,7 @@ def main(data):
         print("Test accuracy: ", percentage_test)
 
 
-    elif data.lower() == "test":
-        #X_train =[[0, 0], [0, 1], [1, 0], [1, 1]]
-
-        x1 = [0, 0, 1, 1]
-        x2 = [0, 1, 0, 1]
-        X_train = np.column_stack((x1, x2))
-        z_train = [0, 0, 0, 1]
-
-        z_train = np.array(z_train)
-
-
-        X_test = X_train
-        z_test = z_train
-
-        hidden_nodes = [2]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.0001    #0.1 or 0.01 works well for sigmoid, same for relu and leaky_relu
-        batch_size = 4
-        epochs = 10000
-        lamb = 0
-
-        activation_func = "sigmoid"
-        cost_func = "accuracy"     #relu and leaky_relu only works with mse
-        dataset = "classification"
-        weight_init_method = "none"
-
-
-        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
-        Neural.model_training("GD")
-
-        z_model = Neural.prediction(X_train)
-
-        print(z_model)
-
-
-        z_classified = classify(z_model)
-        results = np.column_stack((z_train, z_classified))
-        accuracy = np.abs(z_train.ravel() - z_classified.ravel())
-        total_wrong = sum(accuracy)
-        percentage = (len(accuracy) - total_wrong)/len(accuracy)
-
-        #print("Training results")
-        print(results)
-        print('')
-
-        '''
-        z_predict = Neural.prediction(X_test)
-        z_predict_class = classify(z_predict)
-        results_test = np.column_stack((z_test, z_predict_class))
-        accuracy_test = np.abs(z_test.ravel() - z_predict_class.ravel())
-        total_wrong_test = sum(accuracy_test)
-        percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
-
-        '''
-        #print("Test results")
-        #print(results_test)
-
-        print("Train accuracy: ", percentage)
-
-        #print("Test accuracy: ", percentage_test)
 
 
 
-
-
-
-main("cancer")
+main("franke")
