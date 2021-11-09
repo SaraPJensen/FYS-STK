@@ -36,7 +36,7 @@ np.random.seed(2018)
 
 n_dpoints = 40
 
-noise = 0.2
+noise = 0
 
 x = np.arange(0,1,1/n_dpoints)
 y = np.arange(0,1,1/n_dpoints)
@@ -57,7 +57,6 @@ X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z_flat, test_size
 
 
 
-
 poly = 8
 
 features = int((poly + 1) * (poly + 2) / 2)
@@ -69,7 +68,7 @@ X_test = X_test_tot[:, :features]
 
 #To find the optimal eta, find the eigenvalues of XTX
 matrix = X_train.T @ X_train
-#print(np.shape(matrix))
+
 eig_vals, eig_vecs = np.linalg.eig(matrix)
 
 #Optimal learning rate is less than 1/max(eigvals)
@@ -78,13 +77,8 @@ print("Maximum learning rate: ", 1/max(eig_vals))
 lamb = 0
 
 
-beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ z_train
-ols_pred = X_test @ beta
-
-ols_mse = mean_squared_error(z_test, ols_pred)
-print(ols_mse)
 #-------------------------------
-#Regular gradient Descent
+#Regular Gradient Descent
 #-------------------------------
 #Necessary variables for SGD
 max_iter = 50
@@ -92,28 +86,30 @@ theta = np.random.randn(features, 1)
 #eta = 0.0025
 eta_GD = (1 / np.max(eig_vals))
 
-n_iterations = 100000
+n_iterations = 1000
 
 z_train = z_train.reshape(-1, 1)
+
+dtheta = 0
+momentum = 0
 
 #Define the cost function to be able to take the gradient using autograd
 def cost_func(X_train, theta, z_train):
     return (1/len(X_train[:, 0]))*((X_train @ theta)-z_train)**2      #np.sum(((X_train @ theta)-z_train)**2)
 
 
-
 for iter in range(n_iterations):
-
     gradients = X_train.T @ ((X_train @ theta)-z_train) + lamb * theta   #replace this with autograd
-    #Should this be n_dpoints???   Removed at the start:  2.0/ n_dpoints *
-    #derivative = egrad(cost_func, 1)
-    #gradients = derivative(X_train, theta, z_train)   #take the derivative w.r.t. theta
-
     if abs(sum(gradients)) <= 0.00001:
         break
-    theta -= eta_GD*gradients
 
-#print("GD theta: ", theta)
+    dtheta = momentum * dtheta - eta_GD*gradients
+    theta += dtheta
+
+
+
+
+
 
 z_predict = X_test @ theta
 z_model = X_train @ theta
@@ -143,37 +139,30 @@ print('')
 
 #Parameters
 epochs = 1000
-batch_size = 5
+batch_size = 30
 batches = int(len(X_train[:, 0])/batch_size)
-eta = 0.00025   #need to add some algorithm to scale the learning rate
+eta = 0.0025   #need to add some algorithm to scale the learning rate
 theta = np.random.randn(features, 1)
 
-mse = np.zeros((epochs, 2))
 
 for e in range (epochs):
     for b in range (batches):
         indices = np.random.randint(0, high = len(X_train[:, 0]), size = batch_size)
-        X_b = X_train[indices]
+        X_b = X_train[indices]   #does this pick out the rows indexed and all the columns?
         z_b = z_train[indices]
         gradient = X_b.T @ ((X_b @ theta)-z_b) + lamb * theta
 
         if abs(sum(gradient)) <= 0.00001:
             break
 
-        theta -= eta*gradient
+        dtheta = momentum * dtheta - eta*gradient
+        theta += dtheta
 
-    pred = X_test @ theta
-    model = X_train @ theta
-    
-    mse[e, 0] = mean_squared_error(z_test, pred)
-    mse[e, 1] = mean_squared_error(z_train, model)
-
-#print("SGD theta: ", theta)
 
 z_predict = X_test @ theta
 z_model = X_train @ theta
 
-'''
+
 print("Stochastic gradient descent")
 
 mse_train = mean_squared_error(z_train, z_model)
@@ -189,15 +178,6 @@ print('')
 r2_test = r2_score(z_test, z_predict)
 print(f"R2, test: {r2_test:.5}")
 print('')
-'''
-x_ax = np.linspace(1, epochs, epochs)
-plt.plot(x_ax, mse[:, 0], label = "Test MSE")
-plt.plot(x_ax, mse[:, 1], label = "Train MSE")
-plt.axhline(ols_mse, c='r', ls='--', alpha=0.6, label = "OLS MSE")
-plt.legend()
-plt.xlabel("# Epochs")
-plt.ylabel("MSE")
-plt.show()
 
 
 #----------------------
