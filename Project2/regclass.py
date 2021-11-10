@@ -171,8 +171,6 @@ class FrankeRegression:
 
 
 
-
-
 X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 30, noise = 0.05, poly=8)
 
 
