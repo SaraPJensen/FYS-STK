@@ -227,6 +227,7 @@ class Regression:
     '''
 
 if __name__ == "__main__":
+    np.random.seed(1337+420+69)
     n = 20
     x = np.random.rand(n)
     y = np.random.rand(n)
