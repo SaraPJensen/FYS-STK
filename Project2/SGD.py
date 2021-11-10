@@ -7,8 +7,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from numpy import linalg
 
-from autograd import elementwise_grad as egrad
-from autograd import grad
 
 
 def FrankeFunction(x,y):
@@ -34,9 +32,9 @@ def design_matrix(x_flat, y_flat, poly):
 
 np.random.seed(2018)
 
-n_dpoints = 40
+n_dpoints = 30
 
-noise = 0
+noise = 0.05
 
 x = np.arange(0,1,1/n_dpoints)
 y = np.arange(0,1,1/n_dpoints)
@@ -49,7 +47,7 @@ x_flat = np.ravel(x)
 y_flat = np.ravel(y)
 z_flat = np.ravel(z)
 
-max_poly = 10
+max_poly = 8
 X = design_matrix(x_flat, y_flat, max_poly)
 
 X_train_tot, X_test_tot, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
@@ -83,7 +81,7 @@ lamb = 0
 #Necessary variables for SGD
 max_iter = 50
 theta = np.random.randn(features, 1)
-#eta = 0.0025
+#eta_GD = 0.0025
 eta_GD = (1 / np.max(eig_vals))
 
 n_iterations = 1000
@@ -142,6 +140,7 @@ epochs = 1000
 batch_size = 30
 batches = int(len(X_train[:, 0])/batch_size)
 eta = 0.0025   #need to add some algorithm to scale the learning rate
+#eta = (1 / np.max(eig_vals))
 theta = np.random.randn(features, 1)
 
 
