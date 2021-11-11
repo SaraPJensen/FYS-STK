@@ -328,9 +328,11 @@ class NeuralNetwork:
                 plt.title(f"Accuracy using {self.activation_func} as activation function")
                 plt.legend()
                 plt.show()
+                
+                return(train_accuracy[-1], test_accuracy[-1])
 
 
-            return(train_accuracy[-1], test_accuracy[-1])
+            #return(train_accuracy[-1], test_accuracy[-1]) # Error when plot='no'
 
 
         elif method == "SGD" and self.dataset == "function":
@@ -660,4 +662,5 @@ def main(data):
 
 
 
-main("franke")
+if __name__ == "__main__":
+    main("franke")
