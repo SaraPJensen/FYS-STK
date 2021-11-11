@@ -33,12 +33,6 @@ def scalerStandard(X_train, X_test, z_train, z_test):
     #scale the response variable
     z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
     z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
-    '''
-    X_train_scaled = scaler.fit_transform(X_train, with_std = False) #æææ
-    X_test_scaled = scaler.fit_transform(X_test)
-    z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
-    z_test_scaled = (z_test - np.mean(z_test))/np.std(z_test)
-    '''
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
 
@@ -148,8 +142,6 @@ class NeuralNetwork:
             return sigmoid(z)*(1-sigmoid(z))
 
         elif self.activation_func.lower() == "relu":
-            #print("Activation function derivative: ")
-            #print(np.where(z > 0, 1, 0))
             return np.where(z > 0, 1, 0)
 
         elif self.activation_func.lower() == "leaky_relu":
@@ -163,8 +155,6 @@ class NeuralNetwork:
             return (-2/self.n_datapoints)*(self.z_train.reshape(z_model.shape) - z_model)
 
         elif self.cost_func.lower() == "accuracy":
-            #print("Cost function derivative: ")
-            #print((z_model - self.z_train.reshape(z_model.shape))/(z_model*(1-z_model)))
             return (z_model - self.z_train.reshape(z_model.shape))/(z_model*(1-z_model))
 
 
@@ -186,30 +176,12 @@ class NeuralNetwork:
 
             previous = layer
 
-            # print("Hidden weights: ")
-            # print(layer.hidden_weights)
-            # print()
-            #
-            #
-            # print("Hidden layer:")
-            # print(layer.z_hidden)
-            # print()
-            #
-            #
-            # print("Layer output: ")
-            # print(output)
-            # print()
-            #
-            # input()
-
-
-
         if self.dataset == "function":
             layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
 
         elif self.dataset.lower() == "classification":
             layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
-            #layer.a_out = layer.z_hidden
+
 
 
     def backpropagation(self):
@@ -221,30 +193,6 @@ class NeuralNetwork:
             grad_activation = 1
 
         error_output = grad_cost * grad_activation
-
-        # print("z hidden: ")
-        # print(self.output_layer.z_hidden)
-        # print()
-        #
-        # print("output: ")
-        # print(self.output_layer.a_out)
-        # print()
-        #
-        # print("grad cost: ")
-        # print(grad_cost)
-        # print('')
-        #
-        # print("grad_activation: ")
-        # print(grad_activation)
-        # print('')
-        #
-        # print("Error output: ")
-        # print(error_output)
-        #
-        #
-        #
-        # input()
-
 
         self.output_layer.error = error_output
         next_layer = self.output_layer
@@ -293,11 +241,11 @@ class NeuralNetwork:
                     z_model = self.prediction(self.X_train)
                     z_predict = self.prediction(self.X_test)
 
-                    '''
+
                     model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
                     if np.isnan(model_sum):
                         break
-                    '''
+
 
                     z_classified = classify(z_model)
                     results = np.column_stack((self.z_train_full, z_classified))
@@ -317,9 +265,6 @@ class NeuralNetwork:
                     test_accuracy.append(percentage_test)
 
 
-                    #print(self.output_layer.hidden_weights)
-                    #input()
-
             if plot == "yes":
                 plt.plot(Epochs, train_accuracy, label = "Accuracy train")
                 plt.plot(Epochs, test_accuracy, label = "Accuracy test")
@@ -328,11 +273,11 @@ class NeuralNetwork:
                 plt.title(f"Accuracy using {self.activation_func} as activation function")
                 plt.legend()
                 plt.show()
-                
+
                 return(train_accuracy[-1], test_accuracy[-1])
 
 
-            #return(train_accuracy[-1], test_accuracy[-1]) # Error when plot='no'
+            return(train_accuracy[-1], test_accuracy[-1]) # Error when plot='no'
 
 
         elif method == "SGD" and self.dataset == "function":
@@ -353,7 +298,6 @@ class NeuralNetwork:
 
                 for b in range(self.batches):
                     index = np.random.randint(self.batches)
-                    #indices = np.random.randint(0, high = self.n_datapoints-1, size = self.batch_size)
 
                     self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
                     self.z_train = self.z_train_full[indices[index]]
@@ -453,10 +397,10 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
         np.random.seed(123)
 
         if self.init_method.lower() == "he":
-            self.hidden_weights = np.random.normal(scale=(np.sqrt(2)/np.sqrt(self.n_hidden_nodes)), size=(self.n_previous_nodes, self.n_hidden_nodes))
+            self.hidden_weights = np.random.normal(scale=(np.sqrt(2)/np.sqrt(self.n_previous_nodes)), size=(self.n_previous_nodes, self.n_hidden_nodes))
 
         elif self.init_method.lower() == "xavier":
-            bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes + self.n_hidden_nodes))
+            bound = np.sqrt(6)/(np.sqrt(self.n_previous_nodes))
 
             self.hidden_weights = np.random.uniform(-bound, bound, size = (self.n_previous_nodes, self.n_hidden_nodes))
 
@@ -467,7 +411,6 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
             self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / (np.sqrt(2)*np.sqrt(self.n_hidden_nodes))    #this is the wrong expression for he, but it works bloody well....
 
             #self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / self.n_hidden_nodes
-
 
 
         #the bias is a vector, where each element is the bias for one node
@@ -640,13 +583,13 @@ def main(data):
 
 
         hidden_nodes = [30, 30]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.0001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
-        batch_size = 32
-        epochs = 500
-        lamb = 1
+        eta = 0.00001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
+        batch_size = 80
+        epochs = 1000
+        lamb = 0
 
         activation_func = "relu"
-        cost_func = "accuracy"     #relu and leaky_relu only works with mse
+        cost_func = "accuracy"
         dataset = "classification"
         weight_init_method = "he"     #use homemade for relu and leaky_relu
 
@@ -661,6 +604,5 @@ def main(data):
 
 
 
-
 if __name__ == "__main__":
-    main("franke")
+    main("cancer")
