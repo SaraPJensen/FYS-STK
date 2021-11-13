@@ -1,7 +1,6 @@
 from franke_regclass import *
 
-X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0, poly=7)
-
+X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0, poly=7, design = "poly")
 
 
 def OLS():
@@ -193,7 +192,7 @@ def batchloop():
 
 
 
-#SGD_test()
+SGD_test()
 #learning_rate()
 #momentum()
 #OLS()
