@@ -10,6 +10,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 import seaborn as sns
+from Franke_data import *
 
 
 def FrankeFunction(x,y):
@@ -282,7 +283,7 @@ class NeuralNetwork:
 
         elif method == "SGD" and self.dataset == "function":
 
-            if plot == "yes":
+            if plot == "yes" or plot == "data":
                 Epochs = []
                 mse_train = []
                 mse_test = []
@@ -305,7 +306,7 @@ class NeuralNetwork:
                     self.feed_forward()
                     self.backpropagation()
 
-                if plot == "yes":
+                if plot == "yes" or plot == "data":
 
                     z_model = self.prediction(self.X_train)
                     z_predict = self.prediction(self.X_test)
@@ -336,6 +337,10 @@ class NeuralNetwork:
                 plt.title(f"R2 score using {self.activation_func} as activation function")
                 plt.legend()
                 plt.show()
+
+            if plot == "data":
+                print("er du her?")
+                return Epochs, mse_train, mse_test, r2_train, r2_test
 
 
             z_model = self.prediction(self.X_train)
@@ -404,8 +409,14 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
             self.hidden_weights = np.random.uniform(-bound, bound, size = (self.n_previous_nodes, self.n_hidden_nodes))
 
+
         elif self.init_method.lower() == "none":
             self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes)
+
+
+        elif self.init_method.lower() == "nielsen":
+            self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / np.sqrt(self.n_previous_nodes)
+
 
         elif self.init_method.lower() == "homemade":
             self.hidden_weights = np.random.randn(self.n_previous_nodes, self.n_hidden_nodes) / (np.sqrt(2)*np.sqrt(self.n_hidden_nodes))    #this is the wrong expression for he, but it works bloody well....
@@ -563,10 +574,6 @@ def main(data):
 
 
 
-
-
-
-
     elif data.lower() == "cancer":
         #-------------------------------------
         #Breast cancer analysis
@@ -601,8 +608,4 @@ def main(data):
 
         print("Test accuracy: ", percentage_test)
 
-
-
-
-if __name__ == "__main__":
-    main("cancer")
+main ("cancer")
