@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import sys
 import warnings
 
@@ -42,10 +43,10 @@ y_train = y_train.reshape(-1, 1)#np.array([y_train]).reshape(-1, 1)
 y_test = y_test.reshape(-1, 1)
 max_iterations = 10000
 
-sklr_filename = f"part_e/sk_loglreg_{len(lambdas)}"
-gd_filename = f"part_e/man_gd_{len(learning_rates)}_{len(lambdas)}"
-sksgd_filename = f"part_e/sk_sgd_{len(learning_rates)}_{len(lambdas)}"
-mansgd_filename = f"part_e/man_sgd_{len(learning_rates)}_{len(lambdas)}"
+sklr_filename = f"part_e/sk_loglreg_{len(lambdas)}_{max_iterations}"
+gd_filename = f"part_e/man_gd_{len(learning_rates)}_{len(lambdas)}_{max_iterations}"
+sksgd_filename = f"part_e/sk_sgd_{len(learning_rates)}_{len(lambdas)}_{max_iterations}"
+mansgd_filename = f"part_e/man_sgd_{len(learning_rates)}_{len(lambdas)}_{max_iterations}"
 
 
 if train:
@@ -120,7 +121,7 @@ if train:
             #sklearn
 
             SGDLogReg = SGDClassifier(loss = 'log', max_iter = max_iterations, alpha=lambd,\
-                    learning_rate='constant', eta0 = eta)
+                    learning_rate='constant', eta0 = eta, tol=1e-5)
             SGDLogReg.fit(X_train, y_train.ravel())
             SGDaccuracy = SGDLogReg.score(X_test, y_test)
 
@@ -185,20 +186,70 @@ else:
     sk_sgd_score = np.loadtxt(sksgd_filename + ".txt")
     man_sgd_score = np.loadtxt(mansgd_filename + ".txt")
 
-print(gd_score)
+""" Plot the results """
 '''
-sk_ans = SGDLogReg.predict(X_test)#out(p(X_test_s.dot(SGDLogReg.coef_.reshape(-1, 1))))
+x = 3.5
+xticks = [f"{i:.2e}" for i in lambdas]
+yticks = [f"{i:.2e}" for i in learning_rates]
+#print(xticks)
+plt.figure(figsize = (4*x, 3*x))
 
-#print(man_ans==sk_ans)
-print("Sammenlikning, vår SGD vs SKLearn:")
-print(f"{np.sum(man_ans==sk_ans)}/{len(man_ans)}")
-#print("sk_ans:")
-#print(sk_ans)
-#print(sk_ans)
-man_acc = np.sum(man_ans == y_test)
-print("Johan II har da følgende treffsikkerhet på sin Logistiske Regresjonsanalyser:\n", man_acc, "/", len(y_test))
-#print(man_ans)
-#print(y_test)
-#print(man_ans == y_test)
-#print(sk_ans == y_test)
+sns.heatmap(gd_score, linewidth = 0.5, square = True, annot = True, cmap = 'YlGnBu', \
+        cbar_kws={'shrink':0.6}, xticklabels=xticks, yticklabels=yticks)
+
+plt.title(f"Accuracy for Gradient Descent {max_iterations} epochs")
+plt.xlabel("$\lambda$", size = 20)
+plt.ylabel("$\eta$", rotation = 0, size = 20)
+plt.xticks(rotation = 45)
+#plt.savefig(gd_filename + ".png")
+plt.show()
+
+plt.figure(figsize = (4*x, 3*x))
+
+sns.heatmap(sk_sgd_score, linewidth = 0.5, square = True, annot = True, cmap = 'YlGnBu', \
+        cbar_kws={'shrink':0.6}, xticklabels=xticks, yticklabels=yticks)
+
+plt.title(f"Accuracy for Scikit-learns Stochastic Gradient Descent {max_iterations} epochs")
+plt.xlabel("$\lambda$", size = 20)
+plt.ylabel("$\eta$", rotation = 0, size = 20)
+plt.xticks(rotation = 45)
+#plt.savefig(sksgd_filename + ".png")
+plt.show()
+
+plt.figure(figsize = (4*x, 3*x))
+
+sns.heatmap(man_sgd_score, linewidth = 0.5, square = True, annot = True, cmap = 'YlGnBu', \
+        cbar_kws={'shrink':0.6}, xticklabels=xticks, yticklabels=yticks)
+
+plt.title(f"Accuracy for Stochastic Gradient Descent {max_iterations} epochs")
+plt.xlabel("$\lambda$", size = 20)
+plt.ylabel("$\eta$", rotation = 0, size = 20)
+plt.xticks(rotation = 45)
+#plt.savefig(mansgd_filename + ".png")
+plt.show()
+
+fig, ax = plt.subplots()
+
+plt.plot(lambdas, sk_logreg)
+ax.set_xscale('log')
+plt.show()
 '''
+
+""" Optimal params """
+def get_opt_ind(matrix):
+    ind = np.unravel_index(np.argmax(matrix, axis=None), matrix.shape)
+    return ind
+
+print(f"Epochs: {max_iterations}")
+
+sk_sgd_ind = get_opt_ind(sk_sgd_score)
+sksgd_e, sksgd_l = learning_rates[sk_sgd_ind[0]], lambdas[sk_sgd_ind[1]]
+print(f"SGDClassifier: Highest score: {sk_sgd_score[sk_sgd_ind]} eta = {sksgd_e}, lamda = {sksgd_l}")
+
+gd_ind = get_opt_ind(gd_score)
+gd_e, gd_l = learning_rates[gd_ind[0]], lambdas[gd_ind[1]]
+print(f"Gradient Descent: Highest score: {gd_score[gd_ind]} eta = {gd_e}, lamda = {gd_l}")
+
+sgd_ind = get_opt_ind(man_sgd_score)
+sgd_e, sgd_l = learning_rates[sgd_ind[0]], lambdas[sgd_ind[1]]
+print(f"Stochastic Gradient Descent: Highest score: {man_sgd_score[sgd_ind]} eta = {sgd_e}, lamda = {sgd_l}")
