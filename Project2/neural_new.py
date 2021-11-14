@@ -583,6 +583,8 @@ def main(data):
         X = cancer.data   #cancer.data is the design matrix, dimensions 569x30
         z = cancer.target  #cancer.target is the target values, 1=Malign, 0=Benign
 
+        np.random.seed(123)
+
 
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
@@ -608,4 +610,5 @@ def main(data):
 
         print("Test accuracy: ", percentage_test)
 
-main ("cancer")
+if __name__ == "__main__":
+    main ("cancer")
