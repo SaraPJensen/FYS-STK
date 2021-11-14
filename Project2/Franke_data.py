@@ -28,10 +28,9 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 
-def Franke_data(n_dpoints, noise, poly):
-
+def Franke_data(n_dpoints, noise, design, poly = 0):
+    #np.random.seed(1234567)
     np.random.seed(1234567)
-    #np.random.seed(1234)
 
     x = np.arange(0,1,1/n_dpoints)
     y = np.arange(0,1,1/n_dpoints)
@@ -43,8 +42,13 @@ def Franke_data(n_dpoints, noise, poly):
     y_flat = np.ravel(y)
     z_flat = np.ravel(z)
 
-    X = design_matrix(x_flat, y_flat, poly)
+    if design.lower() == "poly":
+        X = design_matrix(x_flat, y_flat, poly)
 
+    elif design.lower() == "stack":
+        X = np.column_stack((x_flat, y_flat))
+
+    np.random.seed(2018)
     X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size = 0.2)
 
     return X_train, X_test, z_train, z_test

@@ -1,6 +1,6 @@
 from franke_regclass import *
 
-X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0, poly=7, design = "poly")
+X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.05, poly=7, design = "poly")
 
 
 def OLS():
@@ -75,7 +75,6 @@ def momentum():
     Epochs_low_m, mse_train_l, mse_test_low_m, r2_train_l, r2_test_l = momentum_lower.SGD(epochs = 1000, batch_size = 30, eta = 0.00481487*0.5, momentum = 0.5, lamb = 0.00127427, learning_schedule = "no", plot = "data")
 
 
-
     plt.plot(Epochs_h[4:], mse_test_h[4:], label = r"$\eta$ = 0.002407, without momentum")
     plt.plot(Epochs_l_m[4:], mse_test_l_m[4:], label = r"$\eta$ = 0.002407, momentum = 0.2")
     plt.plot(Epochs_low_m[4:], mse_test_low_m[4:], label = r"$\eta$ = 0.002407, momentum = 0.5")
@@ -101,12 +100,12 @@ def gridsearch():
     #gridsearch for lambda and eta, here for SGD
     eta_min = np.log10(1e-5)   #log base 10
     eta_max = np.log10(0.025)    #upper limit
-    eta_n = 20
+    eta_n = 10
     eta = np.logspace(eta_min, eta_max, eta_n)
 
     lamb_min = np.log10(1e-5)   #log base 10
     lamb_max = np.log10(1)   #upper limit
-    lamb_n = 20
+    lamb_n = 10
 
 
     lamb = np.logspace(lamb_min, lamb_max, lamb_n)
@@ -117,7 +116,7 @@ def gridsearch():
 
     for e in range(len(eta)):
         for l in range(len(lamb)):
-            np.random.seed(123)
+            #np.random.seed(123)
             SGD = FrankeRegression(X_train, X_test, z_train, z_test)
             z_model, z_predict = SGD.SGD(1000, eta = eta[e], batch_size = 30, momentum = 0, lamb = lamb[l])
             mse_train, mse_test, r2_train, r2_test = SGD.error(z_model, z_predict)
@@ -144,7 +143,7 @@ def gridsearch():
     plt.figure(figsize = (4*scale, 4*scale))
     ax_mse = sns.heatmap(mse_results, xticklabels = eta, yticklabels = lamb,  annot=True, cmap="YlGnBu", fmt='.3g')
 
-    ax_mse.set_title("Test MSE for SGD on Franke function after 500 epochs", size = 20)
+    ax_mse.set_title("Test MSE for SGD on Franke function after 1000 epochs", size = 20)
     ax_mse.set_xlabel(r"log$_{10}\eta$", size = 20)
     ax_mse.set_ylabel(r"log$_{10}\lambda$", size = 20)
 
@@ -192,9 +191,9 @@ def batchloop():
 
 
 
-SGD_test()
+#SGD_test()
 #learning_rate()
 #momentum()
 #OLS()
 #batchloop()
-#gridsearch()
+gridsearch()
