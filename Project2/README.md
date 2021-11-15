@@ -10,24 +10,30 @@ Use designated files for each section of the project.
 File-by-file rundown and explanation of each file and their their functions.
 
 ### [Franke_data.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/Franke_data.py)
-Makes various plots of the data, dependant on input arguments. Full description of each plotting function is given below.
 - blabla
 
 #### Functions:
-- 
+- design_matrix()
+- FrankeFunction()
+- Franke_data()
 
 
 ### [franke_regclass.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/franke_regclass.py)
+Description
 
-
-#### Functions:
-- 
-
-
+#### Class: 
+FrankeRegression: 
+##### Functions:
+- beta()
+- OLS_Ridge()
+- GD()
+- SGD()
+- error()
+- print_error()
 
 
 ### [ex_A.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/franke_regclass.py)
-
+Description
 
 #### Functions:
 - 
@@ -36,14 +42,26 @@ Makes various plots of the data, dependant on input arguments. Full description 
 
 
 ### [neural_new.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/neural_new.py)
-
+Description
 
 #### Functions:
+- sigmoid()
+- relu()
+- leaky_relu()
+- classify()
+
+#### Classes: 
+NeuralNetwork
+##### Functions:
+- activation()
 - 
 
 
-### [ex_B.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/franke_regclass.py)
 
+
+
+### [ex_B.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/franke_regclass.py)
+Description
 
 #### Functions:
 - 
