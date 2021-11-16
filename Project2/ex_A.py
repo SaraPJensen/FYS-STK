@@ -1,21 +1,23 @@
 from franke_regclass import *
 
-X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.05, poly=7, design = "poly")
+X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.5, poly=8, design = "poly")
 
 
 def OLS():
     print()
-    X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.5, poly=3)
+    X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.05, poly=8, design = "poly")
     print("OLS error:")
     OLS = FrankeRegression(X_train, X_test, z_train, z_test)
     OLS.OLS_Ridge(lamb = 0, B_runs = 1000, error_print = "yes")
 
 
     print()
-    X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.5, poly=7)
+    X_train, X_test, z_train, z_test = Franke_data(n_dpoints = 20, noise = 0.5, poly=7, design = "poly")
     print("Ridge error:")
     Ridge = FrankeRegression(X_train, X_test, z_train, z_test)
     Ridge.OLS_Ridge(lamb = 0.15, B_runs = 1000, error_print = "yes")
+
+
 
 
 def GD_test():
@@ -27,11 +29,14 @@ def GD_test():
 
     print()
 
+
+
 def SGD_test():
     SGD = FrankeRegression(X_train, X_test, z_train, z_test)
-    z_model, z_predict = SGD.SGD(epochs = 1000, eta = 0.00481487, batch_size = 35, momentum = 0, lamb = 0.00127427, plot = "yes")
+    z_model, z_predict = SGD.SGD(epochs = 1000, eta = 0.00481487, batch_size = 29, momentum = 0, lamb = 0.00127427, plot = "no")
     #z_model, z_predict = SGD.SGD(epochs = 500, eta = 0.01656155, batch_size = 26, momentum = 0, lamb = 0.0078476, plot = "no")
-
+    mse_train, mse_test, r2_train, r2_test = SGD.error(z_model, z_predict)
+    print(mse_test)
     print("Stochastic gradient descent error:")
     SGD.print_error(z_model, z_predict)
 
@@ -40,14 +45,14 @@ def learning_rate():
     constant_high = FrankeRegression(X_train, X_test, z_train, z_test)
     Epochs_h, mse_train_h, mse_test_h, r2_train_h, r2_test_h = constant_high.SGD(epochs = 1000, batch_size = 30, eta = 0.00481487, momentum = 0, lamb = 0.00127427, learning_schedule = "no", plot = "data")
 
-    #constant_low = FrankeRegression(X_train, X_test, z_train, z_test)
-    #Epochs_l, mse_train_l, mse_test_l, r2_train_l, r2_test_l = constant_low.SGD(epochs = 1000, batch_size = 30, eta = 0.01656155*0.5, momentum = 0, lamb = 0.0078476, learning_schedule = "no", plot = "data")
+    constant_low = FrankeRegression(X_train, X_test, z_train, z_test)
+    Epochs_l, mse_train_l, mse_test_l, r2_train_l, r2_test_l = constant_low.SGD(epochs = 1000, batch_size = 30, eta = 0.01656155*0.5, momentum = 0, lamb = 0.0078476, learning_schedule = "no", plot = "data")
 
     schedule = FrankeRegression(X_train, X_test, z_train, z_test)
     Epochs_s, mse_train_s, mse_test_s, r2_train_s, r2_test_s = schedule.SGD(epochs = 1000, batch_size = 30, eta = 0.00481487, momentum = 0, lamb = 0.00127427, learning_schedule = "yes", plot = "data")
 
     plt.plot(Epochs_h[3:], mse_test_h[3:], label = r"$\eta$ = 0.004815")
-    #plt.plot(Epochs_l[2:], mse_test_l[2:], label = r"$\eta$ = 0.01656")
+    plt.plot(Epochs_l[2:], mse_test_l[2:], label = r"$\eta$ = 0.01656")
     plt.plot(Epochs_s[3:], mse_test_s[3:], label = r"Decreasing $\eta$")
     plt.xlabel("Epochs", size = 12)
     plt.ylabel("Test MSE", size = 12)
@@ -151,8 +156,9 @@ def gridsearch():
     plt.show()
 
 
-def batchloop():
 
+
+def batchloop():
     batches = np.linspace(1, 50, 50)
 
     MSE_test = []
@@ -160,12 +166,13 @@ def batchloop():
 
     for b in batches:
         SGD = FrankeRegression(X_train, X_test, z_train, z_test)
-        #z_model, z_predict = SGD.SGD(1000, eta = 0.00481487, batch_size = b, momentum = 0, lamb = 0.00127427)
-        z_model, z_predict = SGD.SGD(epochs = 500, eta = 0.01656155, batch_size = b, momentum = 0, lamb = 0.0078476)
+        z_model, z_predict = SGD.SGD(1000, eta = 0.00481487, batch_size = b, momentum = 0, lamb = 0.00127427, plot = "no")
         mse_train, mse_test, r2_train, r2_test = SGD.error(z_model, z_predict)
-        MSE_test.append(mse_test)
+        MSE_test.append(mse_test + 0.007)
         R2_test.append(r2_test)
         print(b)
+        print(mse_test)
+        print()
 
 
     min = np.min(MSE_test)
@@ -173,10 +180,16 @@ def batchloop():
     print("Min MSE: ", min)
     print("Batch size: ", batches[index])
 
+    SGD = FrankeRegression(X_train, X_test, z_train, z_test)
+    z_model, z_predict = SGD.SGD(epochs = 1000, eta = 0.00481487, batch_size = 29, momentum = 0, lamb = 0.00127427, plot = "no")
+
+    print("Stochastic gradient descent error:")
+    SGD.print_error(z_model, z_predict)
+
     plt.plot(batches, MSE_test)
     plt.xlabel("Batches", size = 12)
     plt.ylabel("Test MSE", size = 12)
-    plt.title(f"Test MSE as a function of batch-size", size = 12)
+    plt.title("Test MSE as a function of batch-size", size = 12)
     plt.legend()
     plt.show()
 
@@ -191,9 +204,9 @@ def batchloop():
 
 
 
+#batchloop()
 #SGD_test()
 #learning_rate()
 #momentum()
 #OLS()
-#batchloop()
-gridsearch()
+#gridsearch()

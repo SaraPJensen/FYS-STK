@@ -61,22 +61,12 @@ class FrankeRegression:
         return mse_train, mse_test, r2_train, r2_test
 
 
-    def max_eta(self):   #don't need this
-        matrix = self.X_train.T @ self.X_train * 2/self.datapoints
-        eig_vals, eig_vecs = np.linalg.eig(matrix)
-        max = (1 / np.max(eig_vals))  #calculate the maximum eta
-        eta = max   #just to be on the safe side
-        print("Max eta: ", eta)
-
-        return eta
 
     def GD(self, epochs, eta, momentum = 0, lamb = 0, learning_schedule = "no"): # Gradient descent
 
         theta = np.random.randn(self.features, 1)
-
         z_train = self.z_train.reshape(-1, 1)
         dtheta = 0
-
         eta0 = eta
 
         for e in range(epochs):
@@ -130,7 +120,6 @@ class FrankeRegression:
 
                 X_b = self.X_train[indices[index],:]   #pick out what rows to use
                 z_b = z_train[indices[index]]
-
                 gradient = X_b.T @ ((X_b @ theta)-z_b) + lamb * theta
 
                 if abs(sum(gradient)) <= 0.00001:
