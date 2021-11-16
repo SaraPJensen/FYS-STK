@@ -56,7 +56,7 @@ Code for neural network, containing a class for the network and a class for the 
 
 #### Classes: 
 - NeuralNetwork
-Creates a neural network with the architecture given by the parameters.  
+  - Creates a neural network with the architecture given by the parameters.  
   - Functions:
     - activation(): Activation functions  
     - activation_derivative(): Derivatives of activation functions
@@ -67,7 +67,7 @@ Creates a neural network with the architecture given by the parameters.
     - prediction(): generates a prediction for the given input, be be used after model training
 
 - hidden_layer
-One layer-object for each hidden layer in the network, as well as the input and output layers. Contains information about the number of nodes, hidden weights and biases, as well as input and output to and from the layer.
+  - One layer-object for each hidden layer in the network, as well as the input and output layers. Contains information about the number of nodes, hidden weights and biases, as well as input and output to and from the layer.
   - Functions:
     -  update_parameters(): updates the weights and biases according to the parameters given. 
 
