@@ -12,17 +12,7 @@ from sklearn.datasets import load_breast_cancer
 import seaborn as sns
 from Franke_data import *
 
-
-def FrankeFunction(x,y):
-    term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
-    term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
-    term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
-    term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
-    return term1 + term2 + term3 + term4
-
-
-
-#Add momentum to the SGD
+'''   Can this safely be removed? 
 
 def scalerStandard(X_train, X_test, z_train, z_test):
     scaler = StandardScaler()
@@ -36,7 +26,7 @@ def scalerStandard(X_train, X_test, z_train, z_test):
     z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
 
     return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
-
+'''
 
 
 #---------------------
@@ -127,17 +117,6 @@ class NeuralNetwork:
             return leaky_relu(z)
 
 
-
-    def cost(self, z_model): #Do we need this?
-        if self.cost.lower() == "mse":
-            return (z_model - self.z_train)**2
-
-        elif self.cost.lower() == "accuracy":
-            return - self.z_train * np.log(z_model) + (1 - self.z_train) * np.log(1 - z_model)
-
-
-
-
     def activation_derivative(self, z):
         if self.activation_func.lower() == "sigmoid":
             return sigmoid(z)*(1-sigmoid(z))
@@ -179,6 +158,7 @@ class NeuralNetwork:
 
         if self.dataset == "function":
             layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
+            #pass
 
         elif self.dataset.lower() == "classification":
             layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
@@ -365,23 +345,11 @@ class NeuralNetwork:
 
 
 
-
     def prediction(self, data):
         self.input.a_out = data   #The input layer is replaced with the test data
         self.feed_forward()
 
         return self.output_layer.a_out  #z_prediction
-
-
-
-    def grid_search(self, eta, lamb):
-
-        if self.dataset == "function":
-
-            self.eta = eta
-            self.lamb = lamb
-
-
 
 
 
@@ -438,177 +406,3 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
     def update_parameters(self, weights_gradient, bias_gradient, eta):
         self.hidden_weights -= eta*weights_gradient   #This has been done wrong!!!
         self.hidden_bias -= eta*bias_gradient
-
-
-
-
-
-def main(data):
-    #np.random.seed(1234)
-    print('')
-    print('')
-    print('')
-    print("Restart")
-
-    if data.lower() == "franke":
-        #------------------------------
-        #Franke function analysis
-        #------------------------------
-        #np.random.seed(123)
-
-        n_dpoints = 30
-        noise = 0.2
-
-        x = np.arange(0,1,1/n_dpoints)
-        y = np.arange(0,1,1/n_dpoints)
-
-        x, y = np.meshgrid(x, y)
-
-        z = FrankeFunction(x, y) + noise*np.random.randn(n_dpoints, n_dpoints)
-
-        x_flat = np.ravel(x)
-        y_flat = np.ravel(y)
-        z_flat = np.ravel(z)
-
-        X = np.column_stack((x_flat, y_flat))
-
-
-        X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size=0.2)
-
-
-        hidden_nodes = [50, 50]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.07    #0.05 and 0.01 works well for leaky relu and relu, 0.03 works for sigmoid
-        batch_size = 30
-        epochs = 100
-        lamb = 0
-
-        activation_func = "relu"
-        cost_func = "mse"
-        dataset = "function"
-        training_method = "SGD"
-        weight_init_method = "he"
-
-
-
-        '''
-        #np.random.seed(123)
-        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
-        Neural.model_training(training_method)
-
-
-        z_model = Neural.prediction(X_train)
-        z_predict = Neural.prediction(X_test)
-
-        results = np.column_stack((z_train, z_model))
-        #print(results)
-
-        print("Train MSE: ", mean_squared_error(z_train, z_model))
-        print("Train R2 score: ", r2_score(z_train, z_model))
-        print('')
-        print("Test MSE: ", mean_squared_error(z_test, z_predict))
-        print("Test R2 score: ", r2_score(z_test, z_predict))
-        '''
-
-
-
-        #gridsearch for lambda and eta
-
-        eta_min = 1e-7
-        eta_max = 1
-        eta_n = 5
-        eta = np.logspace(-7, 0, eta_n)
-        #eta = np.linspace(eta_min, eta_max, eta_n)
-
-        lamb_min = 1e-7
-        lamb_max = 10
-        lamb_n = 5
-
-        #lamb = np.linspace(lamb_min, lamb_max, lamb_n)
-        lamb = np.logspace(-7, 0, lamb_n)
-
-        mse_results = np.zeros((len(lamb), len(eta)))   #each row corresponds to one value of lambda, each column to a value of eta
-        r2_results = np.zeros((len(lamb), len(eta)))
-
-
-        for e in range(len(eta)):
-            for l in range(len(lamb)):
-                np.random.seed(123)
-                NN = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta[e], lamb[l], activation_func, cost_func, dataset, weight_init_method)
-                mse_train, mse_test, r2_train, r2_test = NN.model_training(training_method, "no")
-
-                mse_results[l, e] = mse_test  #row l, column e
-                r2_results[l, e] = r2_test
-
-                print(e, l)
-
-
-        min = np.min(mse_results)
-        index = np.where(mse_results == min)
-        print("Min MSE: ", min)
-        print("Min eta: ", eta[index[1]])
-        print("Min lambda: ", lamb[index[0]])
-
-        results = [eta, lamb, mse_results]
-
-        print(lamb)
-        print(eta)
-
-        eta = np.round(np.log10(eta), 3)
-        lamb = np.round(np.log10(lamb), 3)
-
-
-        ax = sns.heatmap(mse_results, xticklabels = eta, yticklabels = lamb,  annot=True, cmap="YlGnBu")
-        #ax.set_xticks(eta)
-        #ax.set_yticks(lamb)
-
-        ax.set_xlabel(r"log10$\eta$")
-        ax.set_ylabel(r"log10$\lambda$")
-
-        plt.show()
-
-
-
-
-
-
-
-
-
-    elif data.lower() == "cancer":
-        #-------------------------------------
-        #Breast cancer analysis
-        #-------------------------------------
-        #np.random.seed(1234)
-        cancer = load_breast_cancer(return_X_y=False, as_frame=False)
-        X = cancer.data   #cancer.data is the design matrix, dimensions 569x30
-        z = cancer.target  #cancer.target is the target values, 1=Malign, 0=Benign
-
-        np.random.seed(123)
-
-
-        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
-
-        X_train, X_test, z_train_useless, z_test_useless = scalerStandard(X_train, X_test, z_train, z_test)
-
-
-        hidden_nodes = [30, 30]   #This is a list of the number of nodes in each hidden layer
-        eta = 0.00001   #0.00001 or 0.0001 works well for sigmoid, 0.01 for relu and leaky relu   (0.0001 for relu and xavier)
-        batch_size = 80
-        epochs = 1000
-        lamb = 0
-
-        activation_func = "relu"
-        cost_func = "accuracy"
-        dataset = "classification"
-        weight_init_method = "he"     #use homemade for relu and leaky_relu
-
-
-        Neural = NeuralNetwork(X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func, cost_func, dataset, weight_init_method)
-        percentage_train, percentage_test = Neural.model_training("SGD")
-
-        print("Train accuracy: ", percentage_train)
-
-        print("Test accuracy: ", percentage_test)
-
-if __name__ == "__main__":
-    main ("cancer")
