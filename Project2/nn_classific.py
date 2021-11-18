@@ -30,15 +30,15 @@ X_test_s = scaler.fit_transform(X_test)
 
 layers = [30, 30]       # Two layers, 30 nodes each
 
-wi = 'he'           # weight_initialization, same variance for each layer
-af = 'relu'          # activation_function
-epochs = 50
+wi = 'xavier'           # weight_initialization, same variance for each layer
+af = 'sigmoid'          # activation_function
+epochs = 100            # Change to 50 for relu-he combination
 batch_size = 1          # Same as sk-learn
 
 # Use this with sigmoid + xavier
-#learning_rates = np.logspace(-4, 1, 11) #Various learning rates and lambda values
+learning_rates = np.logspace(-4, 1, 11) #Various learning rates and lambda values
 # Use this with relu/leaky relu + He
-learning_rates = np.logspace(-6, 0, 11) #Various learning rates and lambda values
+#learning_rates = np.logspace(-6, 0, 11) #Various learning rates and lambda values
 lambdas = np.logspace(-5, 1, 20)
 
 accs = np.zeros((len(learning_rates), len(lambdas)))      # Accuracies
@@ -68,7 +68,6 @@ if train:
 
             accs[i, j] = acc
 
-            '''
             """ sk-learn """ # No leaky_relu
             sk_network = MLPClassifier(hidden_layer_sizes = tuple(layers), activation='logistic',\
                     solver='sgd', alpha=lambd, batch_size=batch_size, learning_rate_init=eta,\
@@ -78,7 +77,6 @@ if train:
 
             sk_acc = sk_network.score(X_test_s, target)
             sk_accs[i, j] = sk_acc
-            '''
     
     np.savetxt(filename + '.txt', accs)
     np.savetxt(skfilename + '.txt', sk_accs)
@@ -88,7 +86,6 @@ else:
     sk_accs = np.loadtxt(skfilename + '.txt')
 
 """ Plot the accuracies """
-''' # Or not
 x = 3.5
 xlabels = [f"{i:.2g}" for i in lambdas]
 ylabels = [f"{i:.2g}" for i in learning_rates]
@@ -100,7 +97,7 @@ plt.xlabel("$\lambda$")
 plt.ylabel("$\eta$", rotation = 0)
 plt.xticks(rotation = 45)
 plt.title(f"Accuracy for custom network, {epochs} epochs")
-plt.savefig(filename+".png")
+#plt.savefig(filename+".png")
 plt.show()
 
 plt.figure(figsize=(4*x, 3*x))
@@ -110,9 +107,8 @@ plt.xlabel("$\lambda$")
 plt.ylabel("$\eta$", rotation = 0)
 plt.xticks(rotation = 45)
 plt.title(f"Accuracy for sk-learn network, {epochs} epochs")
-plt.savefig(skfilename+".png")
+#plt.savefig(skfilename+".png")
 plt.show()
-#'''
 
 print(f"Epochs: {epochs}")
 print("Custom:")
@@ -127,8 +123,8 @@ skeind = skind[0]
 sklind = skind[1]
 print(f"best accuracy: {np.max(sk_accs)}\nparams: eta [{skeind}/{len(learning_rates)}] = {learning_rates[skeind]}, lambda [{sklind}/{len(lambdas)}] = {lambdas[sklind]}")
 
-"""
 #Prediction Accuracy for optimal parameters and custom epochs, only for testing
+'''
 eps = 50
 # Note that the penalization is now set to 0
 network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test, layers, eps, batch_size, learning_rates[eind], lambdas[lind],\
@@ -141,4 +137,4 @@ acc = np.sum(pred == target)/target.shape[0]
 
 print(f"Accuracy for optimal parameters and {eps} epochs")
 print(f"{np.sum(pred==target)}/{target.shape[0]} = {acc}")
-"""
+'''

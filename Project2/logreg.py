@@ -57,7 +57,6 @@ if train:
     man_sgd_score = np.zeros((len(learning_rates), len(lambdas)))
 
     for l, lambd in enumerate(lambdas):
-        #print(f"Iterasjon:\nlambda {l+1}/{len(lambdas)}")
         """ Sk LogReg """ # only depends on lambda
         ''' By default the regression is used with the lBFGS
             (limited-memory Broyden-Fletcher-Goldfarb-Shanno) method,
@@ -72,46 +71,20 @@ if train:
         for e, eta in enumerate(learning_rates):
             print(f"Iteration: lambda {l+1}/{len(lambdas)} eta {e+1}/{len(learning_rates)}")
             beta = 0.01 * np.random.randn(n_features, 1)    # Initial random parameter inizialization
-    #beta = LogReg.coef_.reshape(-1, 1)
-
-    #ee = np.exp(z)
-    #return ee/(1+ee)
-
-    #print(z)
-    #print(p(z))
-    #print(p(z)*(1-p(z)))
-    #print(W)
-
-    #y_train_s= scaler.fit_transform(y_train.reshape(-1, 1))
-    #y_test_s = scaler.fit_transform(y_test.reshape(-1, 1))
-
 
             """ Gradient Descent """
             for i in range(max_iterations):
-                #print("iteration: ", i)
                 z = X_train_s.dot(beta)
-                #print("z: ", np.shape(z))
                 W = np.diag( (p(z)*(1-p(z))).reshape(-1) )
-                #print("W: ", W.shape)
 
-                #print("y train: ", y_train.shape)
-                #print("p(z): ", p(z).shape)
                 grad_C = 1/len(X_train) * X_train_s.T @ (y_train - p(z)) + lambd * beta
-                #1/len(X_train) *
-                #print("Grad C: ", grad_C.shape)
                 Hess_C = X_train_s.T @ W @ X_train_s
-                #print("Hess C: ", Hess_C.shape)
 
-                #beta = beta + np.linalg.pinv(Hess_C) @ grad_C       # Bør det være + her? ref. Hastie
-                beta = beta + eta * grad_C      # Const learn_rate, no overflow
-                #print("Beta: ", beta.shape)
+                #beta = beta + np.linalg.pinv(Hess_C) @ grad_C
+                beta = beta + eta * grad_C      # Const learn_rate
 
-            #print("Newton iteration")
-            #print(LogReg.coef_)
-            #print(beta.reshape(1, -1))
-            #pred = out(p(X_test_s.dot(beta)))
             prob = p(X_test_s.dot(beta))
-            #print(prob)
+
             pred = prob.round()
 
             score = np.sum(pred == y_test)/len(y_test)
@@ -144,36 +117,16 @@ if train:
 
                     z = X_b.dot(theta)
                     #grad = (1/batch_size) * X_b.T @ ((X_b @ theta) - y_b)
-                    grad = -(1/batch_size) * X_b.T @ (y_b - p(z)) + lambd * theta# Funker med - (negativ)?
-                    #print(grad.shape)
-                    
+                    grad = -(1/batch_size) * X_b.T @ (y_b - p(z)) + lambd * theta                    
                     if np.linalg.norm(grad) < tol:
                         break
 
-                    #print(theta.reshape(1, -1))
                     theta = theta - eta*grad
 
-            #print("SGD")
-            #print(SGDLogReg.coef_)
-            #print(theta.reshape(1, -1))
-
             test_prob = p(X_test_s.dot(theta))
-            #print(test_prob.reshape(1, -1))
-            #print(y_test)
-            #print(p(X_test_s.dot(SGDLogReg.coef_.reshape(-1, 1))).reshape(1, -1))
-            #test_prob = p(X_test_s.dot(LogReg.coef_.reshape(-1, 1)))
-            #print(test_prob) # Gir zeros
+
             man_pred = test_prob.round()
             man_sgd_score[e, l] = np.sum(man_pred==y_test)/len(y_test)
-
-            #man_sgd_score = test_prob.round()
-
-    '''
-    print(f"Sk-learn Logistic Regression:\n{sk_logreg}")
-    print(f"Gradient descent:\n{gd_score}")
-    print(f"Sk-learn SGD:\n{sk_sgd_score}")
-    print(f"Manual SGD:\n{man_sgd_score}")
-    '''
 
     np.savetxt(sklr_filename + ".txt", sk_logreg)
     np.savetxt(gd_filename + ".txt", gd_score)
@@ -187,7 +140,6 @@ else:
     man_sgd_score = np.loadtxt(mansgd_filename + ".txt")
 
 """ Plot the results """
-'''
 x = 3.5
 xticks = [f"{i:.2e}" for i in lambdas]
 yticks = [f"{i:.2e}" for i in learning_rates]
@@ -240,7 +192,7 @@ plt.ylim(0.94, 0.97)
 
 #plt.savefig(sklr_filename + ".png")
 plt.show()
-'''
+
 """ Optimal params """
 def get_opt_ind(matrix):
     ind = np.unravel_index(np.argmax(matrix, axis=None), matrix.shape)

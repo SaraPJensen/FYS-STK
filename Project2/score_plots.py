@@ -53,23 +53,6 @@ scaler = StandardScaler()
 X_train_s = scaler.fit_transform(X_train)
 X_test_s = scaler.fit_transform(X_test)
 
-'''
-# Scores
-sx = []
-rh = []
-
-opt_sx = [(sx_eta, sx_lamb), (sk_sx_eta, sk_sx_lamb)]
-opt_rh = [(rh_eta, rh_lamb), (lrh_eta, lrh_lamb), (sk_rh_eta, sk_rh_lamb)]
-
-layers = [30, 30]
-
-for eta, lambd in opt_sx:
-    network = network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test,\
-                                    layers, 100, 1, eta, lambd,\
-                                    'sigmoid', cost_func='accuracy', dataset='classification',\
-                                    weight_init_method=wi)
-'''
-
 def get_score_acc(af, wi, epochs, eta, lambd, layers = [30, 30]):
     network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test,\
             layers, epochs, 1, eta, lambd, af, cost_func = 'accuracy',\
@@ -164,16 +147,7 @@ lrel3 = np.zeros(len(nodes))
 if sys.argv[1] == 'sigmoid' and sys.argv[2] == 'train':
     for i, num in enumerate(nodes):
         print(f"[{i+1}/{len(nodes)}]")
-        #num = int(num)
-        #ettlag, tolag, trelag = l1[i], l2[i], l3[i]
-        '''
-        sig1[0, i] = quick_score_acc('sigmod', 'xavier', 100, sx_eta, sx_lamb, [num])
-        sig2[0, i] = quick_score_acc('sigmod', 'xavier', 100, sx_eta, sx_lamb, [num, num])
-        sig3[0, i] = quick_score_acc('sigmod', 'xavier', 100, sx_eta, sx_lamb, [num, num, num])
-        print("WTF")
-        exit(1)
-        '''
-        #print("Jævla svinejævler")
+
         network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test,\
                 [num], 100, 1, sx_eta, sx_lamb, 'sigmoid', cost_func = 'accuracy',\
                 dataset='classification', weight_init_method='xavier')
@@ -335,7 +309,7 @@ if sys.argv[1] == 'sigmoid':
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plt.savefig("part_d/sig_epoch.png")
+    #plt.savefig("part_d/sig_epoch.png")
 
     plt.figure()
     plt.title("Accuracy as a function of nodes/layer\nScikit-learn MLPClassifier; Sigmoid")
@@ -351,7 +325,7 @@ if sys.argv[1] == 'sigmoid':
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plt.savefig("part_d/sk_sig_epoch.png")
+    #plt.savefig("part_d/sk_sig_epoch.png")
 
 if sys.argv[1] == 'relu':
     plt.figure()
@@ -369,7 +343,7 @@ if sys.argv[1] == 'relu':
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plt.savefig("part_d/relu_epoch.png")
+    #plt.savefig("part_d/relu_epoch.png")
 
     plt.figure()
 
@@ -386,7 +360,7 @@ if sys.argv[1] == 'relu':
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plt.savefig("part_d/sk_relu_epoch.png")
+    #plt.savefig("part_d/sk_relu_epoch.png")
 
     plt.figure()
 
@@ -403,18 +377,6 @@ if sys.argv[1] == 'relu':
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plt.savefig("part_d/lrelu_epoch.png")
+    #plt.savefig("part_d/lrelu_epoch.png")
 plt.show()
 
-''' Test
-np.random.seed(1826)
-ass = NeuralNetwork(X_train_s, y_train, X_test_s, y_test,\
-        [30], 100, 1, sx_eta, sx_lamb, 'sigmoid', cost_func = 'accuracy',\
-        dataset='classification', weight_init_method='xavier')
-
-ass.model_training("SGD", plot='no')
-
-prob = ass.prediction(X_test_s)
-pred = prob.round()
-acc = np.sum( pred == y_test )/y_test.shape[0]
-'''
