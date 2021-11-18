@@ -1,7 +1,11 @@
 from neural_new import *
 import sys
+import warnings
 
 from sklearn.neural_network import MLPClassifier        # For comparison
+from sklearn.exceptions import ConvergenceWarning
+
+warnings.filterwarnings("ignore", category = ConvergenceWarning)
 
 train = False
 if len(sys.argv) - 1:
@@ -26,12 +30,15 @@ X_test_s = scaler.fit_transform(X_test)
 
 layers = [30, 30]       # Two layers, 30 nodes each
 
-wi = 'xavier'           # weight_initialization, same variance for each layer
-af = 'sigmoid'          # activation_function
-epochs = 100
+wi = 'he'           # weight_initialization, same variance for each layer
+af = 'relu'          # activation_function
+epochs = 50
 batch_size = 1          # Same as sk-learn
 
-learning_rates = np.logspace(-4, 1, 11) #Various learning rates and lambda values
+# Use this with sigmoid + xavier
+#learning_rates = np.logspace(-4, 1, 11) #Various learning rates and lambda values
+# Use this with relu/leaky relu + He
+learning_rates = np.logspace(-6, 0, 11) #Various learning rates and lambda values
 lambdas = np.logspace(-5, 1, 20)
 
 accs = np.zeros((len(learning_rates), len(lambdas)))      # Accuracies
@@ -39,8 +46,10 @@ sk_accs = np.zeros((len(learning_rates), len(lambdas)))   # Accuracies
 
 target = y_test.reshape(-1, 1)      # Same shape as the prediction
 
-filename = f'cv_nn_class_{str(wi[0])}_{str(af[0])}_{epochs}'    # Used for saving
+filename = f'nn_class_{str(wi[0])}_{str(af[0])}_{epochs}'    # Used for saving
 skfilename = 'sk_'+filename
+filename = 'part_d/' + filename
+skfilename = 'part_d/' + skfilename
 
 if train:
     for i, eta in enumerate(learning_rates):
@@ -59,7 +68,8 @@ if train:
 
             accs[i, j] = acc
 
-            """ sk-learn """
+            '''
+            """ sk-learn """ # No leaky_relu
             sk_network = MLPClassifier(hidden_layer_sizes = tuple(layers), activation='logistic',\
                     solver='sgd', alpha=lambd, batch_size=batch_size, learning_rate_init=eta,\
                     max_iter=epochs)
@@ -68,6 +78,7 @@ if train:
 
             sk_acc = sk_network.score(X_test_s, target)
             sk_accs[i, j] = sk_acc
+            '''
     
     np.savetxt(filename + '.txt', accs)
     np.savetxt(skfilename + '.txt', sk_accs)
@@ -116,10 +127,11 @@ skeind = skind[0]
 sklind = skind[1]
 print(f"best accuracy: {np.max(sk_accs)}\nparams: eta [{skeind}/{len(learning_rates)}] = {learning_rates[skeind]}, lambda [{sklind}/{len(lambdas)}] = {lambdas[sklind]}")
 
-#''' # Prediction Accuracy for optimal parameters and custom epochs
-eps = 100
+"""
+#Prediction Accuracy for optimal parameters and custom epochs, only for testing
+eps = 50
 # Note that the penalization is now set to 0
-network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test, layers, eps, batch_size, learning_rates[5], lambdas[0],\
+network = NeuralNetwork(X_train_s, y_train, X_test_s, y_test, layers, eps, batch_size, learning_rates[eind], lambdas[lind],\
                     af, cost_func='accuracy', dataset='classification', weight_init_method=wi)
 network.model_training("SGD", plot='no')
 
@@ -129,3 +141,4 @@ acc = np.sum(pred == target)/target.shape[0]
 
 print(f"Accuracy for optimal parameters and {eps} epochs")
 print(f"{np.sum(pred==target)}/{target.shape[0]} = {acc}")
+"""

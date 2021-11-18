@@ -231,10 +231,16 @@ plt.show()
 fig, ax = plt.subplots()
 
 plt.plot(lambdas, sk_logreg)
+
+plt.title("Scikit-learns LogisticRegression\nAccuracy score as a function of $\lambda$")
+plt.xlabel("$\lambda$")
+plt.ylabel("Accuracy")
 ax.set_xscale('log')
+plt.ylim(0.94, 0.97)
+
+#plt.savefig(sklr_filename + ".png")
 plt.show()
 '''
-
 """ Optimal params """
 def get_opt_ind(matrix):
     ind = np.unravel_index(np.argmax(matrix, axis=None), matrix.shape)
@@ -253,3 +259,6 @@ print(f"Gradient Descent: Highest score: {gd_score[gd_ind]} eta = {gd_e}, lamda 
 sgd_ind = get_opt_ind(man_sgd_score)
 sgd_e, sgd_l = learning_rates[sgd_ind[0]], lambdas[sgd_ind[1]]
 print(f"Stochastic Gradient Descent: Highest score: {man_sgd_score[sgd_ind]} eta = {sgd_e}, lamda = {sgd_l}")
+
+sk_logreg_ind = np.argmax(sk_logreg)
+print(f"LogisticRegression: Highest score: {np.max(sk_logreg)}, lambda = {lambdas[sk_logreg_ind]}")
