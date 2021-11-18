@@ -87,3 +87,8 @@ All the necessary code for doing exercises B and C in the project. Parameters mu
 - batchsize(): Plots MSE as function of batchsize
 - SKlearn(): Generates model and prediction using Sci-Kit learn's MLPRegressor. 
 
+### [nn_classific.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/nn_classific.py)
+All the necessary code for doing exercise D in the project. Datafiles are stored in the repository such that no additional calculations should be needed for the user. If rerunning calculations is desirable, add an additional argument when running the program.
+In order to change the activation function and weight initialization change the variables in the file. Possible arguments for activation function, af = {'sigmoid', 'relu', 'leaky_relu'}. Possible arguments for weight initialization, wi = {'xavier', 'he', 'none', 'nielsen'}.
+Changing the number of epochs and the lambda array is also necessary.
+Sigmoid xavier should have 100 epochs, the relu's he should have 50 epochs. It is apparent from the comments which lambda arrays correspond to which combination. No other combination has been saved.
