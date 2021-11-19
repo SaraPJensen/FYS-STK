@@ -101,5 +101,7 @@ Necessary datafiles are stored in the repository such that no additional calcula
 ### [score_plots.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/score_plots.py)
 Produces plots used in part d.
 Necessary datafiles are stored in the repository such that no additional calculations should be needed on the users part. Follow the instructions if preducing results is desirable.
-For just producing plots: add the argument 'sigmoid' in order to plot results tied to the sigmoid/logistic activation function, or add the argument 'relu' in order to plot results tied to the relu/leaky relu activation functon.
+
+For just producing plots: add the argument 'sigmoid' in order to plot results tied to the sigmoid/logistic activation function, or add the argument 'relu' in order to plot results tied to the relu/leaky relu activation functon. Add an additional argument DIFFERENT from 'train' in order to just plot the data.
+
 For producing plots and recalculating data: add 'train' as an additional argument after the 'sigmoid'/'relu' argument.
