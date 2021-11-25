@@ -16,6 +16,7 @@ class Chromosome:
         if "stop" in self.equation:
             self.equation = "10000.0"
 
+
         #print("Equation: ", self.equation)
         #print("")
 
@@ -43,7 +44,7 @@ class Chromosome:
 
         i = index % 6
         exp = {0: lambda: self.expression(self.read_genes()) + self.operator(self.read_genes()) + self.expression(self.read_genes()),
-                1: lambda: self.expression(self.read_genes()), 2: lambda: self.func(self.read_genes()), 3: lambda: self.digit(self.read_genes()),
+                1: lambda: "(" + self.expression(self.read_genes()) + ")", 2: lambda: self.func(self.read_genes()), 3: lambda: self.digit(self.read_genes()),
                 4: lambda: "x", 5: lambda: "t"}
         return exp[i]()
 
@@ -64,8 +65,8 @@ class Chromosome:
             #print("Func stop")
             return "stop"
 
-        i = index % 4
-        func = {0: "np.sin", 1: "np.cos", 2: "np.exp", 3: "np.log"}
+        i = index % 6
+        func = {0: "np.sin", 1: "np.cos", 2: "np.exp", 3: "np.log", 4: "x**", 5: "t**"}
         return func[i] + "(" + self.expression(self.read_genes()) + ")"
 
     def digit(self, index, stop = False):
@@ -99,15 +100,19 @@ class Chromosome:
 
 
     def fitness(self, x_range, t_range):
-        self.fitness = 0
-        for x in x_range:
-            for t in t_range:
-                dx, dt = self.der(x, t)
-                E = (dx - dt)**2
-                self.fitness += E
+        if ("x" not in self.equation) or ("t" not in self.equation):
+            self.fitness = 1e5
 
+        else:
+            self.fitness = 0
+            for x in x_range:
+                for t in t_range:
+                    dx, dt = self.der(x, t)
+                    E = (dx - dt)**2
+                    self.fitness += E
 
         #print("Fitness calculated")
+
 
 
     def get_fitness(self):
@@ -118,8 +123,9 @@ class Chromosome:
 print()
 print()
 
-x_range = np.linspace(1, 10, 2)
-t_range = np.linspace(1, 10, 2)
+x_range = np.linspace(1, 20, 5)
+t_range = np.linspace(1, 20, 5)
+
 
 
 
@@ -138,6 +144,7 @@ print(C.get_fitness())
 
 '''
 
+np.random.seed(123)
 
 class Population:
     def __init__(self, size_pop, size_chrom, generations):
@@ -148,8 +155,8 @@ class Population:
 
         self.Chromosomes = []
 
-        self.x_range = np.linspace(1, 10, 2)
-        self.t_range = np.linspace(1, 10, 2)
+        self.x_range = np.linspace(1, 10, 5)
+        self.t_range = np.linspace(1, 10, 5)
 
         for c in range (0, size_pop):
             genes = random.sample(range(0, 255), size_chrom)
@@ -167,6 +174,7 @@ class Population:
             print("Fitness value: ", c.get_fitness())
             print()
             i += 1
+
 
 
 
