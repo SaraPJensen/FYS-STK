@@ -1,3 +1,4 @@
+from autograd.differential_operators import elementwise_grad
 import autograd.numpy as np
 import autograd.numpy.random as npr
 from autograd import elementwise_grad as egrad, grad
@@ -9,7 +10,7 @@ import os
 import time
 
 
-class pde_solver_neural_network:
+class PDE_solver_neural_network:
     def __init__(self, X, diff_eq, trial, epochs, nodes, eta, activation="relu"):
         self.X = X
         self.diffeq = diff_eq
@@ -20,8 +21,9 @@ class pde_solver_neural_network:
 
         self.epochs = epochs
         self.eta = eta
-
+        print(f"Initial cost: {self.cost_func(self.P)}")
         self.train()
+        print(f"Final cost: {self.cost_func(self.P)}")
 
     def initialize_weights(self, activation):
         P = [None] * (len(self.nodes) - 1)
@@ -29,84 +31,102 @@ class pde_solver_neural_network:
             n = self.nodes[i - 1]
             m = self.nodes[i]
             P[i - 1] = npr.normal(scale=np.sqrt(2 / n), size=(n + 1, m))  #  +1 for bias
+            # P[i - 1] = npr.normal(size=(n + 1, m))  #  +1 for bias
             P[i - 1][-1, :] = 0.01  # bias initialisering
         self.P = P
-        print(P[0].shape)
 
-    def feed_forward(self, P):
-        prev = self.X
+    def feed_forward(self, x=None, P=None):
+        if x is None:
+            prev = self.X
+        else:
+            prev = x
         # prev = np.concatenate((X, np.ones()))
         for l in range(len(self.nodes) - 1):
             # prev = np.c_[prev, np.ones((prev.shape[0] ,1))]
             prev = np.concatenate((prev, np.ones((prev.shape[0] ,1))), axis=1)
-
+            # print(prev.shape, P[l].shape)
             z = prev @ P[l]
-            a = self.ReLU(z)
+            a = self.sigmoid(z)
             prev = a
 
         self.output = z
+        # print(self.output, self.output.shape)
+        # input()
 
     def train(self):
-        grad_cost_func = egrad(self.cost_func)
-        pbar = tqdm(range(self.epochs))
+        grad_cost_func = grad(self.cost_func, 0)
+        pbar = tqdm(range(self.epochs), desc=f"{self.cost_func(self.P):.4f}")
         for i in pbar:
             gradients = grad_cost_func(self.P)
-            # print(len(gradients))
+            # print(gradients)
+            # input()
             for l in range(len(self.nodes) - 1):
                 # self.P[l] = self.optimizer(self.P[l], gradients[l])
                 self.P[l] = self.P[l] - self.eta * gradients[l]
+            pbar.set_description(f"{self.cost_func(self.P):.4f}")
 
     def ReLU(self, x):
-        return np.where(x > 0, x, 0)
+        return np.where(x > 0, x, 0.01 * x)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def tanh(self, x):
+        return np.tanh(x)
 
     def cost_func(self, P):
-        F = self.diffeq(*self.X.T, self.trial, self(P))
-        return F ** 2 / len(F)
+        F = self.diffeq(self.X, self.trial, self, P)
+        return np.sum(F ** 2) / len(F)
 
-    def __call__(self, P=None):
+    def __call__(self, x=None, P=None):
         if P is None:
             P = self.P
-        self.feed_forward(P)
-        return self.output[-1]
+        if isinstance(x, list):
+            print(x)
+        self.feed_forward(x, P)
+        return self.output
 
+    # def cost_func(self, P):
 
-def trial_func(x, t, N):
-    # sin(pi x) * (1 + t * N(x, t))
-    return np.sin(np.pi * x) * (1 + t * N)
+    #     g_t = self.trial(self.X, self, P)
+    #     dg_t = egrad(self.trial, 0)(self.X, self, P)
+    #     func = self.diffeq(*self.X.T, g_t)
 
-def diffeq(x, t, u, N):
-    lhs = egrad(egrad(u, 0), 0)(x, t, N)  # 2nd derivative over x
-    rhs = egrad(u, 1)(x, t, N)  # first derivative over t
+    #     err = (dg_t - func) ** 2
+    #     return np.sum(err) / np.size(err)
+
+def trial_func(x, N=None, P=None):
+    return 10 + x * N(x, P)
+
+# def g(x, u):
+    # return -2 * u
+
+# def diff(x, u, N):
+#     lhs = egrad(u, 0)(x, N)
+#     rhs = -2 * u(x, N)
+
+def g(x, u, N, P):
+    # gt = u(x, N, P)
+    lhs = egrad(u, 0)(x, N, P)
+    rhs = -2 * u(x, N, P)
     return lhs - rhs
 
+def g_analytic(x, gamma = 2, g0 = 10):
+    return g0*np.exp(-gamma*x)
 
-if __name__ == "__main__":
-    np.random.seed(2021)
-    T = 1
-    # dx = 1 / 100
-    # dt = dx * dx * 0.5
-    # Nx = int(1 // dx + 1)
-    # Nt = int(T // dt + 1)
-    Nx = 101
-    Nt = 10001
-    x = np.linspace(0, 1, Nx)
-    t = np.linspace(0, T, Nt)
+def exp_decay():
+    np.random.seed(15)
+    x = np.linspace(0, 1, 10).reshape(-1, 1)
+    nodes = [10,10]
+    epochs = 1000
+    eta = 0.001
 
-    x, t = np.meshgrid(x, t)
-    X = np.c_[x.reshape(-1, 1), t.reshape(-1, 1)]
-    epochs = 360
-    print(X.shape)
-    Solver = pde_solver_neural_network(X, diffeq, trial_func, epochs, [10, 10], 0.001)
-    solution = trial_func(x, t, Solver())
 
-    print(t.shape, x.shape, solution.shape)
-
-    fig = plt.figure()
-    ax = fig.gca(projection="3d")
-    surf = ax.plot_surface(x, t, solution, antialiased=False)
+    Solver = PDE_solver_neural_network(x, g, trial_func, epochs, nodes, eta)
+    solution = trial_func(x, Solver)
+    plt.plot(x, g_analytic(x))
+    plt.plot(x, solution)
     plt.show()
 
-    # x = np.linspace(0, 1, 1001)
-    # u = trial_func(x, 0, 0)
-    # plt.plot(x, u)
-    # plt.show()
+if __name__ == "__main__":
+    exp_decay()
