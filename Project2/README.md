@@ -32,7 +32,7 @@ FrankeRegression:
 
 
 ### [ex_A.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/ex_A.py)
-All the necessary code for doing exercise A in the project. Parameters must be changed manually within the functions. 
+All the necessary code for doing exercise A in the project. Parameters must be changed manually within the functions and the desired functions calls (found at the bottom of the file) commented in.  
 
 #### Functions:
 - OLS(): OLS and Ridge regression with bootstrapping
@@ -74,7 +74,7 @@ Code for neural network, containing a class for the network and a class for the 
 
 
 ### [ex_B.py](https://github.com/SaraPJensen/FYS-STK/blob/main/Project2/ex_B.py)
-All the necessary code for doing exercises B and C in the project. Parameters must be changed manually within the functions and the desired functions calls commented in. 
+All the necessary code for doing exercises B and C in the project. Parameters must be changed manually within the functions and the desired functions calls (found at the bottom of the file) commented in. 
 
 #### Functions:
 - benchmark_split(): Calculates the "optimal" MSE and R2 scores by comparing the noisy data-set with the Franke function
