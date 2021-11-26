@@ -14,8 +14,7 @@ class Chromosome:
         self.equation = self.expression(self.genes[0])
 
         if "stop" in self.equation:
-            self.equation = "10000.0"
-
+            self.equation = "0.0"
 
         #print("Equation: ", self.equation)
         #print("")
@@ -40,7 +39,6 @@ class Chromosome:
         if index == "stop":
             #print("Expression stop")
             return "stop"
-
 
         i = index % 6
         exp = {0: lambda: self.expression(self.read_genes()) + self.operator(self.read_genes()) + self.expression(self.read_genes()),
@@ -74,7 +72,6 @@ class Chromosome:
         if index == "stop":
             #print("Digit stop")
             return "stop"
-
 
         num = str(index % 10)+".0"
 
@@ -129,7 +126,6 @@ t_range = np.linspace(1, 20, 5)
 
 
 
-
 #genes = [0, 0, 4, 2, 5, 0, 5]   #x*x + t
 '''
 genes = [3, 3]
@@ -147,7 +143,7 @@ print(C.get_fitness())
 np.random.seed(123)
 
 class Population:
-    def __init__(self, size_pop, size_chrom, generations):
+    def __init__(self, size_pop, size_chrom, generations, x_range, t_range):
         self.size_pop = size_pop    #no. of chromosomes
         self.size_chrom = size_chrom    #no. of genes in each chromosome
 
@@ -155,34 +151,54 @@ class Population:
 
         self.Chromosomes = []
 
-        self.x_range = np.linspace(1, 10, 5)
-        self.t_range = np.linspace(1, 10, 5)
+        self.x_range = x_range
+        self.t_range = t_range
 
         for c in range (0, size_pop):
             genes = random.sample(range(0, 255), size_chrom)
-            genes[0] = 0
+            genes[0] =  random.choice([0, 2])   #ensures that the equation isn't too trivial
             c = Chromosome(genes)
             self.Chromosomes.append(c)
 
 
     def fitness(self):
         i = 0
+        fitness_vals = []
         for c in self.Chromosomes:
-            print("Chromosome: ", i)
+            #print("Chromosome: ", i)
             c.read_equation()
             c.fitness(self.x_range, self.t_range)
-            print("Fitness value: ", c.get_fitness())
-            print()
+            fitness_vals.append(c.get_fitness())
+            #print("Fitness value: ", c.get_fitness())
+            #print()
             i += 1
 
+        zipped = zip(fitness_vals, self.Chromosomes)
+        sorted_pairs = sorted(zipped)
+        tuples = zip(*sorted_pairs)
+        fitness_vals, self.sorted_Chromosomes = [list(tuple) for tuple in tuples]
+
+        print("Fitness values")
+        print(fitness_vals)
+
+        print("Chromosome fitness vals:")
+        for c in self.sorted_Chromosomes:
+            print(c.get_fitness())
+
+
+
+    def breed(self):
+        pass
+
+    def mutate(self):
+        pass
 
 
 
 
 
-
-
-
-Pop = Population(30, 50, 1)
+Pop = Population(10, 50, 1)
 
 Pop.fitness()
+
+print("Is this the right document?")
