@@ -2,6 +2,7 @@
 from autograd import grad
 import random
 import autograd.numpy as np
+from scipy.stats import halfnorm
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -32,6 +33,9 @@ class Chromosome:
 
     def read_equation(self):
         print(self.equation)
+
+    def return_genes(self):
+        return self.genes
 
 
     def expression(self, index, stop = False):
@@ -96,9 +100,9 @@ class Chromosome:
         return dM_dx(x, t), dM_dt(x, t)
 
 
-    def fitness(self, x_range, t_range):
+    def calc_fitness(self, x_range, t_range):
         if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = 1e5
+            self.fitness = np.inf
 
         else:
             self.fitness = 0
@@ -108,6 +112,10 @@ class Chromosome:
                     E = (dx - dt)**2
                     self.fitness += E
 
+        #return self.fitness
+
+    def __gt__(self, other):
+        return self.fitness > other.fitness
         #print("Fitness calculated")
 
 
@@ -163,41 +171,57 @@ class Population:
 
     def fitness(self):
         i = 0
-        fitness_vals = []
+        fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)    #does this do anything now??
         for c in self.Chromosomes:
+            c.calc_fitness(self.x_range, self.t_range)
+        self.Chromosomes = sorted(self.Chromosomes)
             #print("Chromosome: ", i)
-            c.read_equation()
-            c.fitness(self.x_range, self.t_range)
-            fitness_vals.append(c.get_fitness())
+            #c.read_equation()
+            #fitness_vals.append(c.fitness(self.x_range, self.t_range))
             #print("Fitness value: ", c.get_fitness())
             #print()
-            i += 1
-
-        zipped = zip(fitness_vals, self.Chromosomes)
-        sorted_pairs = sorted(zipped)
-        tuples = zip(*sorted_pairs)
-        fitness_vals, self.sorted_Chromosomes = [list(tuple) for tuple in tuples]
-
-        print("Fitness values")
-        print(fitness_vals)
+            #i += 1
 
         print("Chromosome fitness vals:")
-        for c in self.sorted_Chromosomes:
+        for c in self.Chromosomes:
             print(c.get_fitness())
-
+            #c.read_equation()
+            #print()
 
 
     def breed(self):
-        pass
+        chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_chrom, size = 2*self.size_pop).astype(int)
 
-    def mutate(self):
-        pass
+        self.past_gen = self.Chromosomes
+
+        i = 0
+
+        while i < self.size_pop * 2:
+
+            indices = np.random.randint(0, 49, 25)   #find which genes to swap
+
+            new_genes = self.past_gen[chroms[i]].return_genes()
+
+            for index in indices:
+                new_genes[index] = self.past_gen[chroms[i+1]].return_genes()[index]
+
+            if i % 20 == 0:   #do this for 10% of the chromosomes
+                new_genes = self.mutate(new_genes)
+
+            self.Chromosomes[i] = Chromosome(new_genes)
+
+            i += 2
+
+    def mutate(genes):
+        #Makes a random mutation to one of the genes by replacing it with a random number
+        index = np.random.randint(0, 49, 1)
+        genes[index] = np.random.randint(0, 255, 1)
+        return genes
 
 
 
 
-
-Pop = Population(10, 50, 1)
+Pop = Population(20, 50, 1, x_range, t_range)
 
 Pop.fitness()
 
