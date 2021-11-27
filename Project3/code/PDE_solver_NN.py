@@ -96,13 +96,13 @@ class PDE_solver_NN_base(Activations):
 
     def save(self, name):
         name = f"{name}_{self.act_func.__name__}"
-        for i in self.nodes[1:, -1]:
+        for i in self.nodes[1:-1]:
             name += "_" + str(i)
         np.save("./nets/" + name, np.asarray(self.P))
 
     def load(self, name):
         name = f"{name}_{self.act_func.__name__}"
-        for i in self.nodes[1, -1]:
+        for i in self.nodes[1:-1]:
             name += "_" + str(i)
         fname = "./nets/" + name + ".npy"
         return list(np.load(fname, allow_pickle=True))
