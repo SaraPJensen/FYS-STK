@@ -16,7 +16,7 @@ class Activations:
 
 
 class PDE_solver_NN_base(Activations):
-    def __init__(self, X, epochs, nodes, eta0, activation="relu"):
+    def __init__(self, X, epochs, nodes, eta0, activation="relu", load=False, name=None):
         self.alpha = 0.01  # for PReLU (leaky relu)
         self.nodes = np.array([X.shape[1], *nodes, 1])
         self.rng = np.random.default_rng(21345)
@@ -24,25 +24,32 @@ class PDE_solver_NN_base(Activations):
         self.epochs = epochs
         self.eta0 = eta0
         
-        P = self.initialize_weights(activation)
-    
         activations = {"sigmoid": self.sigmoid,
                        "relu": self.ReLU,
                        "prelu": self.PReLU,
                        }
         self.act_func = activations[activation]
-        print(f"Initial cost: {self.cost_func(P, X):.4f}")
-        self.P = self.train(X, P)
         self.X = X
-        print(f"Final cost: {self.cost_func(P, X):.4f}")
+        
+        if not load:
+            P = self.initialize_weights(activation)
+            
+            print(f"Initial cost: {self.cost_func(P, X):.4f}")
+            self.P = self.train(X, P)
+            print(f"Final cost: {self.cost_func(P, X):.4f}")
+            if name is not None:
+                self.save(name)
+        else:
+            self.P = self.load(name)    
+
 
     def initialize_weights(self, activation):
-        # P = np.zeros(len(self.nodes) - 1, dtype=object)
         P = [None] * (len(self.nodes) - 1)
         for i in range(1, len(self.nodes)):
             n = self.nodes[i - 1]
             m = self.nodes[i]
-            P[i - 1] = self.rng.normal(0, 1, (n + 1, m))
+            s = np.sqrt(2 / n)
+            P[i - 1] = self.rng.normal(0, s, (n + 1, m))
             P[i - 1][-1, :] = 0.01
         return P
 
@@ -87,34 +94,19 @@ class PDE_solver_NN_base(Activations):
     def get_solution(self, *args):
         return self.trial(*args, self.X, self.P)
 
+    def save(self, name):
+        name = f"{name}_{self.act_func.__name__}"
+        for i in self.nodes[1:, -1]:
+            name += "_" + str(i)
+        np.save("./nets/" + name, np.asarray(self.P))
+
+    def load(self, name):
+        name = f"{name}_{self.act_func.__name__}"
+        for i in self.nodes[1, -1]:
+            name += "_" + str(i)
+        fname = "./nets/" + name + ".npy"
+        return list(np.load(fname, allow_pickle=True))
+        
+
 
     
-class Exp_Decay(PDE_solver_NN_base):
-    def lhs(self, X, P):
-        return ele_grad(self.trial, 0)(X, P)
-    def rhs(self, X, P):
-        return -2 * self.trial(X, P)
-
-    def trial(self, x, P):
-        return 10 + x * self(x, P)
-
-
-
-def g_analytic(x, gamma = 2, g0 = 10):
-    return g0*np.exp(-gamma*x)
-
-
-def main():
-    x = np.linspace(0, 1, 101 * 101).reshape(-1, 1)
-    nodes = [10, 10]
-    epochs = 600
-    eta = 0.001
-
-    Solver = Exp_Decay(x, epochs, nodes, eta)
-    solution = Solver.get_solution(x)
-    plt.plot(x, g_analytic(x))
-    plt.plot(x, solution)
-    plt.show()
-
-if __name__ == "__main__":
-    main()
