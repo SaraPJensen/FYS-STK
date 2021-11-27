@@ -1,9 +1,7 @@
 import autograd.numpy as np
 from autograd import elementwise_grad as ele_grad
-from noclass import PDE_solver_NN_base
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from PDE_solver_NN import PDE_solver_NN_base
 
 
 
@@ -22,16 +20,17 @@ class Diffusion(PDE_solver_NN_base):
     def eta(self, epoch):
         return self.eta0 # * (1.3 - epoch / self.epochs)
 
+
 def main():
-    x = np.linspace(0, 1, 101)
-    t = np.linspace(0, 1, 101)
+    x = np.linspace(0, 1, 11)
+    t = np.linspace(0, 1.5, 101)
     x, t = np.meshgrid(x, t)
     X = np.concatenate((x.reshape(-1, 1), t.reshape(-1, 1)), axis=1)
-    nodes = [20, 20, 10]
-    epochs = 1000
-    eta0 = 0.0008
+    nodes = [20, 20]
+    epochs = 50000
+    eta0 = 0.0001
 
-    Solver = Diffusion(X, epochs, nodes, eta0)
+    Solver = Diffusion(X, epochs, nodes, eta0, load=False, name="Alice")
     solution = Solver.get_solution(*X.T)
     solution = solution.reshape(x.shape)
 
