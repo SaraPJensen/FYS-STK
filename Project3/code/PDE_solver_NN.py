@@ -7,10 +7,10 @@ from tqdm import tqdm
 class Activations:
     def sigmoid(self, x):
         return 1 / (1 - np.exp(-x))
-    
+
     def ReLU(self, x):
         return np.where(x > 0, x, 0)
-    
+
     def PReLU(self, x):
         return np.where(x > 0, x, self.alpha * x)
 
@@ -23,24 +23,24 @@ class PDE_solver_NN_base(Activations):
 
         self.epochs = epochs
         self.eta0 = eta0
-        
+
         activations = {"sigmoid": self.sigmoid,
                        "relu": self.ReLU,
                        "prelu": self.PReLU,
                        }
         self.act_func = activations[activation]
         self.X = X
-        
+
         if not load:
             P = self.initialize_weights(activation)
-            
+
             print(f"Initial cost: {self.cost_func(P, X):.4f}")
             self.P = self.train(X, P)
             print(f"Final cost: {self.cost_func(P, X):.4f}")
             if name is not None:
                 self.save(name)
         else:
-            self.P = self.load(name)    
+            self.P = self.load(name)
 
 
     def initialize_weights(self, activation):
@@ -55,13 +55,16 @@ class PDE_solver_NN_base(Activations):
 
     def train(self, X, P):
         cost_func_grad = ele_grad(self.cost_func, 0)
+        self.history = np.zeros(self.epochs)
         pbar = tqdm(range(self.epochs), desc=f"{self.cost_func(P, X):.10f}")
         for t in pbar:
             try:
                 gradient = cost_func_grad(P, X)
                 for l in range(len(self.nodes) - 1):
                     P[l] = P[l] - self.eta(t) * gradient[l]
-                pbar.set_description(f"{self.cost_func(P, X):.10f}")
+                cf = self.cost_func(P, X)
+                pbar.set_description(f"{cf:.10f}")
+                self.history[t] = cf
             except KeyboardInterrupt:
                 break
         return P
@@ -106,7 +109,7 @@ class PDE_solver_NN_base(Activations):
             name += "_" + str(i)
         fname = "./nets/" + name + ".npy"
         return list(np.load(fname, allow_pickle=True))
-        
 
 
-    
+
+
