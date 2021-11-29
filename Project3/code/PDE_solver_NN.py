@@ -28,8 +28,9 @@ class Optimizer:
 
 class PDE_solver_NN_base(Activations):
     def __init__(self, 
-                 X, 
+                 inp_nodes,
                  nodes=[10,],          # nodes in each hidden layer
+                 output_node=1,
                  activation="relu",    # actuvation function
                  alpha=0,
                  epochs=100,           # training epochs
@@ -40,8 +41,9 @@ class PDE_solver_NN_base(Activations):
                  name=None,            # name of file (nickname) 
                  seed=21345,           # random seed for weight initialization
                  ):
-        self.nodes = np.array([X.shape[1], *nodes, 1])
+        self.nodes = np.array([inp_nodes, *nodes, output_node])
         self.rng = np.random.default_rng(seed)
+        self.name = name
 
         self.epochs = epochs
         self.eta0 = eta0
@@ -56,23 +58,15 @@ class PDE_solver_NN_base(Activations):
                        }
         self.act_func = activations[activation]
 
-        self.X = X
         self.t = np.arange(self.epochs)
 
         if not load:
-            P = self.initialize_weights(activation)
-
-            print(f"Initial cost: {self.cost_func(P, X):.4f}")
-            self.P = self.train(X, P)
-            print(f"Final cost: {self.cost_func(P, X):.4f}")
-            if name is not None:
-                self.save_history(name)
-                self.save(name)
+            self.initialize_weights()
         else:
             self.P = self.load(name)
             self.load_history(name)
 
-    def initialize_weights(self, activation):
+    def initialize_weights(self):
         P = [None] * (len(self.nodes) - 1)
         for i in range(1, len(self.nodes)):
             n = self.nodes[i - 1]
@@ -80,9 +74,13 @@ class PDE_solver_NN_base(Activations):
             s = np.sqrt(6 / (1 + self.alpha**2) / (n + m))
             P[i - 1] = self.rng.normal(0, s, (n + 1, m))
             P[i - 1][-1, :] = 0.01
-        return P
+        self.P = P
 
-    def train(self, X, P):
+    def train(self, X):
+        P = self.P
+        self.X = X
+        print(f"Initial cost: {self.cost_func(P, X):.4f}")
+
         cost_func_grad = ele_grad(self.cost_func, 0)
         self.history = np.zeros(self.epochs)
         pbar = tqdm(range(self.epochs), desc=f"{self.cost_func(P, X):.10f}")
@@ -92,17 +90,28 @@ class PDE_solver_NN_base(Activations):
                 for L in range(len(self.nodes) - 1):
                     Lgrad = gradient[L] + self.lmb * P[L]
                     update = self.Optim(self.eta(t) * Lgrad, L)
-                    # print(update.shape, np.max(update))
                     P[L] = P[L] - update
+
                 cf = self.cost_func(P, X)
                 pbar.set_description(f"{cf:.10f}")
-                self.history[t] = cf
+                self.record(t, cf, X, P)
 
             except KeyboardInterrupt:
                 self.epochs = t
                 self.history = self.history[:t]
                 break
-        return P
+
+        print(f"Final cost: {self.cost_func(P, X):.4f}")
+        self.P = P
+        if self.name is not None:
+            self.save_history(self.name)
+            self.save(self.name)
+
+    def record(self, t, cf, X, P):
+        """
+        Can be reimplemented to record different stuff during training
+        """
+        self.history[t] = cf
 
     def feed_forward(self, x, P):
         prev = x
