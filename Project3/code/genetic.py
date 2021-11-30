@@ -44,6 +44,8 @@ class Chromosome:
         exp = {0: lambda: "(" + self.expression(self.read_genes()) + self.operator(self.read_genes()) + self.expression(self.read_genes()) + ")",
                 1: lambda: "(" + self.expression(self.read_genes()) + ")", 2: lambda: self.func(self.read_genes()), 3: lambda: self.digit(self.read_genes()),
                 4: lambda: "x", 5: lambda: "t"}
+
+
         return exp[i]()
 
 
@@ -51,16 +53,16 @@ class Chromosome:
         if index == "stop":
             return "stop"
 
-        i = index % 4
-        ope = {0: "+", 1: "-", 2: "*", 3: "/"}
+        i = index % 5
+        ope = {0: "+", 1: "-", 2: "*", 3: "/", 4: "**"}
         return ope[i]
 
     def func(self, index, stop = False):
         if index == "stop":
             return "stop"
 
-        i = index % 5
-        func = {0: "np.sin", 1: "np.cos", 2: "np.exp", 3: "x**", 4: "t**"}
+        i = index % 3
+        func = {0: "np.sin", 1: "np.cos", 2: "np.exp"} #, 3: "x**", 4: "t**"}   #should these be included or not?
         return func[i] + "(" + self.expression(self.read_genes()) + ")"
 
 
@@ -358,7 +360,7 @@ class Population:
     def mutate(self, genes):
         #Makes a random mutation to one of the genes by replacing it with a random number
         for i in range(3):
-            index = np.random.randint(0, 49)   #find where to swap
+            index = np.random.randint(1, 49)   #find where to swap, ensure that the first gene is 0 or 2
             genes[index] = index = np.random.randint(0, 255)   #find where to swap
         return genes
 
