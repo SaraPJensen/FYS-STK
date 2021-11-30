@@ -38,7 +38,7 @@
 
 \twocolumn
 \section{Introduction}
-\kant
+
 
 \section{Theory}
 
@@ -50,21 +50,100 @@ The main idea behind genetic algorithms is to take inspiration from the unsuperv
 Over the generations, the individuals in the population gradually become better adapted to the environment in which they live as a result of cumulative selection. This requires that not only the final change is favourable, but the adaptive shift at each step must have provided an improvement in order for it to have been selected for.  This idea is well represented by the idea of ``fitness landscapes'', introduced by Sewall Wright in the 1930's \cite{Sewall}. These landscapes, also known as adaptive landscapes or evolutionary landscapes, provide a visualisation of the link between the genotypes (the complete set of genes of an individual) or phenotypes (the observable traits of an individual) and the individual's adaptive fitness or success. The adaptive success of the individual is represented by the height of its position in the landscape, and individuals with similar genotypes are expected to be located nearby each other in the landscape. These landscapes can be multidimensional, although the exact parameters along the other axes will be complex functions of the environment, and are rarely studied in detail. Instead, such landscapes provide a useful metaphor and tool for visualising evolutionary optimisation, where the population as a whole is expected to move towards higher points in the landscape over time. Furthermore, it makes it easy to understand how populations can end up at local minima with suboptimal traits which evolution struggles to ''improve'', since moving to the true optimum would require an initial descent in the landscape, which cannot happen through cumulative selection. Random mutations can in some cases help to prevent this, but not always.
 
 Applying this to machine learning, it is common to initialise a ``population'' of ``chromosomes'', which form a set of candidate solutions. Each chromosome is encoded as a list of genes following a set of encoding and decoding rules determined by the algorithms. Each gene then encodes an element of the candidate solution. For each generation, the ``fitness'' of each chromosome is evaluated based on some metric which is summarised in the cost function. The fitness of the individuals then determines their chance of reproduction. 
-A new generation of chromosomes is then generated through reproduction (crossover) and mutation, where the fittest chromosomes from the past generation are most likely to have their genes passed on. A range of different algorithms can be used for these two steps. Over the generations, it is hoped that the fitness of the candidate solutions will increase until a sufficiently good model is reached. However, the concept of fitness landscapes apply equally well to such machine learning algorithms as to the evolutionary process. There will be always be a significant risk of getting stuck at local maxima in the landscape, where the evolutionary process stagnates at a sub-optimal solution. This can partly be prevented through mutations, and the effect of this will be studied further.
-
-\subsubsection{Differential Equations and Genetic Grammar}
+A new generation of chromosomes is then generated through reproduction (crossover) and mutation, where the fittest chromosomes from the past generation are most likely to have their genes passed on. A range of different algorithms can be used for these two steps. Over the generations, it is hoped that the fitness of the candidate solutions will increase until a sufficiently good model is reached. However, the concept of fitness landscapes apply equally well to such machine learning algorithms as to the evolutionary process. There will be always be a significant risk of getting stuck at local maxima in the landscape, where the evolutionary process stagnates at a sub-optimal solution. Getting stuck in such local extrema is an ever-present problem in all of machine learning. Genetic algorithms thus stands out in that the mutation operator helps at getting out of these stagnation points, increasing the chances of reaching the global maxima in the fitness landscape. 
 
 
-
-
+\subsubsection{Differential Equations and Grammatical Evolution}
+Genetic algorithms have been found to be useful in various optimisation problems, as suggested by the importance of the notion of the fitness landscape in the framework. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their  \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}. 
 
 \subsubsection{Algorithm}
 
+
+
+
+Pseudocode of algorithm 
+
 \paragraph{Grammar}
+Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}.  The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithms always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2. 
+
+\begin{table}[h]
+\centering
+    \caption{Encoding scheme defining the grammar of the algorithm, showing how the genes are sequentially read to generate an analytic expression.}
+    \label{tab:grammar}  
+        \begin{tabular}{ccc}
+        \toprule
+        Type & Options & Index \\
+        \midrule
+             
+             \multirow{6}{*}{\texttt{<expr>}} 
+             		& \multicolumn{1}{c}{\texttt{(<expr><op><expr>)}} & \multicolumn{1}{c}{\texttt{[0]}} \\
+                                & \multicolumn{1}{c}{\texttt{(<expr>)}} & \multicolumn{1}{c}{\texttt{[1]}} \\
+                                & \multicolumn{1}{c}{\texttt{<func>(<expr>)}} & \multicolumn{1}{c}{\texttt{[2]}} \\
+                                & \multicolumn{1}{c}{\texttt{<digit>}} & \multicolumn{1}{c}{\texttt{[3]}} \\
+                                & \multicolumn{1}{c}{\texttt{<x>}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+                                & \multicolumn{1}{c}{\texttt{<t>}} & \multicolumn{1}{c}{\texttt{[5]}} \\                        
+                                 
+	\midrule
+        
+            \multirow{5}{*}{\texttt{<op>}} 
+            		& \multicolumn{1}{c}{\texttt{+}} & \multicolumn{1}{c}{\texttt{[0]}} \\
+                                & \multicolumn{1}{c}{\texttt{-}} & \multicolumn{1}{c}{\texttt{[1]}} \\
+                                & \multicolumn{1}{c}{\texttt{*}} & \multicolumn{1}{c}{\texttt{[2]}} \\
+                                & \multicolumn{1}{c}{\texttt{/}} & \multicolumn{1}{c}{\texttt{[3]}} \\
+                                & \multicolumn{1}{c}{\texttt{**}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+                                
+	\midrule
+        
+            \multirow{5}{*}{\texttt{<func>}} 
+                                & \multicolumn{1}{c}{\texttt{sin(<expr>)}} & \multicolumn{1}{c}{\texttt{[0]}} \\
+                                & \multicolumn{1}{c}{\texttt{cos(<expr>)}} & \multicolumn{1}{c}{\texttt{[1]}} \\
+                                & \multicolumn{1}{c}{\texttt{exp(<expr>)}} & \multicolumn{1}{c}{\texttt{[2]}} \\
+                                & \multicolumn{1}{c}{\texttt{x**(<expr>)}} & \multicolumn{1}{c}{\texttt{[3]}} \\
+                                & \multicolumn{1}{c}{\texttt{t**(<expr>)}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+
+	\midrule
+        
+            \multirow{10}{*}{\texttt{<digit>}} 
+            		& \multicolumn{1}{c}{\texttt{0}} & \multicolumn{1}{c}{\texttt{[0]}} \\
+                                & \multicolumn{1}{c}{\texttt{1}} & \multicolumn{1}{c}{\texttt{[1]}} \\
+                                & \multicolumn{1}{c}{\texttt{2}} & \multicolumn{1}{c}{\texttt{[2]}} \\
+                                & \multicolumn{1}{c}{\texttt{3}} & \multicolumn{1}{c}{\texttt{[3]}} \\
+                                & \multicolumn{1}{c}{\texttt{4}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+                                & \multicolumn{1}{c}{\texttt{5}} & \multicolumn{1}{c}{\texttt{[5]}} \\
+                                & \multicolumn{1}{c}{\texttt{6}} & \multicolumn{1}{c}{\texttt{[6]}} \\
+                                & \multicolumn{1}{c}{\texttt{7}} & \multicolumn{1}{c}{\texttt{[7]}} \\
+                                & \multicolumn{1}{c}{\texttt{8}} & \multicolumn{1}{c}{\texttt{[8]}} \\
+                                & \multicolumn{1}{c}{\texttt{9}} & \multicolumn{1}{c}{\texttt{[9]}} \\
+                                & \multicolumn{1}{c}{\texttt{$\pi$}} & \multicolumn{1}{c}{\texttt{[10]}} \\
+                             
+        \bottomrule
+        \end{tabular}
+\end{table}
+
+
+The analytic solution to the problem studied is encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 21, 2, 0, 3, 21, 2, 5, 2, 2, 0, 0, 3, 21, 2, 3]. 
 
 \paragraph{Fitness evaluation}
+The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations. 
+
+The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. 
+
+The contribution to the fitness from the partial differential equation is given by: 
+
+XXX
+
+The factor of $1/N^{2}$ is not necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable. 
+
+The contribution to the fitness from the boundary conditions is given by: 
+
+XXX
+
+Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This can be useful if one factor contributed much more to the fitness than the other. 
 
 \paragraph{Reproduction and Mutation}
+There exists a range of different algorithms for creating the next generation of chromosomes from the current generation. 
+
+Elitism is another option which can be added to the reproduction algorithm. This allows a predetermined number of the fittest individuals to be passed onto the next generation unaltered, whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations. 
 
 
 
