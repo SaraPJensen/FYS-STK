@@ -41,6 +41,11 @@
 
 
 \section{Theory}
+ 
+\begin{equation}
+\label{eq:diff}
+    \frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}
+\end{equation}
 
 \subsection{Genetic Algorithms}
 Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland XXX} is still in use today. 
@@ -86,12 +91,12 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
                                  
 	\midrule
         
-            \multirow{5}{*}{\texttt{<op>}} 
+            \multirow{4}{*}{\texttt{<op>}} 
             		& \multicolumn{1}{c}{\texttt{+}} & \multicolumn{1}{c}{\texttt{[0]}} \\
                                 & \multicolumn{1}{c}{\texttt{-}} & \multicolumn{1}{c}{\texttt{[1]}} \\
                                 & \multicolumn{1}{c}{\texttt{*}} & \multicolumn{1}{c}{\texttt{[2]}} \\
                                 & \multicolumn{1}{c}{\texttt{/}} & \multicolumn{1}{c}{\texttt{[3]}} \\
-                                & \multicolumn{1}{c}{\texttt{**}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+                                %& \multicolumn{1}{c}{\texttt{**}} & \multicolumn{1}{c}{\texttt{[4]}} \\
                                 
 	\midrule
         
@@ -127,17 +132,55 @@ The analytic solution to the problem studied is encoded as: [0, 2, 2, 0, 3, 0, 1
 \subsubsection{Fitness evaluation}
 The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations. 
 
-The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. 
+The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. Define each candidate solution is labelled $M_{i}(x, t)$ for x $\in [x_{0}, x_{1}]$ and t $\in [t_{0}, t_{1}]$, both with \textit{N} points. 
 
-The contribution to the fitness from the partial differential equation is given by: 
 
-XXX
+The differential equation can be expressed as is expressed in the form:
+
+\begin{equation*}
+    f \left( x, t, u(x, t), \frac{\partial u(x, t)}{\partial x}, \frac{\partial u(x, t)}{\partial t}, \frac{\partial^2 u(x, t) }{\partial x^2}, \frac{\partial^2 u(x, t) }{\partial t^2} \right) = 0
+\end{equation*}
+
+
+The contribution to the fitness from the partial differential equation is then given by: 
+
+\begin{equation*}
+    D(M_{i}) = -\frac{1}{N^{2}}\sum_{k, l=1}^{N} f^2
+\end{equation*}
+
+In the case of the diffusion equation: 
+
+\begin{equation*}
+    D(M_{i}) = - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2
+\end{equation*}
 
 The factor of $1/N^{2}$ is not necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable. 
 
+
 The contribution to the fitness from the boundary conditions is given by: 
 
-XXX
+\begin{align*}
+    B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(x_0, t_l)- u(x_0, t_l)\right) ^2  \\
+    B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(x_1, t_l)- u(x_1, t_l))^2  \\
+    B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_0)- u(x_k, t_0))^2  \\
+    B_4(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_1)- u(x_k, t_1))^2  \\
+\end{align*}
+
+In the given problem: 
+
+\begin{align*}
+    B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(0, t_l)\right) ^2  \\
+    B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(L, t_l))^2  \\
+    B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2  \\
+\end{align*}
+
+
+The total fitness is then: 
+
+\begin{align*}
+    F(M_{i}) &= D(M_{i}) + \lambda  ( B_1(M_{i})  \\
+    		&+  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  )
+\end{align*}
 
 Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This can be useful if one factor contributed much more to the fitness than the other. 
 
@@ -147,6 +190,8 @@ There exists a range of different algorithms for creating the next generation of
 Elitism is another option which can be added to the reproduction algorithm. This allows a predetermined number of the fittest individuals to be passed onto the next generation unaltered, whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations. 
 
 
+\cite{He}
+
 
 
 \section{Results}
@@ -154,5 +199,7 @@ Elitism is another option which can be added to the reproduction algorithm. This
 \section{Discussion}
 
 \section{Conclusion}
+
+\bibliography{refs}
 
 \end{document}
