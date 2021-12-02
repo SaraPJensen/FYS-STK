@@ -31,14 +31,13 @@ def main():
     t = np.linspace(0, 5, 201)
     x, t = np.meshgrid(x, t)
     X = np.concatenate((x.reshape(-1, 1), t.reshape(-1, 1)), axis=1)
-    print(X.shape)
 
     Solver = Diffusion(X.shape[1],
                        nodes=[10, 40, 20, 10], 
                        activation="abs",
                        alpha=-1,
-                       epochs=100_000, 
-                    #    epochs=500, 
+                    #    epochs=100_000, 
+                       epochs=500, 
                        eta0=0.000004,
                        lmb=0, 
                        gamma=0.9, 

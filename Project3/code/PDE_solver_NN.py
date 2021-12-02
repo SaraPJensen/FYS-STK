@@ -1,7 +1,9 @@
 import autograd.numpy as np
 from autograd import elementwise_grad as ele_grad
-import matplotlib.pyplot as plt
 from tqdm import tqdm
+import warnings
+
+# warnings.filterwarnings("error", category=RuntimeWarning)
 
 
 class Activations:
@@ -18,7 +20,7 @@ class Activations:
 class Optimizer:
     def __init__(self, gamma=0, layer_sizes=None):
         self.g = min(1, max(gamma, 0))  # ensure between 0 and 1
-        self.prev_v = [np.zeros((i + 1, 1)) + 1e-6 for i in layer_sizes]
+        self.prev_v = [np.zeros((i + 1, 1)) for i in layer_sizes]
 
     def __call__(self, eta_grad, layer=0):
         v = self.g * self.prev_v[layer] + eta_grad
@@ -40,10 +42,12 @@ class PDE_solver_NN_base(Activations):
                  load=False,           # Load weights from file instead of training
                  name=None,            # name of file (nickname) 
                  seed=21345,           # random seed for weight initialization
+                 tol=1e-12             # lowest cost during training
                  ):
         self.nodes = np.array([inp_nodes, *nodes, output_node])
         self.rng = np.random.default_rng(seed)
         self.name = name
+        self.tol = tol
 
         self.epochs = epochs
         self.eta0 = eta0
@@ -71,8 +75,12 @@ class PDE_solver_NN_base(Activations):
         for i in range(1, len(self.nodes)):
             n = self.nodes[i - 1]
             m = self.nodes[i]
-            s = np.sqrt(6 / (1 + self.alpha**2) / (n + m))
-            P[i - 1] = self.rng.normal(0, s, (n + 1, m))
+            if self.act_func.__name__ == "sigmoid":
+                s = np.sqrt(1 / (n))
+                P[i - 1] = self.rng.uniform(-0.1, s, (n + 1, m))
+            else:
+                s = np.sqrt(6 / (1 + self.alpha**2) / (n + m))
+                P[i - 1] = self.rng.normal(0, s, (n + 1, m))
             P[i - 1][-1, :] = 0.01
         self.P = P
 
@@ -93,13 +101,17 @@ class PDE_solver_NN_base(Activations):
                     P[L] = P[L] - update
 
                 cf = self.cost_func(P, X)
+
+                if cf < self.tol or np.isnan(cf):
+                    break
+
                 pbar.set_description(f"{cf:.10f}")
                 self.record(t, cf, X, P)
 
             except KeyboardInterrupt:
-                self.epochs = t
-                self.history = self.history[:t]
                 break
+        self.epochs = t
+        self.history = self.history[:t]
 
         print(f"Final cost: {self.cost_func(P, X):.4f}")
         self.P = P
@@ -132,7 +144,7 @@ class PDE_solver_NN_base(Activations):
         returnes the normalized square error
         """
         error = (self.lhs(X, P) - self.rhs(X, P)) ** 2
-        return np.sum(error, axis=0) / error.shape[0]
+        return np.sum(error) / error.shape[0]
 
     def lhs(self, X, P):
         """

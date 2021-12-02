@@ -6,89 +6,87 @@ from PDE_solver_NN import PDE_solver_NN_base
 
 class Symmetric_matrix(PDE_solver_NN_base):
     def lhs(self, X, P):
-        x, t = X.T
-        return ele_grad(self.trial, 1)(x, t, X, P)
+        return ele_grad(self, 0)(self.t_max, P)
 
     def rhs(self, X, P):
-        x, t = X.T
-        x_trial = self.trial(x, t, X, P).T
-        print(x_trial.shape)
-        xx = np.sum(x_trial * x_trial, axis=0)
-        xxF = np.ones((len(xx), self.A.shape[0])) * xx[:, None]
-        
-        xAx = np.sum(x_trial.T @ (self.A @ x_trial), axis=0)
-        xAxF = np.ones((len(xAx), self.A.shape[0])) * xAx[:, None]
-        print("xx")
-        print(xx.shape)
-        print(xxF.shape)
-        print(xAx.shape)
-        print(xAxF.shape)
-        print(self.I.shape)
-        m = xxF @ self.A
-        print(m.shape)
-        M = xxF @ self.A + (1 - xAxF) @ self.I
-        print(M.shape)
-        print("We did it!")
-        print((M @ x_trial - x_trial).shape)
-        exit()
-        return M @ x_trial - x_trial
-
-    def trial(self, x, t, X, P):
-        return np.exp(-t[:, None]) * x[:, None] + (1 - np.exp(-t[:, None])) * self(X, P)
+        x = self(X, P)[-1].reshape(-1, 1)
+        xxAx = self.xx0 * self.A @ x
+        xAxx = x.T @ self.A @ x * x
+        return xxAx - xAxx
 
     def symmetrix(self, A, x0, t):
-        self.N = A.shape[0]
         self.A = A
-        self.I = np.eye(self.N)
-        self.x0 = x0.reshape(-1, 1)
-        self.t_max = t[-1].reshape(-1, 1)
+        self.xx0 = x0.T @ x0
 
-        x, t = np.meshgrid(x0, t)
-        X = np.concatenate((x.reshape(-1, 1), t.reshape(-1, 1)), axis=1)
+        self.t_max = t[-1].reshape(-1, 1)
+        X = t.reshape(-1, 1)
         
         self.eigval = np.zeros(self.epochs)
-        self.eigvec = np.zeros((self.epochs, self.N))
+        self.eigvec = np.zeros((self.epochs, self.nodes[-1]))
 
         self.train(X)
 
     def record(self, t, cf, X, P):
-        super().record(t, cf)
-        eigval, eigvec = self.eig(X, P)
-        self.eigval[t] = eigval
-        self.eigvec[t, :] = eigvec
+        super().record(t, cf, X, P)
 
-    def eig(self, X, P):
-        # v = self.trial(self.x0, self.t, X, P)
-        # Av = self.A @ v
-        return 0, self.x0
+        vec = self(self.t_max, P).reshape(-1, 1)
+        vec /= np.linalg.norm(vec)
+        val = (vec.T @ self.A @ vec) / (vec.T @ vec)
+        
+        self.eigval[t] = val
+        self.eigvec[t, :] = vec[:, 0]
 
+    def eig(self):
+        return self.eigval[self.epochs - 1], self.eigvec[self.epochs - 1]
+
+    def assess(self):
+        true_vals, true_vecs = np.linalg.eig(self.A)
+        val, vec = self.eig()
+        
+        idx = np.argmin(abs(true_vals - val))
+        true_val = true_vals[idx]
+        true_vec = true_vecs[:, idx]
+        
+        true_vec *= np.sign(true_vec[0])
+        vec *= np.sign(vec[0])
+
+        val_err = np.log10(val / true_val)
+        vec_err = np.log10(vec / true_vec)
+
+        return val_err, vec_err
 
 
 def main():
-    np.random.seed(2021)
+    seed = 2021
+    np.random.seed(seed)
     n = 6
     Q = np.random.normal(size=(n,n))
-    A = Q.T + Q
+    A = (Q.T + Q) / 2
     
     x = np.random.normal(size=n)
     tmax = 1e4
-    nT = 11
+    nT = 101
     t = np.linspace(0, tmax, nT)
 
-    Solver = Symmetric_matrix(2,
-                              nodes=[10,10],
+    Übernetz = Symmetric_matrix(1,
+                              nodes=[12, 12],
                               output_node=n,
-                              activation="relu",
-                              alpha=0,
-                              epochs=100,
-                              eta0=0.001,
+                              activation="sigmoid",
+                              epochs=3000,
+                              eta0=0.0000034,
                               lmb=0,
-                              gamma=0,
+                              gamma=0.8,
                               load=False,
                               name=None,
-                              seed=2021,
+                              seed=seed,
                               )
-    Solver.symmetrix(A, x, t)
+    Übernetz.symmetrix(A, x, t)
+    print(Übernetz.assess())
+
+    fig = go.Figure(data=go.Scatter(y=Übernetz.history, mode="lines"))
+    fig.show()
+
+
 
 if __name__ == "__main__":
     main()
