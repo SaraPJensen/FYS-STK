@@ -11,6 +11,8 @@
 \usepackage{eurosym}
 \usepackage{footmisc}
 \usepackage{kantlipsum}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \usepackage{titlesec}
 
@@ -41,6 +43,23 @@
 
 
 \section{Theory}
+ 
+Differential equation:
+ 
+\begin{equation}
+\label{eq:diff}
+    \frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}
+\end{equation}
+
+Boundary conditions: 
+\begin{align}
+\label{eq:boundary}
+    u(0, t) &= 0  \\
+    u(L, t) &= 0  \\
+    u(x, 0) &= sin(\pi x) 
+\end{align}
+
+
 
 \subsection{Genetic Algorithms}
 Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland XXX} is still in use today. 
@@ -61,8 +80,7 @@ Genetic algorithms have been found to be useful in various optimisation problems
 \section{Methods}
 
 \subsection{Genetic Algorithm}
-
-Pseudocode of algorithm 
+The outline of the algorithm is as follows. A population-class is defined containing a list of \textit{C} chromosomes with randomly generated sequences of \textit{G} genes. For each generation, the genetic sequence of each chromosome is decoded and its corresponding analytic expression is generated. The fitness value of each chromosome is then calculated, and the list of chromosomes ordered according to their fitness. Chromosomes whose fitness is \texttt{nan} or \texttt{inf} are removed from the list before crossover. The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome. 
 
 \subsubsection{Grammar}
 Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}.  The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithms always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2. 
@@ -86,12 +104,12 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
                                  
 	\midrule
         
-            \multirow{5}{*}{\texttt{<op>}} 
+            \multirow{4}{*}{\texttt{<op>}} 
             		& \multicolumn{1}{c}{\texttt{+}} & \multicolumn{1}{c}{\texttt{[0]}} \\
                                 & \multicolumn{1}{c}{\texttt{-}} & \multicolumn{1}{c}{\texttt{[1]}} \\
                                 & \multicolumn{1}{c}{\texttt{*}} & \multicolumn{1}{c}{\texttt{[2]}} \\
                                 & \multicolumn{1}{c}{\texttt{/}} & \multicolumn{1}{c}{\texttt{[3]}} \\
-                                & \multicolumn{1}{c}{\texttt{**}} & \multicolumn{1}{c}{\texttt{[4]}} \\
+                                %& \multicolumn{1}{c}{\texttt{**}} & \multicolumn{1}{c}{\texttt{[4]}} \\
                                 
 	\midrule
         
@@ -127,32 +145,75 @@ The analytic solution to the problem studied is encoded as: [0, 2, 2, 0, 3, 0, 1
 \subsubsection{Fitness evaluation}
 The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations. 
 
-The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. 
+The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. Define each candidate solution is labelled $M_{i}(x, t)$ for x $\in [x_{0}, x_{1}]$ and t $\in [t_{0}, t_{1}]$, both with \textit{N} points. 
 
-The contribution to the fitness from the partial differential equation is given by: 
 
-XXX
+The differential equation can be expressed as is expressed in the form:
+
+\begin{equation*}
+    f \left( x, t, u(x, t), \frac{\partial u(x, t)}{\partial x}, \frac{\partial u(x, t)}{\partial t}, \frac{\partial^2 u(x, t) }{\partial x^2}, \frac{\partial^2 u(x, t) }{\partial t^2} \right) = 0
+\end{equation*}
+
+
+The contribution to the fitness from the partial differential equation is then given by: 
+
+\begin{equation*}
+    D(M_{i}) = -\frac{1}{N^{2}}\sum_{k, l=1}^{N} f^2
+\end{equation*}
+
+In the case of the diffusion equation: 
+
+\begin{equation*}
+    D(M_{i}) = - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2
+\end{equation*}
 
 The factor of $1/N^{2}$ is not necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable. 
 
+
 The contribution to the fitness from the boundary conditions is given by: 
 
-XXX
+\begin{align*}
+    B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(x_0, t_l)- u(x_0, t_l)\right) ^2  \\
+    B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(x_1, t_l)- u(x_1, t_l))^2  \\
+    B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_0)- u(x_k, t_0))^2  \\
+    B_4(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_1)- u(x_k, t_1))^2  \\
+\end{align*}
+
+In the given problem: 
+
+\begin{align*}
+    B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(0, t_l)\right) ^2  \\
+    B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(L, t_l))^2  \\
+    B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2  \\
+\end{align*}
+
+
+The total fitness is then: 
+
+\begin{align*}
+    F(M_{i}) &= D(M_{i}) + \lambda  ( B_1(M_{i})  \\
+    		&+  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  )
+\end{align*}
 
 Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This can be useful if one factor contributed much more to the fitness than the other. 
 
-\subsubsection{Reproduction and Mutation}
-There exists a range of different algorithms for creating the next generation of chromosomes from the current generation. 
+\subsubsection{Reproduction}
+There exists a range of different algorithms for creating the next generation of chromosomes from the current generation. The main elements  of the algorithm for reproduction are the selection, crossover and mutation schemes used. 
 
-Elitism is another option which can be added to the reproduction algorithm. This allows a predetermined number of the fittest individuals to be passed onto the next generation unaltered, whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations. 
+First, elitism was used before any of the other reproduction operations. This involves a predetermined number  \textit{E}of the fittest individuals to be passed onto the next generation unaltered (without mutations), whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations. 
 
+The selection scheme determines what chromosomes from the current are chosen as parents. Two different methods were here investigated; probabilistic selection and tournament selection. Assume the current generation contains \textit{C} individuals and \textit{NC} new chromosomes are to be created. For probabilistic selection, a list containing \textit{2NC} integers distributed according to half a normal distribution centred at 0 with standard deviation \textit{0.2C} is generated. These number are then iterated over in pairs, and are used as indices to choose which two individuals from the sorted list of chromosomes are to be chosen as parents. This ensures that the fittest individuals have a much higher chance of reproduction, but genotypic and phenotypic variance is still ensured by allowing the less fit individuals to reproduce some of the time. Tournament selection involves picking \textit{K} random integers in the range [0, C] and pick out the lowest two. These are then used as the indices to pick out the two parents from the sorted list of chromosomes. Note that both methods allows the same chromosome to be chosen as both parents, in which case the child will always be a perfect copy of the parent(s) before mutation. How the new chromosomes are generated from the two parents is then determined by the crossover scheme.
 
+The crossover scheme determines how new chromosomes are created from the past generation. Three different methods were investigated here. First, one can create a new genetic sequence which is a perfect mix of the genes of the two parents. \textit{0.5G} different integers are picked from the range [0, G], and these are used as the indices of the genes used from one parent, and the remaining genes are taken from the other parent at the loci not picked by the indices. Note that the loci of the genes in the sequence are always preserved. This is the method most analogous to how reproduction takes place in nature. Alternatively, a random index in the range [0, G] is chosen, and this is used as the crossover point, such that the genes before that point is taken from one parent and the genes after that point from the other parent. The two halves are then combined to create a new genetic sequence. 
 
+After the crossover operation, a mutation operation is applied. Two rates are important in choosing how this is done. Firstly, one must decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
 \section{Results}
 
 \section{Discussion}
 
 \section{Conclusion}
+
+\bibliography{refs}
 
 \end{document}
