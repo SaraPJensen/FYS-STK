@@ -62,7 +62,7 @@ Boundary conditions:
 
 
 \subsection{Genetic Algorithms}
-Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland XXX} is still in use today. 
+Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland} is still in use today. 
 
 The main idea behind genetic algorithms is to take inspiration from the unsupervised Darwinian evolution of populations of living organisms over generations and create an analogous machine learning algorithm. There are three main principles of Darwinian evolution which are usually considered the necessary and sufficient conditions for natural selection to occur. These are a) phenotypic variation, b) differential fitness, and c) heritability. Phenotypic variation is the population-level property of there being variation in the phenotypic traits of the individuals in that population, and not just genotypic variation. Differential fitness is the property that survival and reproduction rates vary between the individuals in the population, and heritability is the property that some traits are passed onto offspring from their parents. 
 
@@ -147,11 +147,10 @@ The fitness of an individual is a weighed sum of its deviance from the different
 
 The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. Define each candidate solution is labelled $M_{i}(x, t)$ for x $\in [x_{0}, x_{1}]$ and t $\in [t_{0}, t_{1}]$, both with \textit{N} points. 
 
-
-The differential equation can be expressed as is expressed in the form:
+For a function $u(x, t)$, the differential equation can be expressed as is expressed in the form:
 
 \begin{equation*}
-    f \left( x, t, u(x, t), \frac{\partial u(x, t)}{\partial x}, \frac{\partial u(x, t)}{\partial t}, \frac{\partial^2 u(x, t) }{\partial x^2}, \frac{\partial^2 u(x, t) }{\partial t^2} \right) = 0
+    f \left( x, t, u, \frac{\partial u}{\partial x}, \frac{\partial u}{\partial t}, \frac{\partial^2 u }{\partial x^2}, \frac{\partial^2 u}{\partial t^2} \right) = 0
 \end{equation*}
 
 
@@ -163,9 +162,10 @@ The contribution to the fitness from the partial differential equation is then g
 
 In the case of the diffusion equation: 
 
-\begin{equation*}
-    D(M_{i}) = - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2
-\end{equation*}
+\begin{align*}
+    &D(M_{i}) = \\
+    & - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2
+\end{align*}
 
 The factor of $1/N^{2}$ is not necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable. 
 
