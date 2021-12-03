@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from numba import jit
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -77,21 +78,6 @@ class Chromosome:
         return num
 
 
-    def der_diff(self, x, t):   #calculates the derivatives for the diffusion equation
-        func = lambda x, t: eval(self.equation)
-
-        dM_dx = grad(grad(func, 0), 0)
-        dM_dt = grad(func, 1)
-
-        try:
-            diff = (dM_dx(x, t) - dM_dt(x, t))**2
-
-        except ZeroDivisionError:
-            diff = 1e10
-
-        return diff
-
-
 
     def boundary_diff(self, func,  x_range, t_range):
         x_0 = 0
@@ -103,7 +89,7 @@ class Chromosome:
                 x_0 += (func(0.0000001, t))**2      #prevent division by zero
                 x_L += (func(x_range[-1], t))**2
 
-            except ZeroDivisionError:
+            except:# ZeroDivisionError:
                 x_0 += 1e10
                 x_L += 1e10
 
@@ -111,7 +97,7 @@ class Chromosome:
             try:
                 t_0 += (func(x, 0.0000001) - np.sin(np.pi*x))**2
 
-            except ZeroDivisionError:
+            except:# ZeroDivisionError:
                 t_0 += 1e10
 
         return (x_0 + x_L + t_0)/len(x_range)
@@ -134,7 +120,7 @@ class Chromosome:
                     try:
                         diff = (dM_dx(x, t) - dM_dt(x, t))**2
 
-                    except ZeroDivisionError:
+                    except: # ZeroDivisionError:
                         diff = 1e10
 
                     self.fitness += diff
@@ -147,7 +133,7 @@ class Chromosome:
 
 
 
-    def calc_fitness_print(self, x_range, t_range):
+    def calc_fitness_print(self, x_range, t_range):   #use to print out the deviance from the differential eq and boundary conditions
 
         if ("x" not in self.equation) or ("t" not in self.equation):
             self.fitness = np.inf
@@ -164,14 +150,13 @@ class Chromosome:
                     try:
                         diff = (dM_dx(x, t) - dM_dt(x, t))**2
 
-                    except ZeroDivisionError:
+                    except: # ZeroDivisionError:
                         diff = 1e10
 
                     self.fitness += diff
 
             self.fitness /= (len(x_range))**2
             print("Total diff eq deviance: ", self.fitness)
-
 
             boundary = self.boundary_diff(func, x_range, t_range)
 
@@ -197,6 +182,8 @@ class Chromosome:
     def return_genes(self):
         return self.genes
 
+
+
 '''
 #Analytic solution
 first = [0, 2, 2, 0, 3, 0, 1, 0, 3, 21, 2, 0, 3, 21, 2, 5, 2, 2, 0, 0, 3, 21, 2, 4]
@@ -212,9 +199,6 @@ t_range = np.linspace(0.0000001, 1, 15)
 
 Analytic.calc_fitness(x_range, t_range)
 '''
-
-
-
 
 
 
@@ -238,17 +222,15 @@ class Population:
 
 
 
-    def fitness(self):
+    def fitness(self, write = True):
         i = 0
-        fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)    #does this do anything now??
+        #fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)    #does this do anything now??
 
         for c in self.Chromosomes:
             c.calc_fitness(self.x_range, self.t_range)
 
-        print()
         for c in self.Chromosomes:
             if (math.isnan(c.get_fitness()) or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
-            #math.isnan(c.get_fitness()) or
                 self.Chromosomes.remove(c)
 
 
@@ -256,15 +238,22 @@ class Population:
         self.Chromosomes = sorted(self.Chromosomes)
 
 
-        #print()
-        print("Final chromosome fitness vals:")
-        for c in self.Chromosomes[:10]:
-            #c.read_equation()
-            print("Fitness value: ", c.get_fitness())
+        if write == True:
+            fitness_vals = []
+            for c in self.Chromosomes:
+                fitness_vals.append(c.get_fitness())
+            return fitness_vals, self.Chromosomes[0].get_equation()
+
+
+        else:
+            print("Final chromosome fitness vals:")
+            for c in self.Chromosomes[:10]:
+                print("Fitness value: ", c.get_fitness())
 
 
 
-    def fitness_print(self):
+
+    def fitness_print(self):   #use to
         i = 0
         fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)    #does this do anything now??
 
@@ -275,8 +264,6 @@ class Population:
         print()
         for c in self.Chromosomes:
             if (not c.get_fitness() != c.get_fitness() or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
-            #math.isnan(c.get_fitness()) or
-
                 self.Chromosomes.remove(c)
 
 
@@ -288,7 +275,6 @@ class Population:
 
         print("Final chromosome fitness vals:")
         for c in self.Chromosomes:
-            #c.read_equation()
             print("Fitness value: ", c.get_fitness())
             print()
 
@@ -409,34 +395,48 @@ class Population:
 
 
 
-x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
-t_range = np.linspace(0.0000001, 1, 10)
 
 
 
+def main(filename):
+    x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
+    t_range = np.linspace(0.0000001, 1, 10)
+
+    pop_size = 50
+    genes = 50
+    mutation_rate = 10
+
+    Pop = Population(pop_size, genes, 1, x_range, t_range)
 
 
-Pop = Population(200, 50, 1, x_range, t_range)
+    generations = 25
+
+    file = open(f"data/{filename}.csv", "w")
+    file.write(f"Pop_size: {pop_size} Genes: {genes} Method: swap Mutated: {mutation_rate} \n")
+    file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
+
+    for i in range(generations):
+        print()
+        print()
+        print("Generation: ", i)
+        fitness, equation = Pop.fitness(write = True)
+
+        length = len(fitness)
+        avg10 = np.sum(fitness[:int(length*0.1)])/int(length*0.1)
+        avg70 = np.sum(fitness[:int(length*0.7)])/int(length*0.7)
+        best = fitness[0]
+
+        file.write(f"{i},{avg10},{avg70},{best},{equation} \n")
+
+        Pop.breed_swap(mutation_rate)
 
 
-generations = 100
+    file.close()
 
-for i in range(generations):
     print()
-    print()
-    print("Generation: ", i)
-    Pop.fitness()
-    Pop.breed_swap(8)
 
 
-print()
-Pop.fitness_print()
-Pop.print_eqs(10)
-
-
-print()
-
-
+main("tester")
 
 
 #np.exp((np.sin(t)))/8.0
