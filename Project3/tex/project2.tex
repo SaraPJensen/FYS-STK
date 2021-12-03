@@ -18,6 +18,14 @@
 
 \setcounter{secnumdepth}{4}
 
+\renewcommand{\deg}{^{\circ}}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\newcommand{\hksqrt}[2][]{\ \mathpalette\DHLhksqrt{[#1]{#2\,}}}
+\def\DHLhksqrt#1#2{\setbox0=\hbox{$#1\sqrt#2$}\dimen0=\ht0
+    \advance\dimen0-0.3\ht0
+    \setbox2=\hbox{\vrule height\ht0 depth -\dimen0}
+    {\box0\lower0.65pt\box2}}
+
 \onecolumn
 
 \graphicspath{{../plots/}}
@@ -41,7 +49,7 @@
 \twocolumn
 \section{Introduction}
 
-The theoretical basis for machine learning and artificial intellegence was developed many decades ago, with the term \textit{machine learning} being coined in 1959. But it is only in the last decade or so where deep learning have seen widespread use, making complex data analysis possible. Advances in computing power is one of the main reasons for this, but also refining of the statistical methods have been important in yielding good results. Today, neural networks form an integral part of many algorithms, being able to solve new problems, or old problems more efficiently. In \cite{p2HO} and \cite{p2S}, feed forward neural networks were used to both fit continous data, as well as classification.
+The theoretical basis for machine learning and artificial intellegence was developed many decades ago, with the term \textit{machine learning} being coined in 1959. But it is only in the last decade or so where deep learning have seen widespread use, making complex data analysis possible. Advances in computing power is one of the main reasons for this, but also refining of the statistical methods have been important in yielding good results. Today, neural networks form an integral part of many algorithms, being able to solve new problems, or old problems more efficiently. In \cite{p2S} and \cite{p2HO}, feed forward neural networks were used to both fit continous data, as well as classification.
 
 Partial differential equations with many independent variables are notoriously hard to solve analytically. The Navier-Stokes equations, describing the motion of viscous fluids, is a famous equation with no known exact solution. There exist numerical schemes to solve it in certain cases. An alternative could be to use neural networks. This paper will show that machine learning can solve PDEs. Specifically, the equation studied is the one-dimensional diffusion equation. First, a feed forward neural network is used. Secondly, a genetic algorithm building on the theory of natural selection is applied on the same problem. It will also be solved analytically and with an explicit scheme to compare accuracy and efficiency.
 
@@ -50,22 +58,30 @@ Further, Yi et. al. showed that the eigenvalues of a symmetrix matrix can be des
 
 \section{Theory}
 
-Differential equation:
-
-The temperature gradient $u(x, t)$ in a rod in time can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
+The temperature gradient $u(x, t)$ in a rod of length $L=1$ can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
 \begin{equation}
 	\label{eq:diff}
 	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}.
-\end{equation}
+\end{equation},
 
-
-Boundary conditions:
-\begin{align}
+where $x$ is the length along the rod, and $t$ is time. The boundary and intial conditions are
+\begin{align*}
 	\label{eq:boundary}
-	u(0, t) & = 0          \\
-	u(L, t) & = 0          \\
+	u(0, t) & = 0             \\
+	u(L, t) & = 0 \numberthis \\
 	u(x, 0) & = sin(\pi x)
-\end{align}
+\end{align*}
+
+It is easily verifiable that the specific analytic solution is
+\begin{equation*}
+	u(x, t) = e^{-\pi^2t}\sin(\pi x)
+\end{equation*}
+
+
+\subsection{Neural Network}
+A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, and from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
+
+In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. When solving a differential equation, a natural choice is the difference in the left and right hand side of the equation, squared. Trenger å se lecture notene til morten for å skrive rett notasjon her.
 
 
 
