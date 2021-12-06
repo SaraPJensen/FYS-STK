@@ -15,69 +15,18 @@ warnings.filterwarnings("ignore")
 
 
 class Chromosome:
-    def __init__(self, genome):
-        self.genome = genome
-        self.g = 0
-        self.equation = self.expression(self.genome[0])
-
-        if ("x" not in self.equation) or ("t" not in self.equation):
-
-            self.equation += "+" + self.expression(self.genome[self.g])
-
-        if "stop" in self.equation:
-            self.equation = "0.0"
+    def __init__(self, genes, matrix, l):
+        self.genes = genes
+        self.matrix = matrix
+        self.length = l
+        self.equation = self.eq_generator()
 
 
-    def read_genes(self):
-        self.g += 1
+    def eq_generator(self):
+        for i in range(l-1):
+            self.equation += str(self.genes[i]) + "*" + self.matrix[i] + "+"
 
-        if self.g > (len(self.genome) - 1):
-            return "stop"
-
-        return self.genome[self.g]
-
-
-    def expression(self, index, stop = False):
-        if index == "stop":
-            return "stop"
-
-        i = index % 6
-        exp = {0: lambda: "(" + self.expression(self.read_genes()) + self.operator(self.read_genes()) + self.expression(self.read_genes()) + ")",
-                1: lambda: "(" + self.expression(self.read_genes()) + ")", 2: lambda: self.func(self.read_genes()), 3: lambda: self.digit(self.read_genes()),
-                4: lambda: "x", 5: lambda: "t"}
-
-
-        return exp[i]()
-
-
-    def operator(self, index, stop = False):
-        if index == "stop":
-            return "stop"
-
-        i = index % 4
-        ope = {0: "+", 1: "-", 2: "*", 3: "/"}  #, 4: "**"}
-        return ope[i]
-
-    def func(self, index, stop = False):
-        if index == "stop":
-            return "stop"
-
-        i = index % 3
-        func = {0: "np.sin", 1: "np.cos", 2: "np.exp"} #, 3: "x**", 4: "t**"}   #should these be included or not?
-        return func[i] + "(" + self.expression(self.read_genes()) + ")"
-
-
-    def digit(self, index, stop = False):
-        if index == "stop":
-            return "stop"
-
-        num = str(index % 11)+".0"
-
-        if num == "10.0":
-            num = "np.pi"
-
-        return num
-
+        self.equation += str(self.genes[l-1]) + "*" + self.matrix[l-1]
 
 
     def boundary_diff(self, func,  x_range, t_range):
@@ -90,7 +39,7 @@ class Chromosome:
                 x_0 += (func(0.0000001, t))**2      #prevent division by zero
                 x_L += (func(x_range[-1], t))**2
 
-            except:# ZeroDivisionError:
+            except:
                 x_0 += 1e10
                 x_L += 1e10
 
@@ -98,7 +47,7 @@ class Chromosome:
             try:
                 t_0 += (func(x, 0.0000001) - np.sin(np.pi*x))**2
 
-            except:# ZeroDivisionError:
+            except:
                 t_0 += 1e10
 
         return (x_0 + x_L + t_0)/len(x_range)
@@ -107,64 +56,56 @@ class Chromosome:
 
     def calc_fitness(self, x_range, t_range):
 
-        if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = 1e10
 
-        else:
-            func = lambda x, t: eval(self.equation)
-            dM_dx = grad(grad(func, 0), 0)
-            dM_dt = grad(func, 1)
+        func = lambda x, t: eval(self.equation)
+        dM_dx = grad(grad(func, 0), 0)
+        dM_dt = grad(func, 1)
 
-            self.fitness = 0
-            for x in x_range:
-                for t in t_range:
-                    try:
-                        diff = (dM_dx(x, t) - dM_dt(x, t))**2
+        self.fitness = 0
+        for x in x_range:
+            for t in t_range:
+                try:
+                    diff = (dM_dx(x, t) - dM_dt(x, t))**2
 
-                    except: # ZeroDivisionError:
-                        diff = 1e10
+                except: # ZeroDivisionError:
+                    diff = 1e10
 
-                    self.fitness += diff
+                self.fitness += diff
 
-            self.fitness /= (len(x_range))**2
+        self.fitness /= (len(x_range))**2
 
-            boundary = self.boundary_diff(func, x_range, t_range)
-            self.fitness += boundary*10
+        boundary = self.boundary_diff(func, x_range, t_range)
+        self.fitness += boundary*10
 
 
 
 
     def calc_fitness_print(self, x_range, t_range):   #use to print out the deviance from the differential eq and boundary conditions
 
-        if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = 1e10
+        print("Equation: ", self.equation)
+        func = lambda x, t: eval(self.equation)
+        dM_dx = grad(grad(func, 0), 0)
+        dM_dt = grad(func, 1)
 
-        else:
-            print("Equation: ", self.equation)
-            func = lambda x, t: eval(self.equation)
-            dM_dx = grad(grad(func, 0), 0)
-            dM_dt = grad(func, 1)
+        self.fitness = 0
+        for x in x_range:
+            for t in t_range:
+                try:
+                    diff = (dM_dx(x, t) - dM_dt(x, t))**2
 
-            self.fitness = 0
-            for x in x_range:
-                for t in t_range:
-                    try:
-                        diff = (dM_dx(x, t) - dM_dt(x, t))**2
+                except: # ZeroDivisionError:
+                    diff = 1e10
 
-                    except: # ZeroDivisionError:
-                        diff = 1e10
+                self.fitness += diff
 
-                    self.fitness += diff
+        self.fitness /= (len(x_range))**2
+        print("Total diff eq deviance: ", self.fitness)
 
-            self.fitness /= (len(x_range))**2
-            print("Total diff eq deviance: ", self.fitness)
+        boundary = self.boundary_diff(func, x_range, t_range)
 
-            boundary = self.boundary_diff(func, x_range, t_range)
+        print("Boundary deviance: ", boundary)
+        self.fitness += boundary*10
 
-            print("Boundary deviance: ", boundary)
-            self.fitness += boundary*10
-
-        print()
 
 
 
@@ -183,7 +124,7 @@ class Chromosome:
 
 
     def return_genes(self):
-        return self.genome
+        return self.genes
 
 
 
@@ -208,23 +149,34 @@ Analytic.calc_fitness(x_range, t_range)
 np.random.seed(123)
 
 class Population:
-    def __init__(self, size_pop, size_chrom, generations, x_range, t_range):
+    def __init__(self, size_pop, poly, generations, x_range, t_range):
         self.size_pop = size_pop    #no. of chromosomes
-        self.size_chrom = size_chrom    #no. of genes in each chromosome
         self.generations = generations    #no. of generations
-        #self.Chromosomes = []
+
         self.x_range = x_range
         self.t_range = t_range
+        self.matrix, self.len = self.design_matrix(poly)
 
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
-
         for i in range (0, size_pop):
-            genes = random.sample(range(0, 255), size_chrom)
-            genes[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
-            c = Chromosome(genes)
+            genes = np.random.normal(0, 1, l)  #indices, normal distribution
+            c = Chromosome(genes, self.matrix, self.len)
             self.Chromosomes[i] = c
-            #self.Chromosomes.append(c)
+
+
+
+    def design_matrix(self, poly):
+        l = int((poly+1)*(poly+2)/2)		# Number of features
+        X = []
+        for i in range(0, poly+1):
+            q = int((i)*(i+1)/2)
+
+            for k in range(i+1):
+                X.append(f"(x**{i-k})*(t**{k})")
+        return X, l
+
+
 
 
     def fitness(self, write = True):
@@ -244,7 +196,6 @@ class Population:
             for c in self.Chromosomes:
                 fitness_vals[i] = c.get_fitness()
                 i += 1
-                #fitness_vals.append(c.get_fitness())
             return fitness_vals, self.Chromosomes[0].get_equation()
 
 
@@ -297,16 +248,16 @@ class Population:
 
         while i < parents:
 
-            indices = np.random.randint(0, 49, 25)   #find which genes to swap
-            new_genome = self.past_gen[chroms[i]].return_genes()
+            indices = np.random.randint(0, genes-1, int(genes/2))   #find which genes to swap
+            new_genes = self.past_gen[chroms[i]].return_genes()
 
             for index in indices:
-                new_genome[index] = self.past_gen[chroms[i+1]].return_genes()[index]
+                new_genes[index] = self.past_gen[chroms[i+1]].return_genes()[index]
 
             if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+                new_genes = self.mutate(new_genes, mutation)
 
-            self.Chromosomes[j] = Chromosome(new_genome)
+            self.Chromosomes[j] = Chromosome(new_genes, self.matrix, self.len)
 
             i += 2
             j += 1
@@ -318,30 +269,29 @@ class Population:
         parents = 2*self.size_pop - elite*2
         chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_pop, size = parents).astype(int)
         self.past_gen = self.Chromosomes
-        #self.Chromosomes = []
+
 
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
         for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
             self.Chromosomes[e] = self.past_gen[e]
-            #self.Chromosomes.append(self.past_gen[e])
+
 
         i = 0
         j = elite
 
         while i < parents:
 
-            index = np.random.randint(0, 30)   #find where to swap
-            new_genome = np.zeros(genes)
+            index = np.random.randint(0, 0.6*genes)   #find where to swap
+            new_genes = np.zeros(genes)
 
-            new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
-            new_genome[index:] = self.past_gen[chroms[i+1]].return_genes()[index:]
+            new_genes[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
+            new_genes[index:] = self.past_gen[chroms[i+1]].return_genes()[index:]
 
             if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+                new_genes = self.mutate(new_genes, mutation)
 
-            #self.Chromosomes.append(Chromosome(new_genes))
-            self.Chromosomes[j] = Chromosome(new_genome)
+            self.Chromosomes[j] = Chromosome(new_genes, self.matrix, self.len)
 
             i += 2
             j += 1
@@ -361,36 +311,34 @@ class Population:
         j = elite
 
         while j < self.size_pop:  #tournament selection
-            indices = np.sort(np.random.randint(0, 49, 5))  #pick out three random chromosomes, use the two best for reproduction
+            indices = np.sort(np.random.randint(0, genes-1, 5))  #pick out three random chromosomes, use the two best for reproduction
 
-            split = np.random.randint(0, 49)   #where to split
+            split = np.random.randint(0, genes-1)   #where to split
 
-            genome1 = self.past_gen[indices[0]].return_genes()
-            genome2 = self.past_gen[indices[1]].return_genes()
+            gene1 = self.past_gen[indices[0]].return_genes()
+            gene2 = self.past_gen[indices[1]].return_genes()
 
-            save_end = genome1[split:]
+            save_end = gene1[split:]
 
-            genome1[split:] = genome2[split:]
-            genome2[split:] = save_end
+            gene1[split:] = gene2[split:]
+            gene2[split:] = save_end
 
-            genome1 = self.mutate(genome1, mutation)    #add mutations to half the new genes
+            gene1 = self.mutate(gene1, mutation)    #add mutations to half the new genes
 
-            self.Chromosomes[j] = Chromosome(genome1)
-            self.Chromosomes[j+1] = Chromosome(genome2)
+            self.Chromosomes[j] = Chromosome(gene1, self.matrix, self.len)
+            self.Chromosomes[j+1] = Chromosome(gene2, self.matrix, self.len)
 
             j += 1
 
-            #self.Chromosomes.append(Chromosome(gene1))
-            #self.Chromosomes.append(Chromosome(gene2))
 
 
 
-    def mutate(self, genome, mutations):
+    def mutate(self, genes, mutations):
         #Makes a random mutation to a number of the genes by replacing them with a random number
         for i in range(mutations):
-            index = np.random.randint(1, len(genome))   #find where to swap, ensure that the first gene is 0 or 2
-            genome[index] = np.random.randint(0, 255)   #find where to swap
-        return genome
+            index = np.random.randint(1, len(genes))   #find where to swap, ensure that the first gene is 0 or 2
+            genes[index] = np.random.uniform(-1, 1)  #find where to swap
+        return genes
 
 
     def print_eqs(self, number):
@@ -406,8 +354,8 @@ class Population:
 
 
 def main(filename):
-    x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
-    t_range = np.linspace(0.0000001, 1, 10)
+    x_range = np.linspace(0.0, 1, 10)   #prevent division by zero
+    t_range = np.linspace(0.0, 1, 10)
 
     pop_size = 50
     genes = 50
@@ -442,8 +390,3 @@ def main(filename):
 
 
 main("tester")
-
-
-#np.exp((np.sin(t)))/8.0
-
-#t*(x*t-x)/8.0     #This came up as a solution with very low fitness, 0.22
