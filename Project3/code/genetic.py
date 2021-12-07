@@ -417,7 +417,7 @@ def main():
     filename = str(np.random.randint(0, 100000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
 
     for i in range(generations):
