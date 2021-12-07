@@ -87,18 +87,18 @@ class Chromosome:
 
         for t in t_range:
             try:
-                x_0 += (func(0.0000001, t))**2      #prevent division by zero
+                x_0 += (func(0.0, t))**2      #prevent division by zero and overflow
                 x_L += (func(x_range[-1], t))**2
 
-            except:# ZeroDivisionError:
+            except:
                 x_0 += 1e10
                 x_L += 1e10
 
         for x in x_range:
             try:
-                t_0 += (func(x, 0.0000001) - np.sin(np.pi*x))**2
+                t_0 += (func(x, 0.0) - np.sin(np.pi*x))**2
 
-            except:# ZeroDivisionError:
+            except:
                 t_0 += 1e10
 
         return (x_0 + x_L + t_0)/len(x_range)
@@ -108,7 +108,7 @@ class Chromosome:
     def calc_fitness(self, x_range, t_range):
 
         if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = 1e10
+            self.fitness = -1e10
 
         else:
             func = lambda x, t: eval(self.equation)
@@ -124,12 +124,12 @@ class Chromosome:
                     except: # ZeroDivisionError:
                         diff = 1e10
 
-                    self.fitness += diff
+                    self.fitness -= diff
 
             self.fitness /= (len(x_range))**2
 
             boundary = self.boundary_diff(func, x_range, t_range)
-            self.fitness += boundary*10
+            self.fitness -= boundary*10
 
 
 
@@ -137,7 +137,7 @@ class Chromosome:
     def calc_fitness_print(self, x_range, t_range):   #use to print out the deviance from the differential eq and boundary conditions
 
         if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = 1e10
+            self.fitness = -1e10
 
         else:
             print("Equation: ", self.equation)
@@ -151,10 +151,10 @@ class Chromosome:
                     try:
                         diff = (dM_dx(x, t) - dM_dt(x, t))**2
 
-                    except: # ZeroDivisionError:
+                    except:
                         diff = 1e10
 
-                    self.fitness += diff
+                    self.fitness -= diff
 
             self.fitness /= (len(x_range))**2
             print("Total diff eq deviance: ", self.fitness)
@@ -162,14 +162,14 @@ class Chromosome:
             boundary = self.boundary_diff(func, x_range, t_range)
 
             print("Boundary deviance: ", boundary)
-            self.fitness += boundary*10
+            self.fitness -= boundary*10
 
         print()
 
 
 
     def __gt__(self, other):
-        return self.fitness > other.fitness
+        return self.fitness < other.fitness
 
     def set_fitness(self, fitness):
         self.fitness = fitness
@@ -205,14 +205,14 @@ Analytic.calc_fitness(x_range, t_range)
 
 
 
-np.random.seed(123)
+
 
 class Population:
     def __init__(self, size_pop, size_chrom, generations, x_range, t_range):
         self.size_pop = size_pop    #no. of chromosomes
         self.size_chrom = size_chrom    #no. of genes in each chromosome
         self.generations = generations    #no. of generations
-        #self.Chromosomes = []
+
         self.x_range = x_range
         self.t_range = t_range
 
@@ -220,11 +220,11 @@ class Population:
 
 
         for i in range (0, size_pop):
-            genes = random.sample(range(0, 255), size_chrom)
-            genes[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
-            c = Chromosome(genes)
+            genome = random.sample(range(0, 255), self.size_chrom)
+            genome[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
+            c = Chromosome(genome)
             self.Chromosomes[i] = c
-            #self.Chromosomes.append(c)
+
 
 
     def fitness(self, write = True):
@@ -233,18 +233,18 @@ class Population:
 
         for c in self.Chromosomes:
             if (math.isnan(c.get_fitness()) or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
-                c.set_fitness(1e10)
+                c.set_fitness(-1e10)
 
         self.Chromosomes = np.sort(self.Chromosomes)
 
 
-        if write == True:
-            fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)    #does this do anything now??
+        if write == True:   #Use this when writing to file
+            fitness_vals = np.zeros(self.size_pop, dtype=Chromosome)
             i = 0
             for c in self.Chromosomes:
                 fitness_vals[i] = c.get_fitness()
                 i += 1
-                #fitness_vals.append(c.get_fitness())
+
             return fitness_vals, self.Chromosomes[0].get_equation()
 
 
@@ -340,7 +340,6 @@ class Population:
             if i % 4 == 0:   #do this for 50% of the chromosomes
                 new_genome = self.mutate(new_genome, mutation)
 
-            #self.Chromosomes.append(Chromosome(new_genes))
             self.Chromosomes[j] = Chromosome(new_genome)
 
             i += 2
@@ -380,8 +379,7 @@ class Population:
 
             j += 1
 
-            #self.Chromosomes.append(Chromosome(gene1))
-            #self.Chromosomes.append(Chromosome(gene2))
+
 
 
 
@@ -405,7 +403,7 @@ class Population:
 
 
 
-def main(filename):
+def main():
     x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
     t_range = np.linspace(0.0000001, 1, 10)
 
@@ -416,8 +414,10 @@ def main(filename):
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
+    filename = str(np.random.randint(0, 100000))
+
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Pop_size: {pop_size} Genes: {genes} Method: swap Mutated: {mutation_rate} \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
 
     for i in range(generations):
@@ -433,6 +433,9 @@ def main(filename):
 
         file.write(f"{i},{avg10},{avg70},{best},{equation} \n")
 
+        if best >= -1e-10:
+            break
+
         Pop.breed_swap(mutation_rate, genes)
 
 
@@ -441,7 +444,7 @@ def main(filename):
     print()
 
 
-main("tester")
+main()
 
 
 #np.exp((np.sin(t)))/8.0

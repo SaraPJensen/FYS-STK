@@ -19,14 +19,15 @@ class Chromosome:
         self.genes = genes
         self.matrix = matrix
         self.length = l
-        self.equation = self.eq_generator()
+        self.equation = ""
+        self.eq_generator()
 
 
     def eq_generator(self):
-        for i in range(l-1):
+        for i in range(self.length-1):
             self.equation += str(self.genes[i]) + "*" + self.matrix[i] + "+"
 
-        self.equation += str(self.genes[l-1]) + "*" + self.matrix[l-1]
+        self.equation += str(self.genes[self.length-1]) + "*" + self.matrix[self.length-1]
 
 
     def boundary_diff(self, func,  x_range, t_range):
@@ -160,7 +161,7 @@ class Population:
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
         for i in range (0, size_pop):
-            genes = np.random.normal(0, 1, l)  #indices, normal distribution
+            genes = np.random.normal(0, 1, self.len)  #indices, normal distribution
             c = Chromosome(genes, self.matrix, self.len)
             self.Chromosomes[i] = c
 
