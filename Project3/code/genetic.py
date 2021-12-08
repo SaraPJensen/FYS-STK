@@ -1,4 +1,3 @@
-#import numpy as np
 from autograd import grad
 import random
 import autograd.numpy as np
@@ -418,10 +417,10 @@ def main():
     x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
     t_range = np.linspace(0.0000001, 1, 10)
 
-    pop_size = 50
+    pop_size = 1000
     genes = 50
     mutation_rate = 10
-    generations = 20
+    generations = 1000
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
