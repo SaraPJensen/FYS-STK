@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-from numba import jit
+
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -20,7 +20,7 @@ class Chromosome:
         self.g = 0
         self.equation = self.expression(self.genome[0])
 
-        if ("x" not in self.equation) or ("t" not in self.equation):
+        if (("x" not in self.equation) or ("t" not in self.equation)) and self.g < 0.8*len(self.genome):  #keep looping if x or t is missing, but only if there is a substantial part of the genome left
 
             self.equation += "+" + self.expression(self.genome[self.g])
 
@@ -201,9 +201,20 @@ x_range = np.linspace(0.0000001, 1, 15)   #prevent division by zero
 t_range = np.linspace(0.0000001, 1, 15)
 
 Analytic.calc_fitness(x_range, t_range)
+
+
+test1 = [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]
+test2 = [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]
+
+
+Ex1 = Chromosome(test1)
+
+print(Ex1.get_equation())
+
+Ex2 = Chromosome(test2)
+
+print(Ex2.get_equation())
 '''
-
-
 
 
 
@@ -417,7 +428,7 @@ def main():
     filename = str(np.random.randint(0, 100000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: mix - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
 
     for i in range(generations):
@@ -436,8 +447,7 @@ def main():
         if best >= -1e-10:
             break
 
-        Pop.breed_swap(mutation_rate, genes)
-
+        Pop.breed_mix(mutation_rate, genes)
 
     file.close()
 
