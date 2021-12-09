@@ -455,7 +455,7 @@ def main():
         avg70 = np.sum(fitness[:int(length*0.7)])/int(length*0.7)
         best = fitness[0]
 
-        file = open(f"data/{filename}.csv", "w")
+        file = open(f"data/{filename}.csv", "a")
         file.write(f"{i},{avg10},{avg70},{best},{equation} \n")
 
         file.close()
