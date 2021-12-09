@@ -438,10 +438,13 @@ def main():
     file = open(f"data/{filename}.csv", "w")
     file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
+    file.close()
 
     print("Filename: ", filename)
 
     for i in range(generations):
+        file = open(f"data/{filename}.csv", "w")
+        
         print()
         print()
         print("Generation: ", i)
@@ -454,6 +457,8 @@ def main():
         best = fitness[0]
 
         file.write(f"{i},{avg10},{avg70},{best},{equation} \n")
+
+        file.close()
 
         if best >= -1e-10:
             break
