@@ -295,6 +295,10 @@ class Population:
         #standard deviation 0.2*current size of population to ensure that the best individuals are reproduced
         chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_pop, size = parents).astype(int)
 
+        for i in range(len(chroms)):
+            if chroms[i] > self.size_pop:
+                çhroms[i] = 0
+
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -327,6 +331,11 @@ class Population:
         elite = self.size_pop // 20   #pass on the 5% best individuals
         parents = 2*self.size_pop - elite*2
         chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_pop, size = parents).astype(int)
+
+        for i in range(len(chroms)):
+            if chroms[i] > self.size_pop:
+                çhroms[i] = 0
+
         self.past_gen = self.Chromosomes
         #self.Chromosomes = []
 
@@ -436,6 +445,7 @@ def main():
         print()
         print()
         print("Generation: ", i)
+        print("Filename: ", filename)
         fitness, equation = Pop.fitness(write = True)
 
         length = len(fitness)
