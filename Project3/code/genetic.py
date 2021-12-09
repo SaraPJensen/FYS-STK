@@ -424,11 +424,13 @@ def main():
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
-    filename = str(np.random.randint(0, 100000))
+    filename = str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
     file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
+
+    print("Filename: ", filename)
 
     for i in range(generations):
         print()
@@ -449,6 +451,7 @@ def main():
         Pop.breed_swap(mutation_rate, genes)
 
     file.close()
+
 
     print()
 
