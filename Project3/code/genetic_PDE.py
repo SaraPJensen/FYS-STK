@@ -19,7 +19,7 @@ class Chromosome:
         self.g = 0
         self.equation = self.expression(self.genome[0])
 
-        if (("x" not in self.equation) or ("t" not in self.equation)) and self.g < 0.8*len(self.genome):  #keep looping if x or t is missing, but only if there is a substantial part of the genome left
+        if (("x" not in self.equation) or ("y" not in self.equation)) and self.g < 0.8*len(self.genome):  #keep looping if x or t is missing, but only if there is a substantial part of the genome left
 
             self.equation += "+" + self.expression(self.genome[self.g])
 
@@ -43,7 +43,7 @@ class Chromosome:
         i = index % 6
         exp = {0: lambda: "(" + self.expression(self.read_genes()) + self.operator(self.read_genes()) + self.expression(self.read_genes()) + ")",
                 1: lambda: "(" + self.expression(self.read_genes()) + ")", 2: lambda: self.func(self.read_genes()), 3: lambda: self.digit(self.read_genes()),
-                4: lambda: "x", 5: lambda: "t"}
+                4: lambda: "x", 5: lambda: "y"}
 
 
         return exp[i]()
@@ -62,7 +62,7 @@ class Chromosome:
             return "stop"
 
         i = index % 3
-        func = {0: "np.sin", 1: "np.cos", 2: "np.exp"}
+        func = {0: "np.sin", 1: "np.cos", 2: "np.exp"}  #should these be included or not?
         return func[i] + "(" + self.expression(self.read_genes()) + ")"
 
 
@@ -70,85 +70,87 @@ class Chromosome:
         if index == "stop":
             return "stop"
 
-        num = str(index % 11)+".0"
-
-        if num == "10.0":
-            num = "np.pi"
+        num = str(index % 10)+".0"
 
         return num
 
 
 
-    def boundary_diff(self, func,  x_range, t_range):
+    def boundary_diff(self, func,  x_range, y_range):
         x_0 = 0
-        x_L = 0
-        t_0 = 0
+        x_1 = 0
+        y_0 = 0
+        y_1 = 0
 
-        for t in t_range:
+        for y in y_range:
             try:
-                x_0 += (func(0.0, t))**2      #prevent division by zero and overflow
-                x_L += (func(x_range[-1], t))**2
+                x_0 += (func(0.0, y))**2      #prevent division by zero and overflow
+                x_1 += (func(1.0, y) - np.sin(1.0)*np.cos(y))**2
 
             except:
                 x_0 += 1e10
-                x_L += 1e10
+                x_1 += 1e10
+
 
         for x in x_range:
             try:
-                t_0 += (func(x, 0.0) - np.sin(np.pi*x))**2
+                y_0 += (func(x, 0.0) - np.sin(x))**2
+                y_1 += (func(x, 1.0) - np.sin(x)*np.cos(1.0))**2
 
             except:
-                t_0 += 1e10
+                y_0 += 1e10
+                y_1 += 1e10
 
-        return (x_0 + x_L + t_0)/len(x_range)
+        return (x_0 + x_1 + y_0 + y_1)/len(x_range)
 
 
 
-    def calc_fitness(self, x_range, t_range):
+    def calc_fitness(self, x_range, y_range):
 
-        if ("x" not in self.equation) or ("t" not in self.equation):
+        if ("x" not in self.equation) or ("y" not in self.equation):
             self.fitness = -1e10
 
         else:
-            func = lambda x, t: eval(self.equation)
-            dM_dx = grad(grad(func, 0), 0)
-            dM_dt = grad(func, 1)
+            func = lambda x, y: eval(self.equation)
+            d2M_dx2 = grad(grad(func, 0), 0)
+            d2M_dy2 = grad(grad(func, 1), 1)
+
 
             self.fitness = 0
             for x in x_range:
-                for t in t_range:
+                for y in y_range:
                     try:
-                        diff = (dM_dx(x, t) - dM_dt(x, t))**2
+                        diff = (d2M_dx2(x, y) + d2M_dy2(x, y) + 2*func(x, y))**2
 
-                    except: # ZeroDivisionError:
+                    except:
                         diff = 1e10
 
                     self.fitness -= diff
 
             self.fitness /= (len(x_range))**2
 
-            boundary = self.boundary_diff(func, x_range, t_range)
+            boundary = self.boundary_diff(func, x_range, y_range)
             self.fitness -= boundary*10
 
 
 
 
-    def calc_fitness_print(self, x_range, t_range):   #use to print out the deviance from the differential eq and boundary conditions
+    def calc_fitness_print(self, x_range, y_range):   #use to print out the deviance from the differential eq and boundary conditions
 
-        if ("x" not in self.equation) or ("t" not in self.equation):
+        if ("x" not in self.equation) or ("y" not in self.equation):
             self.fitness = -1e10
 
         else:
             print("Equation: ", self.equation)
-            func = lambda x, t: eval(self.equation)
-            dM_dx = grad(grad(func, 0), 0)
-            dM_dt = grad(func, 1)
+            func = lambda x, y: eval(self.equation)
+            d2M_dx2 = grad(grad(func, 0), 0)
+            d2M_dy2 = grad(grad(func, 1), 1)
 
             self.fitness = 0
             for x in x_range:
-                for t in t_range:
+                for y in y_range:
                     try:
-                        diff = (dM_dx(x, t) - dM_dt(x, t))**2
+                        diff = (d2M_dx2(x, y) + d2M_dy2(x, y) + 2*func(x, y))**2
 
                     except:
                         diff = 1e10
@@ -158,7 +160,7 @@ class Chromosome:
             self.fitness /= (len(x_range))**2
             print("Total diff eq deviance: ", self.fitness)
 
-            boundary = self.boundary_diff(func, x_range, t_range)
+            boundary = self.boundary_diff(func, x_range, y_range)
 
             print("Boundary deviance: ", boundary)
             self.fitness -= boundary*10
@@ -186,45 +188,16 @@ class Chromosome:
 
 
 
-'''
-#Analytic solution
-first = [0, 2, 2, 0, 3, 0, 1, 0, 3, 21, 2, 0, 3, 21, 2, 5, 2, 2, 0, 0, 3, 21, 2, 4]
-
-
-Analytic = Chromosome(first)
-
-print(Analytic.get_equation())
-
-
-x_range = np.linspace(0.0000001, 1, 15)   #prevent division by zero
-t_range = np.linspace(0.0000001, 1, 15)
-
-Analytic.calc_fitness(x_range, t_range)
-
-
-test1 = [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]
-test2 = [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]
-
-
-Ex1 = Chromosome(test1)
-
-print(Ex1.get_equation())
-
-Ex2 = Chromosome(test2)
-
-print(Ex2.get_equation())
-'''
-
 
 
 class Population:
-    def __init__(self, size_pop, size_chrom, generations, x_range, t_range):
+    def __init__(self, size_pop, size_chrom, generations, x_range, y_range):
         self.size_pop = size_pop    #no. of chromosomes
         self.size_chrom = size_chrom    #no. of genes in each chromosome
         self.generations = generations    #no. of generations
 
         self.x_range = x_range
-        self.t_range = t_range
+        self.y_range = y_range
 
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -239,7 +212,7 @@ class Population:
 
     def fitness(self, write = True):
         for c in self.Chromosomes:
-            c.calc_fitness(self.x_range, self.t_range)
+            c.calc_fitness(self.x_range, self.y_range)
 
         for c in self.Chromosomes:
             if (math.isnan(c.get_fitness()) or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
@@ -268,7 +241,7 @@ class Population:
 
     def fitness_print(self):   #use to
         for c in self.Chromosomes:
-            c.calc_fitness_print(self.x_range, self.t_range)
+            c.calc_fitness_print(self.x_range, self.y_range)
 
 
         print()
@@ -311,7 +284,7 @@ class Population:
 
         while i < parents:
 
-            indices = np.random.randint(0, 49, 25)   #find which genes to swap
+            indices = np.random.randint(0, genes-1, 25)   #find which genes to swap
             new_genome = self.past_gen[chroms[i]].return_genes()
 
             for index in indices:
@@ -350,7 +323,7 @@ class Population:
 
         while i < parents:
 
-            index = np.random.randint(0, 30)   #find where to swap
+            index = np.random.randint(0, 0.6*genes)   #find where to swap
             new_genome = np.zeros(genes)
 
             new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
@@ -398,10 +371,6 @@ class Population:
 
             j += 1
 
-        print(len(self.Chromosomes))
-
-
-
 
 
     def mutate(self, genome, mutations):
@@ -425,20 +394,21 @@ class Population:
 
 
 def main():
-    x_range = np.linspace(0.0, 1, 10)   
-    t_range = np.linspace(0.0, 1, 10)
+    x_range = np.linspace(0, 1, 10)   #prevent division by zero
+    y_range = np.linspace(0, 1, 10)
 
-    pop_size = 1000
+    pop_size = 100
     genes = 50
     mutation_rate = 10
-    generations = 1000
+    generations = 20
 
-    Pop = Population(pop_size, genes, generations, x_range, t_range)
+    Pop = Population(pop_size, genes, generations, x_range, y_range)
 
-    filename = "Diff_eq_" + str(np.random.randint(0, 1000000))
+    filename = "PDE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"PDE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write("Diff. equation: PDE2, solution: sin(x)cos(x)")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
