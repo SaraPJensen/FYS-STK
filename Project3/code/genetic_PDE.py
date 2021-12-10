@@ -432,10 +432,10 @@ def main():
 
         file.close()
 
-        if best >= -1**(-10):
+        if best >= -1e-10:
             print("Finished, best fitness: ", best)
-            print(-1**(-10))
-            print(best >= -1**(-10))
+            print(-1e-10)
+            print(best >= -1e-10)
             break
 
         Pop.breed_tournament(mutation_rate, genes)
