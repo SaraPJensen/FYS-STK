@@ -350,7 +350,7 @@ class Population:
 
         while i < parents:
 
-            index = np.random.randint(0, 30)   #find where to swap
+            index = np.random.randint(0, 0.6 * genes -1)   #find where to swap
             new_genome = np.zeros(genes)
 
             new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
@@ -425,7 +425,7 @@ class Population:
 
 
 def main():
-    x_range = np.linspace(0.0, 1, 10)   
+    x_range = np.linspace(0.0, 1, 10)
     t_range = np.linspace(0.0, 1, 10)
 
     pop_size = 1000

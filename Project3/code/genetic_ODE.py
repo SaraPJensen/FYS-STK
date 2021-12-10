@@ -303,7 +303,7 @@ class Population:
 
         while i < parents:
 
-            index = np.random.randint(0, 30)   #find where to swap
+            index = np.random.randint(0, 0.6*genes - 1)   #find where to swap
             new_genome = np.zeros(genes)
 
             new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
@@ -332,9 +332,9 @@ class Population:
         j = elite
 
         while j < self.size_pop - 1:  #tournament selection
-            indices = np.sort(np.random.randint(0, 49, 5))  #pick out three random chromosomes, use the two best for reproduction
+            indices = np.sort(np.random.randint(0, self.size_pop - 1, 5))  #pick out three random chromosomes, use the two best for reproduction
 
-            split = np.random.randint(0, 49)   #where to split
+            split = np.random.randint(0, genes - 1)   #where to split
 
             genome1 = self.past_gen[indices[0]].return_genes()
             genome2 = self.past_gen[indices[1]].return_genes()
