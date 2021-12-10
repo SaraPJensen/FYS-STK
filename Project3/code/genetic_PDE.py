@@ -397,10 +397,10 @@ def main():
     x_range = np.linspace(0, 1, 10)   #prevent division by zero
     y_range = np.linspace(0, 1, 10)
 
-    pop_size = 100
+    pop_size = 1000
     genes = 50
     mutation_rate = 10
-    generations = 20
+    generations = 1000
 
     Pop = Population(pop_size, genes, generations, x_range, y_range)
 
@@ -432,7 +432,7 @@ def main():
 
         file.close()
 
-        if best >= -1e-10:
+        if best >= -1**(-10):
             break
 
         Pop.breed_tournament(mutation_rate, genes)
