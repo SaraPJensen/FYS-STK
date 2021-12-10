@@ -367,7 +367,7 @@ class Population:
 
 
     def breed_tournament(self, mutation, genes):
-        elite = self.size_pop // 20
+        elite = self.size_pop // 20   #must be an even number
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -378,7 +378,7 @@ class Population:
 
         j = elite
 
-        while j < self.size_pop:  #tournament selection
+        while j < self.size_pop - 1:  #tournament selection
             indices = np.sort(np.random.randint(0, 49, 5))  #pick out three random chromosomes, use the two best for reproduction
 
             split = np.random.randint(0, 49)   #where to split
@@ -397,6 +397,8 @@ class Population:
             self.Chromosomes[j+1] = Chromosome(genome2)
 
             j += 1
+
+        print(len(self.Chromosomes))
 
 
 
