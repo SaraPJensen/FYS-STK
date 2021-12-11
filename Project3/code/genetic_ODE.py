@@ -92,8 +92,8 @@ class Chromosome:
             self.fitness = 0
             for x in x_range:
                 try:
-                    diff = (dM_dx(x) - (2*x - func(x))/x)**2   #ODE1
-                    #diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    #diff = (dM_dx(x) - (2*x - func(x))/x)**2   #ODE1
+                    diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
 
                 except:
                     diff = 1e10
@@ -106,6 +106,7 @@ class Chromosome:
                 #boundary = (func(0.1) - 20.1)**2    #ODE1
 
                 boundary = (func(0))**2  + (dM_dx(0) - 2)**2   #ODE5
+
             except:
                 boundary = 1e10
 
@@ -128,8 +129,8 @@ class Chromosome:
             self.fitness = 0
             for x in x_range:
                 try:
-                    #diff = (dM_dx(x) - (2.0*x - func(x))/x)**2   #ODE1
-                    diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    diff = (dM_dx(x) - (2.0*x - func(x))/x)**2   #ODE1
+                    #diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
 
                 except:
                     diff = 1e10
@@ -140,9 +141,9 @@ class Chromosome:
 
             print("Total diff eq deviance: ", self.fitness)
 
-            #boundary = (func(0.1) - 20.1)**2    #ODE1
+            boundary = (func(0.1) - 20.1)**2    #ODE1
 
-            boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
+            #boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
 
             print("Boundary deviance: ", boundary)
             self.fitness -= boundary*10
@@ -213,13 +214,14 @@ class Population:
 
         else:
             print("Final chromosome fitness vals:")
-            for c in self.Chromosomes[:10]:
+            for c in self.Chromosomes:  #[:10]:
                 print("Fitness value: ", c.get_fitness())
+                print("Equation: ", c.get_equation())
 
 
 
 
-    def fitness_print(self):   #use to
+    def fitness_print(self):
         for c in self.Chromosomes:
             c.calc_fitness_print(self.x_range)
 
@@ -290,13 +292,12 @@ class Population:
                 çhroms[i] = 0
 
         self.past_gen = self.Chromosomes
-        #self.Chromosomes = []
 
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
         for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
             self.Chromosomes[e] = self.past_gen[e]
-            #self.Chromosomes.append(self.past_gen[e])
+
 
         i = 0
         j = elite
@@ -351,7 +352,7 @@ class Population:
 
             j += 1
 
-        print(len(self.Chromosomes))
+
 
 
 
@@ -378,7 +379,7 @@ class Population:
 
 
 def main():
-    x_range = np.linspace(0.0000001, 1, 10)   #prevent division by zero
+    x_range = np.linspace(0.1, 1, 10)   #prevent division by zero
 
     pop_size = 1000
     genes = 50
@@ -387,15 +388,19 @@ def main():
 
     Pop = Population(pop_size, genes, generations, x_range)
 
+
+
     filename = "ODE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
     file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
-    file.write("Diff. equation: ODE5, solution: y(x) = 2x*exp(3x)")
+    #file.write("Diff. equation: ODE1, solution: y(x) = x + 2/x \n")
+    file.write("Diff. equation: ODE5, solution: y(x) = 2x*exp(3x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
     print("Filename: ", filename)
+
 
     for i in range(generations):
 
@@ -403,6 +408,8 @@ def main():
         print()
         print("Generation: ", i)
         print("Filename: ", filename)
+        #Pop.fitness(write = False)
+
         fitness, equation = Pop.fitness(write = True)
 
         length = len(fitness)
@@ -414,6 +421,7 @@ def main():
         file.write(f"{i},{avg10},{avg70},{best},{equation} \n")
 
         file.close()
+
 
         if best >= -1e-10:
             print("Finished, best fitness: ", best)

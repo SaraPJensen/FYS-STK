@@ -241,6 +241,7 @@ class Population:
         for c in self.Chromosomes:
             c.calc_fitness(self.x_range, self.t_range)
 
+
         for c in self.Chromosomes:
             if (math.isnan(c.get_fitness()) or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
                 c.set_fitness(-1e10)
@@ -337,13 +338,11 @@ class Population:
                 çhroms[i] = 0
 
         self.past_gen = self.Chromosomes
-        #self.Chromosomes = []
 
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
         for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
             self.Chromosomes[e] = self.past_gen[e]
-            #self.Chromosomes.append(self.past_gen[e])
 
         i = 0
         j = elite
@@ -371,7 +370,6 @@ class Population:
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
-        new = self.size_pop - elite
 
         for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
             self.Chromosomes[e] = self.past_gen[e]
@@ -395,6 +393,29 @@ class Population:
 
             self.Chromosomes[j] = Chromosome(genome1)
             self.Chromosomes[j+1] = Chromosome(genome2)
+
+            j += 1
+
+
+
+
+
+    def breed_random(self, mutation, genes):
+        elite = self.size_pop // 20   #must be an even number
+        self.past_gen = self.Chromosomes
+        self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
+
+
+        for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
+            self.Chromosomes[e] = self.past_gen[e]
+
+        j = elite
+
+        while j < self.size_pop:  #generate new chromosomes with random genes
+            genome = random.sample(range(0, 255), self.size_chrom)
+            genome[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
+            c = Chromosome(genome)
+            self.Chromosomes[j] = c
 
             j += 1
 
@@ -431,18 +452,21 @@ def main():
     pop_size = 1000
     genes = 50
     mutation_rate = 10
-    generations = 1000
+    generations = 10000
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
+
+
 
     filename = "Diff_eq_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
     print("Filename: ", filename)
+
 
     for i in range(generations):
 
@@ -451,6 +475,9 @@ def main():
         print("Generation: ", i)
         print("Filename: ", filename)
         fitness, equation = Pop.fitness(write = True)
+
+        #Pop.fitness(write = False)
+
 
         length = len(fitness)
         avg10 = np.sum(fitness[:int(length*0.1)])/int(length*0.1)
@@ -462,10 +489,12 @@ def main():
 
         file.close()
 
+
         if best >= -1e-10:
             break
 
-        Pop.breed_tournament(mutation_rate, genes)
+
+        Pop.breed_random(mutation_rate, genes)
 
     file.close()
 
