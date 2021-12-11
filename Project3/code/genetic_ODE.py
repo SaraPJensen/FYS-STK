@@ -94,7 +94,8 @@ class Chromosome:
             for x in x_range:
                 try:
                     #diff = (dM_dx(x) - (2*x - func(x))/x)**2   #ODE1
-                    diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    #diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    diff = (d2M_dx2(x) + 100*func(x))**2    #ODE4
 
                     self.fitness -= diff
 
@@ -105,7 +106,9 @@ class Chromosome:
 
             try:
                 #boundary = (func(0.1) - 20.1)**2    #ODE1
-                boundary = (func(0.0))**2  + (dM_dx(0.0) - 2)**2   #ODE5
+                #boundary = (func(0.0))**2  + (dM_dx(0.0) - 2)**2   #ODE5
+                boundary = (func(0.0))**2  + (dM_dx(0.0) - 10)**2   #ODE4
+
 
             except:
                 boundary =  1e10
@@ -133,7 +136,8 @@ class Chromosome:
             for x in x_range:
                 try:
                     #diff = (dM_dx(x) - (2.0*x - func(x))/x)**2   #ODE1
-                    diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    #diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    diff = (d2M_dx2(x) + 100*func(x))**2    #ODE4
 
                     self.fitness -= diff
 
@@ -145,8 +149,8 @@ class Chromosome:
             print("Total diff eq deviance: ", self.fitness)
 
             #boundary = (func(0.1) - 20.1)**2    #ODE1
-
-            boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
+            #boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
+            boundary = (func(0.0))**2  + (dM_dx(0.0) - 10)**2   #ODE4
 
             print("Boundary deviance: ", boundary)
             self.fitness -= boundary*10
@@ -401,7 +405,7 @@ Wrong.calc_fitness_print(x_range)
 
 def main():
     #x_range = np.linspace(0.1, 1, 10)   #ODE1
-    x_range = np.linspace(0, 1, 10)   #ODE5
+    x_range = np.linspace(0, 1, 10)   #ODE5, ODE4
 
     pop_size = 1000
     genes = 50
@@ -411,13 +415,13 @@ def main():
     Pop = Population(pop_size, genes, generations, x_range)
 
 
-    
+
     filename = "ODE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
     file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     #file.write("Diff. equation: ODE1, solution: y(x) = x + 2/x \n")
-    file.write("Diff. equation: ODE5, solution: y(x) = 2x*exp(3x) \n")
+    file.write("Diff. equation: ODE4, solution: y(x) = sin(10x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -450,7 +454,6 @@ def main():
 
 
         if best >= -1e-10:
-            print("Finished, best fitness: ", best)
             break
 
 
