@@ -71,7 +71,7 @@ class Chromosome:
         if index == "stop":
             return "stop"
 
-        num = str(index % 10)+".0"
+        num = str(index % 10) + ".0"
 
 
         return num
@@ -84,10 +84,11 @@ class Chromosome:
         if ("x" not in self.equation):
             self.fitness = -1e10
 
+
         else:
             func = lambda x: eval(self.equation)
-            dM_dx = grad(func)
-            d2M_dx2 = grad(grad(func))
+            dM_dx = grad(func, 0)
+            d2M_dx2 = grad(grad(func, 0), 0)
 
             self.fitness = 0
             for x in x_range:
@@ -95,20 +96,20 @@ class Chromosome:
                     #diff = (dM_dx(x) - (2*x - func(x))/x)**2   #ODE1
                     diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
 
+                    self.fitness -= diff
+
                 except:
                     diff = 1e10
-
-            self.fitness -= diff
 
             self.fitness /= len(x_range)
 
             try:
                 #boundary = (func(0.1) - 20.1)**2    #ODE1
-
-                boundary = (func(0))**2  + (dM_dx(0) - 2)**2   #ODE5
+                boundary = (func(0.0))**2  + (dM_dx(0.0) - 2)**2   #ODE5
 
             except:
-                boundary = 1e10
+                boundary =  1e10
+
 
             self.fitness -= boundary*10
 
@@ -117,8 +118,10 @@ class Chromosome:
 
     def calc_fitness_print(self, x_range):   #use to print out the deviance from the differential eq and boundary conditions
 
+
         if ("x" not in self.equation):
             self.fitness = -1e10
+
 
         else:
             print("Equation: ", self.equation)
@@ -129,24 +132,25 @@ class Chromosome:
             self.fitness = 0
             for x in x_range:
                 try:
-                    diff = (dM_dx(x) - (2.0*x - func(x))/x)**2   #ODE1
-                    #diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+                    #diff = (dM_dx(x) - (2.0*x - func(x))/x)**2   #ODE1
+                    diff = (d2M_dx2(x) - 6.0*dM_dx(x) + 9.0*func(x))**2   #ODE5
+
+                    self.fitness -= diff
 
                 except:
                     diff = 1e10
-
-            self.fitness -= diff
 
             self.fitness /= len(x_range)
 
             print("Total diff eq deviance: ", self.fitness)
 
-            boundary = (func(0.1) - 20.1)**2    #ODE1
+            #boundary = (func(0.1) - 20.1)**2    #ODE1
 
-            #boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
+            boundary = (func(0.0))**2  + (dM_dx(0.0) - 2.0)**2   #ODE5
 
             print("Boundary deviance: ", boundary)
             self.fitness -= boundary*10
+            print()
 
         print()
 
@@ -214,7 +218,7 @@ class Population:
 
         else:
             print("Final chromosome fitness vals:")
-            for c in self.Chromosomes:  #[:10]:
+            for c in self.Chromosomes[:10]:
                 print("Fitness value: ", c.get_fitness())
                 print("Equation: ", c.get_equation())
 
@@ -373,13 +377,31 @@ class Population:
             print()
 
 
+'''
+sol = [0, 3, 2, 2, 0, 4, 2, 2, 2, 0, 3, 3, 2, 4]
+
+wrong = [0, 3, 2, 2, 0, 4, 2, 2, 2, 4]
+
+x_range = np.linspace(0, 1, 11)   #ODE5
+
+Sol = Chromosome(sol)
+
+Sol.calc_fitness_print(x_range)
+
+
+
+Wrong = Chromosome(wrong)
+
+Wrong.calc_fitness_print(x_range)
+'''
 
 
 
 
 
 def main():
-    x_range = np.linspace(0.1, 1, 10)   #prevent division by zero
+    #x_range = np.linspace(0.1, 1, 10)   #ODE1
+    x_range = np.linspace(0, 1, 10)   #ODE5
 
     pop_size = 1000
     genes = 50
@@ -389,7 +411,7 @@ def main():
     Pop = Population(pop_size, genes, generations, x_range)
 
 
-
+    
     filename = "ODE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
@@ -402,13 +424,17 @@ def main():
     print("Filename: ", filename)
 
 
+
     for i in range(generations):
+
 
         print()
         print()
+
         print("Generation: ", i)
         print("Filename: ", filename)
-        #Pop.fitness(write = False)
+
+
 
         fitness, equation = Pop.fitness(write = True)
 
@@ -426,6 +452,7 @@ def main():
         if best >= -1e-10:
             print("Finished, best fitness: ", best)
             break
+
 
         Pop.breed_tournament(mutation_rate, genes)
 
