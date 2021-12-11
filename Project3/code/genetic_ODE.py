@@ -362,6 +362,29 @@ class Population:
 
 
 
+    def breed_random(self, mutation, genes):
+        elite = self.size_pop // 20   #must be an even number
+        self.past_gen = self.Chromosomes
+        self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
+
+
+        for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
+            self.Chromosomes[e] = self.past_gen[e]
+
+        j = elite
+
+        while j < self.size_pop:  #generate new chromosomes with random genes
+            genome = random.sample(range(0, 255), self.size_chrom)
+            genome[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
+            c = Chromosome(genome)
+            self.Chromosomes[j] = c
+
+            j += 1
+
+        print(len(self.Chromosomes))
+
+
+
 
 
 
@@ -380,24 +403,6 @@ class Population:
             print(c.get_fitness())
             print()
 
-
-'''
-sol = [0, 3, 2, 2, 0, 4, 2, 2, 2, 0, 3, 3, 2, 4]
-
-wrong = [0, 3, 2, 2, 0, 4, 2, 2, 2, 4]
-
-x_range = np.linspace(0, 1, 11)   #ODE5
-
-Sol = Chromosome(sol)
-
-Sol.calc_fitness_print(x_range)
-
-
-
-Wrong = Chromosome(wrong)
-
-Wrong.calc_fitness_print(x_range)
-'''
 
 
 
@@ -419,7 +424,7 @@ def main():
     filename = "ODE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     #file.write("Diff. equation: ODE1, solution: y(x) = x + 2/x \n")
     file.write("Diff. equation: ODE4, solution: y(x) = sin(10x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
@@ -457,7 +462,7 @@ def main():
             break
 
 
-        Pop.breed_tournament(mutation_rate, genes)
+        Pop.breed_random(mutation_rate, genes)
 
     file.close()
 
@@ -466,3 +471,5 @@ def main():
 
 
 main()
+
+np.sin((9*x)+(x))

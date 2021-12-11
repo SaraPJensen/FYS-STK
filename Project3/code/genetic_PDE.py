@@ -371,6 +371,27 @@ class Population:
 
             j += 1
 
+    def breed_random(self, mutation, genes):
+        elite = self.size_pop // 20   #must be an even number
+        self.past_gen = self.Chromosomes
+        self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
+
+
+        for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
+            self.Chromosomes[e] = self.past_gen[e]
+
+        j = elite
+
+        while j < self.size_pop:  #generate new chromosomes with random genes
+            genome = random.sample(range(0, 255), self.size_chrom)
+            genome[0] = random.choice([0, 2])   #ensures that the equation isn't too trivial
+            c = Chromosome(genome)
+            self.Chromosomes[j] = c
+
+            j += 1
+
+        print(len(self.Chromosomes))
+
 
 
     def mutate(self, genome, mutations):
@@ -407,8 +428,8 @@ def main():
     filename = "PDE_" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"PDE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament, 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
-    file.write("Diff. equation: PDE2, solution: sin(x)cos(x)")
+    file.write(f"PDE - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write("Diff. equation: PDE2, solution: sin(x)cos(x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -438,7 +459,7 @@ def main():
             print(best >= -1e-10)
             break
 
-        Pop.breed_tournament(mutation_rate, genes)
+        Pop.breed_random(mutation_rate, genes)
 
     file.close()
 
