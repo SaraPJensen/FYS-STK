@@ -452,7 +452,7 @@ def main():
     pop_size = 1000
     genes = 50
     mutation_rate = 10
-    generations = 10000
+    generations = 1000
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 

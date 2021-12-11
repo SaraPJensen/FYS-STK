@@ -471,5 +471,3 @@ def main():
 
 
 main()
-
-np.sin((9*x)+(x))
