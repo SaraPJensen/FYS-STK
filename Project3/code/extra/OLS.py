@@ -20,7 +20,7 @@ class Regression:
         return beta
 
 
-    def Bootstrap(self):
+    def Bootstrap(self, name):
 
         MSE_train = []
         MSE_test = []
@@ -28,7 +28,7 @@ class Regression:
         Variance = []
         B_runs = 200
 
-        filename = "OLS_bias_var" + str(np.random.randint(0, 1000000))
+        filename = "OLS_bias_var" + name
 
         file = open(f"data_bv/{filename}.csv", "w")
         file.write("Polynomial,MSE_train,MSE_test,Bias,Variance\n")
@@ -41,12 +41,9 @@ class Regression:
             print()
 
             n = int((degree+1)*(degree+2)/2)
-            print("n: ", n)
 
             X_train = self.X_train[:, :n]
             X_test = self.X_test[:, :n]
-
-            print(len(X_train[0,:]))
 
             z_predictions = np.zeros((len(self.z_test), B_runs))   #matrix containing the values for different bootstrap runs
 
@@ -54,14 +51,14 @@ class Regression:
 
             for i in range(B_runs):
 
-                X_train_boot, z_train_boot = resample(self.X_train, self.z_train)
+                X_train_boot, z_train_boot = resample(X_train, self.z_train)
 
                 beta = self.beta(X_train_boot, z_train_boot)
 
                 z_model = X_train_boot @ beta
-                z_predict = self.X_test @ beta
+                z_predict = X_test @ beta
 
-                MSE_train_boot.append(mean_squared_error(self.z_train, z_model))
+                MSE_train_boot.append(mean_squared_error(z_train_boot, z_model))
 
                 z_predictions[:, i] = z_predict.ravel()
 
@@ -88,13 +85,13 @@ class Regression:
 def main():
     poly = 20
     n_points = 20
-    noise = 0.2
+    noise = 0.5
     design = "poly"
 
     X_train, X_test, z_train, z_test = Franke_data(n_points, noise, design, poly)
 
     OLS = Regression(X_train, X_test, z_train, z_test, poly)
 
-    OLS.Bootstrap()
+    OLS.Bootstrap(f"noise_{noise}_test")
 
 main()

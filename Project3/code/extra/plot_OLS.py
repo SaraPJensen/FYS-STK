@@ -29,7 +29,6 @@ def OLS(filename):
          name="Variance"))
 
 
-
     fig.add_trace(go.Scatter(x=poly, y=mse,
          mode='lines+markers',
          line=dict(width=4, color = "darkcyan"),
@@ -48,4 +47,4 @@ def OLS(filename):
 
 
 
-OLS("OLS_bias_var889014")
+OLS("OLS_bias_var172440")
