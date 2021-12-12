@@ -425,10 +425,10 @@ def main():
 
     Pop = Population(pop_size, genes, generations, x_range, y_range)
 
-    filename = "PDE_" + str(np.random.randint(0, 1000000))
+    filename = "PDE_tour" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"PDE - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"PDE - Pop_size: {pop_size} - Genes: {genes} - Method: tournament 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Diff. equation: PDE2, solution: sin(x)cos(x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
@@ -455,11 +455,9 @@ def main():
 
         if best >= -1e-10:
             print("Finished, best fitness: ", best)
-            print(-1e-10)
-            print(best >= -1e-10)
             break
 
-        Pop.breed_random(mutation_rate, genes)
+        Pop.breed_tournament(mutation_rate, genes)
 
     file.close()
 
