@@ -69,16 +69,12 @@ class Regression:
             bias = np.mean( (z_test - np.mean(z_predictions, axis=1, keepdims=True))**2 )
             variance = np.mean( np.var(z_predictions, axis=1, keepdims=True) )
 
-            MSE_train.append(mse_train)
-            MSE_test.append(mse_test)
-            Bias.append(bias)
-            Variance.append(variance)
 
             file = open(f"data_bv/{filename}.csv", "a")
             file.write(f"{degree},{mse_train},{mse_test},{bias},{variance}\n")
             file.close()
 
-        return MSE_train, MSE_test, Bias, Variance
+
 
 
 

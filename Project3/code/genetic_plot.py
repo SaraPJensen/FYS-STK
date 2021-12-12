@@ -37,68 +37,99 @@ def Plot(equation):
 
 
 
-def progress_top(filename):
-    path = "data/" + filename + ".csv"
-    df = pd.read_csv(path, header=1, sep=",")
+def progress_top():
+    method = ["mix", "swap", "tour", "random"]
+    Method = ["Mix", "Swap", "Tournament", "Random"]
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x = df["Generation"],
-        y = df["top_fitness"],
-        mode="lines", line=dict(width = 5)))
+
+    for name, title in zip(method, Method):
+        path = f"data/Diff_eq_{name}.csv"
+
+        df = pd.read_csv(path, header=1, sep=",")
+
+
+        fig.add_trace(go.Scatter(
+            x = df["Generation"][:500],
+            y = df["top_fitness"][:500],
+            mode="lines",
+            line=dict(width = 5),
+            name = f"{title} selection"))
 
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Fitness of the best chromosome for each generation",
+        title = "Fitness of the best chromosome for the Diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
     fig.show()
 
 
-def progress_avg10(filename):
-    path = "data/" + filename + ".csv"
 
-    df = pd.read_csv(path, header=1, sep=",")
+def progress_avg10():
+
+    method = ["mix", "swap", "tour", "random"]
+    Method = ["Mix", "Swap", "Tournament", "Random"]
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x = df["Generation"],
-        y = df["avg_fitness_10"],
-        mode="lines", line=dict(width = 5)))
+
+    for name, title in zip(method, Method):
+        path = f"data/Diff_eq_{name}.csv"
+
+        df = pd.read_csv(path, header=1, sep=",")
+
+        fig.add_trace(go.Scatter(
+            x = df["Generation"][:500],
+            y = df["avg_fitness_10"][:500],
+            mode="lines",
+            line=dict(width = 5),
+            name = f"{title} selection"))
 
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Average fitness of the 10% best chromosomes",
+        title = "Average fitness of the 10% best chromosomes for the Diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
     fig.show()
 
 
-def progress_avg70(filename):
-    path = "data/" + filename + ".csv"
 
-    df = pd.read_csv(path, header=1, sep=",")
+def progress_avg70():
+    method = ["mix", "swap", "tour", "random"]
+    Method = ["Mix", "Swap", "Tournament", "Random"]
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x = df["Generation"],
-        y = df["avg_fitness_80"],
-        mode="lines", line=dict(width = 5)))
+
+    for name, title in zip(method, Method):
+        path = f"data/Diff_eq_{name}.csv"
+
+        df = pd.read_csv(path, header=1, sep=",")
+
+        fig.add_trace(go.Scatter(
+            x = df["Generation"][2:500],
+            y = df["avg_fitness_70"][2:500],
+            mode="lines",
+            line=dict(width = 5),
+            name = f"{title} selection"))
 
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Average fitness of the 70% best chromosomes",
+        title = "Average fitness of the 70% best chromosomes for the Diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
     fig.show()
+
+
 
 
 def main():
-    eq1 = "t*(x*t-x)/8.0"
-    ex = "(np.cos((t+x))/np.exp(((x-x)+(np.exp(t)*np.exp(((np.exp((x))*t)-(x)))))))"
-
-    progress_avg70("tester")
-
-    #Plotly(ex)
+    #progress_top()
+    #progress_avg10()
+    progress_avg70()
 
 main()
