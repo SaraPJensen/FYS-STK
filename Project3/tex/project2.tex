@@ -40,6 +40,11 @@
 	The very concrete abstract.
 }
 
+% Ting til gjennomlesning:
+% ingen kolon før likning med mindre nødvendig
+% tegnsetting i likninger skal være som i normal tekst
+% Tror det står algorithms noen steder det egt. skal stå algorithm (entall)
+
 
 \maketitle
 
@@ -61,27 +66,40 @@ Further, Yi et. al. showed that the eigenvalues of a symmetrix matrix can be des
 The temperature gradient $u(x, t)$ in a rod of length $L=1$ can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
 \begin{equation}
 	\label{eq:diff}
-	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}.
+	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}
 \end{equation},
 
 where $x$ is the length along the rod, and $t$ is time. The boundary and intial conditions are
 \begin{align*}
 	\label{eq:boundary}
-	u(0, t) & = 0             \\
-	u(L, t) & = 0 \numberthis \\
-	u(x, 0) & = sin(\pi x)
+	u(0, t) & = 0,             \\
+	u(L, t) & = 0, \numberthis \\
+	u(x, 0) & = sin(\pi x).
 \end{align*}
 
 It is easily verifiable that the specific analytic solution is
 \begin{equation*}
-	u(x, t) = e^{-\pi^2t}\sin(\pi x)
+	u(x, t) = e^{-\pi^2t}\sin(\pi x).
 \end{equation*}
+
+\subsection{Explisit Schemes}
 
 
 \subsection{Neural Network}
-A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, and from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
+A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
 
-In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. When solving a differential equation, a natural choice is the difference in the left and right hand side of the equation, squared. Trenger å se lecture notene til morten for å skrive rett notasjon her.
+In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. For solving a PDE, it can generally be written as
+\begin{align*}
+	f(\mathbf{x}, g(\mathbf{x}), g'(\mathbf{x}), g''(\mathbf{x}), \dots, g^{(n)}(\mathbf{x})) = 0,
+\end{align*}
+where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independant variables, and $g(\mathbf{x})$ the solution of the PDE. $f^2$ is then a natural choice of the cost function. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$. In order to take care of the boundary and initial conditions, a trial-function
+\begin{align*}
+	g_t(\mathbf{x}) = b(\mathbf{x}) + h(\mathbf{x}, N(\mathbf{x}, P))
+\end{align*}
+is used rather than the actual solution. Here $b(\mathbf{x})$ ensures that the trial function gives correct initial and boundary values, while $h(\mathbf{x})$ ensures that $N(\mathbf{x})$ has no contribution at these points.
+
+Then, through $E$ iterations, the weights and biases $P$ and updated using the backpropagation-algorithm, as described in \cite{p2S} and \cite{p2HO}.
+
 
 
 
@@ -95,7 +113,7 @@ Over the generations, the individuals in the population gradually become better 
 Applying this to machine learning, it is common to initialise a ``population'' of ``chromosomes'', which form a set of candidate solutions. Each chromosome is encoded as a list of genes following a set of encoding and decoding rules determined by the algorithms. Each gene then encodes an element of the candidate solution. For each generation, the ``fitness'' of each chromosome is evaluated based on some metric which is summarised in the cost function. The fitness of the individuals then determines their chance of reproduction.
 A new generation of chromosomes is then generated through reproduction (crossover) and mutation, where the fittest chromosomes from the past generation are most likely to have their genes passed on. A range of different algorithms can be used for these two steps. Over the generations, it is hoped that the fitness of the candidate solutions will increase until a sufficiently good model is reached. However, the concept of fitness landscapes apply equally well to such machine learning algorithms as to the evolutionary process. There will be always be a significant risk of getting stuck at local maxima in the landscape, where the evolutionary process stagnates at a sub-optimal solution. Getting stuck in such local extrema is an ever-present problem in all of machine learning. Genetic algorithms thus stands out in that the mutation operator helps at getting out of these stagnation points, increasing the chances of reaching the global maxima in the fitness landscape.
 
-Note that a crucial premise for genetic algorithms, which is the so-called the building-block hypothesis, stating that the optimal solution is a combination of smaller elements \cite{Eyal}. At least partly independently of each other, these building blocks must provide a selective advantage to the individual in order to be selected for. Over the generations, cumulative selection ensures that the best building blocks spread in the population, until all the best building blocks have been combined in a single individual chromosome to form the optimal solution. 
+Note that a crucial premise for genetic algorithms, which is the so-called the building-block hypothesis, stating that the optimal solution is a combination of smaller elements \cite{Eyal}. At least partly independently of each other, these building blocks must provide a selective advantage to the individual in order to be selected for. Over the generations, cumulative selection ensures that the best building blocks spread in the population, until all the best building blocks have been combined in a single individual chromosome to form the optimal solution.
 
 
 \subsubsection{Differential Equations and Grammatical Evolution}
@@ -103,6 +121,14 @@ Genetic algorithms have been found to be useful in various optimisation problems
 
 
 \section{Methods}
+
+\subsection{Neural networks}
+
+For \eqref{eq:diff}, with initial and boundary conditions \eqref{eq:boundary},
+\begin{equation}
+	u_t(x, t, N) = \sin{(\pi x)}[1 + tN(x, t, P)]
+\end{equation}
+satisfies the requirements of a trial function.
 
 \subsection{Genetic Algorithm}
 The outline of the algorithm is as follows. A population-class is defined containing a list of \textit{C} chromosomes with randomly generated sequences of \textit{G} genes. For each generation, the genetic sequence of each chromosome is decoded and its corresponding analytic expression is generated. The fitness value of each chromosome is then calculated, and the list of chromosomes ordered according to their fitness. Chromosomes whose fitness is \texttt{nan} or \texttt{inf} are removed from the list before crossover. The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome.
@@ -122,7 +148,7 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
 		\multirow{6}{*}{\texttt{<expr>}}
 		     & \multicolumn{1}{c}{\texttt{(<expr><op><expr>)}} & \multicolumn{1}{c}{\texttt{[0]}}  \\
 		     & \multicolumn{1}{c}{\texttt{(<expr>)}}           & \multicolumn{1}{c}{\texttt{[1]}}  \\
-		     & \multicolumn{1}{c}{\texttt{<func>}}     & \multicolumn{1}{c}{\texttt{[2]}}  \\
+		     & \multicolumn{1}{c}{\texttt{<func>}}             & \multicolumn{1}{c}{\texttt{[2]}}  \\
 		     & \multicolumn{1}{c}{\texttt{<digit>}}            & \multicolumn{1}{c}{\texttt{[3]}}  \\
 		     & \multicolumn{1}{c}{\texttt{<x>}}                & \multicolumn{1}{c}{\texttt{[4]}}  \\
 		     & \multicolumn{1}{c}{\texttt{<t>}}                & \multicolumn{1}{c}{\texttt{[5]}}  \\
@@ -236,37 +262,37 @@ After the crossover operation, a mutation operation is applied. Two rates are im
 \section{Results and Discussion}
 
 \subsection{Genetic Algorithm}
-First, in order to test the algorithm, some of the results presented in \cite{Lagaris} were reproduced, namely two ordinary differential equations (ODEs) and one partial differential equation (PDE). The following two ordinary differential equations were tested: 
+First, in order to test the algorithm, some of the results presented in \cite{Lagaris} were reproduced, namely two ordinary differential equations (ODEs) and one partial differential equation (PDE). The following two ordinary differential equations were tested:
 
 \begin{align*}
 	\frac{dy}{dx}  - \frac{2x - y}{x} = 0 \\
-	y(0.1) = 20.1  \\
+	y(0.1) = 20.1                         \\
 	x \in [0.1, 1],
 \end{align*}
 
-with the analytic solution y(x) = x + 2/x. 
+with the analytic solution y(x) = x + 2/x.
 
 \begin{align*}
-	\frac{d^{2}y}{dx^{2}}  + 100y = 0  \\
-	y(0) = 0 \\
+	\frac{d^{2}y}{dx^{2}}  + 100y = 0 \\
+	y(0) = 0                          \\
 	\frac{dy(0)}{dx} = 10,
 \end{align*}
 
-with the analytic solution y(x) = sin(10x). 
+with the analytic solution y(x) = sin(10x).
 
-The partial differential equation tested was: 
+The partial differential equation tested was:
 
- \begin{align*}
-	\frac{\partial^{2}u}}{\partial x^{2}} + \frac{\partial^{2}u}}{\partial y^{2}} + 2u(x, y) = 0 \\
-	y(0.1) = 20.1  \\
+\begin{align*}
+	\frac{\partial^{2}u}{\partial x^{2}} + \frac{\partial^{2}u}{\partial y^{2}} + 2u(x, y) = 0 \\
+	y(0.1) = 20.1                                                                              \\
 	x \in [0.1, 1],
 \end{align*}
 
-with the analytic solution u(x, y) = sin(x)cos(y). 
+with the analytic solution u(x, y) = sin(x)cos(y).
 
-In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 5 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 95 \% of the new generation were generated through reproduction. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant. 
+In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 5 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 95 \% of the new generation were generated through reproduction. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant.
 
-The genetic algorithm was used to attempt to solve the diffusion equation using three different methods of selection; mixing, swapping and tournament selection. The other variables were kept the same, apart from the maximum number of generations, which was reduced to 1000 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end. 
+The genetic algorithm was used to attempt to solve the diffusion equation using three different methods of selection; mixing, swapping and tournament selection. The other variables were kept the same, apart from the maximum number of generations, which was reduced to 1000 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
 
 
 
@@ -275,9 +301,9 @@ The genetic algorithm was used to attempt to solve the diffusion equation using 
 
 \section{Discussion}
 \subsection{Genetic Algorithm}
-In sum, the genetic algorithm employed successfully reproduces the results from \cite{Lagaris}, where fairly simple analytic expressions are found which fulfil the differential equation and the boundary conditions. However, large populations (1000 chromosomes) and many generations are needed before the desired results are obtained, and importantly, it is far from clear that these are found through cumulative selection, and not just by chance. Looking at the plots of the fitness of the fittest chromosome over the generations, it is clear that this tends to increase step-wise, rather than through a slow process of cumulative selection, which is the process the genetic algorithms are aiming to recreate. This should therefore be a source of worry. In fact, when analysing the algorithm of grammatical evolution employed, it is not surprising that there are few signs of cumulative selection in the results, for it is hard to see how the algorithm would be able to recreate this feature of evolution. To understand why, one must go back to the building block hypothesis and the notion of fitness landscapes. These ideas express two necessary conditions for evolution to take place which also apply to genetic algorithms. Firstly, as stated by the building-block hypothesis, the optimal solution must be built up from independent contributions from different building blocks, as encoded in the genes. Secondly, the fitness landscape expresses the requirement that evolution must be cumulative, such that small changes to the genotype (e.g. changing a few genes) does not normally lead to dramatic changes in the phenotype (here the resulting function). With the above grammar and algorithm used, however, neither requirement is met. 
+In sum, the genetic algorithm employed successfully reproduces the results from \cite{Lagaris}, where fairly simple analytic expressions are found which fulfil the differential equation and the boundary conditions. However, large populations (1000 chromosomes) and many generations are needed before the desired results are obtained, and importantly, it is far from clear that these are found through cumulative selection, and not just by chance. Looking at the plots of the fitness of the fittest chromosome over the generations, it is clear that this tends to increase step-wise, rather than through a slow process of cumulative selection, which is the process the genetic algorithms are aiming to recreate. This should therefore be a source of worry. In fact, when analysing the algorithm of grammatical evolution employed, it is not surprising that there are few signs of cumulative selection in the results, for it is hard to see how the algorithm would be able to recreate this feature of evolution. To understand why, one must go back to the building block hypothesis and the notion of fitness landscapes. These ideas express two necessary conditions for evolution to take place which also apply to genetic algorithms. Firstly, as stated by the building-block hypothesis, the optimal solution must be built up from independent contributions from different building blocks, as encoded in the genes. Secondly, the fitness landscape expresses the requirement that evolution must be cumulative, such that small changes to the genotype (e.g. changing a few genes) does not normally lead to dramatic changes in the phenotype (here the resulting function). With the above grammar and algorithm used, however, neither requirement is met.
 
-To understand why, it might be useful to look at an example of two sets of genes, [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2] and [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]. The only difference in the genotype is the second gene, but whereas the first leads to the expression $sin(x)t$, the second gives the expression $\frac{xt}{6} + 2$. Thus, changing a single gene completely changes the expression generated, making gradual improvements to the expression by changing individual genes near impossible. 
+To understand why, it might be useful to look at an example of two sets of genes, [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2] and [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]. The only difference in the genotype is the second gene, but whereas the first leads to the expression $sin(x)t$, the second gives the expression $\frac{xt}{6} + 2$. Thus, changing a single gene completely changes the expression generated, making gradual improvements to the expression by changing individual genes near impossible.
 
 One of the main problems with the grammar used, and how it becomes disanalogous with the process of natural selection, is in the dependence on the preceding genes in the interpretation of the current gene. In other words, the genes found at the different loci (positions in the genetic sequence) do not have any meaning independent of the genes found at the other loci. This breaks with the underlying assumption justifying the selection and crossover operations, where it is assumed that individual genes contribute to the fitness of the individual and are therefore ``good'' or ``bad'', such that mixing the genes of two fit individuals will give another fit individual. However, when this operation is performed using the above decoding scheme, the meaning of individual genes is completely changed by the change in the preceding genes, so the justification for the entire crossover-scheme breaks down. Thus, the structure of the analytical expressions is rarely preserved during crossover, especially not when the genes are mixed perfectly. Thus, the above algorithm seems to mostly work through brute force by guessing at a very high number of candidate solutions and preserving the best ones from each generation. With 1000 chromosomes and 1000 generations, it is far from surprising the the correct solution eventually pops up by chance, provided this is not too complicated. This means that generating new genes at random instead of using a selection process should give similar results, as long at the ``elite'' is still passed on unaltered over the generations. Note that this is only expected to give similar results for the top chromosome - completely replacing the remaining 95 \% of the population every generation will likely give a worse average fitness. 
 
