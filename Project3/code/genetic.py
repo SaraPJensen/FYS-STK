@@ -419,7 +419,6 @@ class Population:
 
             j += 1
 
-        print(len(self.Chromosomes))
 
 
 
@@ -452,16 +451,16 @@ def main():
     pop_size = 1000
     genes = 50
     mutation_rate = 10
-    generations = 1000
+    generations = 500
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
 
 
-    filename = "Diff_eq_" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_swap" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -494,7 +493,7 @@ def main():
             break
 
 
-        Pop.breed_random(mutation_rate, genes)
+        Pop.breed_swap(mutation_rate, genes)
 
     file.close()
 
