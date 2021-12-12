@@ -31,8 +31,6 @@ def FrankeFunction(x,y):
 def Franke_data(n_dpoints, noise, design, poly = 0):
     np.random.seed(1234567)   #this was used for high noise
 
-    #np.random.seed(1234)    #This was used for low noise
-
     x = np.arange(0,1,1/n_dpoints)
     y = np.arange(0,1,1/n_dpoints)
 

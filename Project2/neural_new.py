@@ -12,21 +12,6 @@ from sklearn.datasets import load_breast_cancer
 import seaborn as sns
 from Franke_data import *
 
-'''   Can this safely be removed? 
-
-def scalerStandard(X_train, X_test, z_train, z_test):
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-
-    X_train_scaled = scaler.transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-
-    #scale the response variable
-    z_train_scaled = (z_train - np.mean(z_train))/np.std(z_train)
-    z_test_scaled = (z_test - np.mean(z_train))/np.std(z_train)
-
-    return X_train_scaled, X_test_scaled, z_train_scaled, z_test_scaled
-'''
 
 
 #---------------------
@@ -45,9 +30,6 @@ def classify(z):
     return np.where(z > 0.5, 1, 0)
 
 
-#-----------------------------------------------
-#This is what we actually want to get working!!
-#-----------------------------------------------
 
 class NeuralNetwork:
     def __init__(self, X_train, z_train, X_test, z_test, hidden_nodes, epochs, batch_size, eta, lamb, activation_func = "sigmoid", cost_func = "MSE", dataset = "function", weight_init_method = "he"):
@@ -66,7 +48,6 @@ class NeuralNetwork:
         self.epochs = epochs
         self.batch_size = batch_size
         self.batches = int(len(self.X_train[:, 0])/self.batch_size)
-
 
 
         self.eta = eta   #add a function which updates this for changing learning rate?
@@ -131,11 +112,8 @@ class NeuralNetwork:
 
 
     def cost_derivative(self, z_model):
-        if self.cost_func.lower() == "mse":
-            return (-2/self.n_datapoints)*(self.z_train.reshape(z_model.shape) - z_model)
-
-        elif self.cost_func.lower() == "accuracy":
-            return (z_model - self.z_train.reshape(z_model.shape))/(z_model*(1-z_model))
+        self.cost_func.lower() == "mse":
+        return (-2/self.n_datapoints)*(self.z_train.reshape(z_model.shape) - z_model)
 
 
 
@@ -156,12 +134,8 @@ class NeuralNetwork:
 
             previous = layer
 
-        if self.dataset == "function":
-            layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
-            #pass
 
-        elif self.dataset.lower() == "classification":
-            layer.a_out = sigmoid(layer.z_hidden)    #Always use sigmoid in the last layer for classification
+        layer.a_out = layer.z_hidden  # no activation func for output layer when a function is fitted, only for classification
 
 
 
@@ -198,150 +172,77 @@ class NeuralNetwork:
 
     def model_training(self, method = "SGD", plot = "yes"):
 
-        if method == "SGD" and self.dataset == "classification":
-            if plot == "yes":
-                Epochs = []
-                train_accuracy = []
-                test_accuracy = []
+        if plot == "yes" or plot == "data":
+            Epochs = []
+            mse_train = []
+            mse_test = []
+            r2_train = []
+            r2_test = []
 
-            for e in range(0, self.epochs):
-                indices = np.random.permutation(self.n_datapoints)
-                indices = np.array_split(indices, self.batches)
+        for e in range(1, self.epochs):
+            indices = np.random.permutation(self.n_datapoints)
+            indices = np.array_split(indices, self.batches)
 
-                for b in range(self.batches):
-                    index = np.random.randint(self.batches)
-
-                    self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
-                    self.z_train = self.z_train_full[indices[index]]
-
-                    self.feed_forward()
-                    self.backpropagation()
-
-                if plot == "yes":
-
-                    z_model = self.prediction(self.X_train)
-                    z_predict = self.prediction(self.X_test)
+            #maybe add a test for convergence of errors?
 
 
-                    model_sum = np.sum(z_model)   #it starts returning nan pretty quickly, which is weird
-                    if np.isnan(model_sum):
-                        break
+            for b in range(self.batches):
+                index = np.random.randint(self.batches)
 
-
-                    z_classified = classify(z_model)
-                    results = np.column_stack((self.z_train_full, z_classified))
-                    accuracy = np.abs(self.z_train_full.ravel() - z_classified.ravel())
-                    total_wrong = sum(accuracy)
-                    percentage = (len(accuracy) - total_wrong)/len(accuracy)
-
-                    z_predict_class = classify(z_predict)
-                    results_test = np.column_stack((self.z_test, z_predict_class))
-                    accuracy_test = np.abs(self.z_test.ravel() - z_predict_class.ravel())
-                    total_wrong_test = sum(accuracy_test)
-                    percentage_test = (len(accuracy_test) - total_wrong_test)/len(accuracy_test)
-
-
-                    Epochs.append(e)
-                    train_accuracy.append(percentage)
-                    test_accuracy.append(percentage_test)
-
-
-            if plot == "yes":
-                plt.plot(Epochs, train_accuracy, label = "Accuracy train")
-                plt.plot(Epochs, test_accuracy, label = "Accuracy test")
-                plt.xlabel("Epochs")
-                plt.ylabel("Accuracy")
-                plt.title(f"Accuracy using {self.activation_func} as activation function")
-                plt.legend()
-                plt.show()
-
-                return(train_accuracy[-1], test_accuracy[-1])
-
-
-            return(train_accuracy[-1], test_accuracy[-1]) # Error when plot='no'
-
-
-        elif method == "SGD" and self.dataset == "function":
-
-            if plot == "yes" or plot == "data":
-                Epochs = []
-                mse_train = []
-                mse_test = []
-                r2_train = []
-                r2_test = []
-
-            for e in range(1, self.epochs):
-                indices = np.random.permutation(self.n_datapoints)
-                indices = np.array_split(indices, self.batches)
-
-                #maybe add a test for convergence of errors?
-
-
-                for b in range(self.batches):
-                    index = np.random.randint(self.batches)
-
-                    self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
-                    self.z_train = self.z_train_full[indices[index]]
-
-                    self.feed_forward()
-                    self.backpropagation()
-
-                if plot == "yes" or plot == "data":
-
-                    z_model = self.prediction(self.X_train)
-                    z_predict = self.prediction(self.X_test)
-
-                    mse_train.append(mean_squared_error(self.z_train_full, z_model))
-                    mse_test.append(mean_squared_error(self.z_test, z_predict))
-
-                    r2_train.append(r2_score(self.z_train_full, z_model))
-                    r2_test.append(r2_score(self.z_test, z_predict))
-
-                    Epochs.append(e)
-
-
-            if plot == "yes":
-                plt.plot(Epochs, mse_train, label = "MSE train")
-                plt.plot(Epochs, mse_test, label = "MSE test")
-                plt.xlabel("Epochs")
-                plt.ylabel("MSE")
-                plt.title(f"MSE using {self.activation_func} as activation function")
-                plt.legend()
-                plt.show()
-
-
-                plt.plot(Epochs, r2_train, label = "R2 train")
-                plt.plot(Epochs, r2_test, label = "R2 test")
-                plt.xlabel("Epochs")
-                plt.ylabel("R2")
-                plt.title(f"R2 score using {self.activation_func} as activation function")
-                plt.legend()
-                plt.show()
-
-            if plot == "data":
-                print("er du her?")
-                return Epochs, mse_train, mse_test, r2_train, r2_test
-
-
-            z_model = self.prediction(self.X_train)
-            z_predict = self.prediction(self.X_test)
-
-            mse_train = (mean_squared_error(self.z_train_full, z_model))
-            mse_test = (mean_squared_error(self.z_test, z_predict))
-
-            r2_train = (r2_score(self.z_train_full, z_model))
-            r2_test = (r2_score(self.z_test, z_predict))
-
-
-            return mse_train, mse_test, r2_train, r2_test
-
-
-
-        if method == "GD":
-            for i in range (self.epochs):
+                self.input.a_out = self.X_train[indices[index],:]   #pick out what rows to use
+                self.z_train = self.z_train_full[indices[index]]
 
                 self.feed_forward()
                 self.backpropagation()
+
+            if plot == "yes" or plot == "data":
+
+                z_model = self.prediction(self.X_train)
+                z_predict = self.prediction(self.X_test)
+
+                mse_train.append(mean_squared_error(self.z_train_full, z_model))
+                mse_test.append(mean_squared_error(self.z_test, z_predict))
+
+                r2_train.append(r2_score(self.z_train_full, z_model))
+                r2_test.append(r2_score(self.z_test, z_predict))
+
+                Epochs.append(e)
+
+
+        if plot == "yes":
+            plt.plot(Epochs, mse_train, label = "MSE train")
+            plt.plot(Epochs, mse_test, label = "MSE test")
+            plt.xlabel("Epochs")
+            plt.ylabel("MSE")
+            plt.title(f"MSE using {self.activation_func} as activation function")
+            plt.legend()
+            plt.show()
+
+
+            plt.plot(Epochs, r2_train, label = "R2 train")
+            plt.plot(Epochs, r2_test, label = "R2 test")
+            plt.xlabel("Epochs")
+            plt.ylabel("R2")
+            plt.title(f"R2 score using {self.activation_func} as activation function")
+            plt.legend()
+            plt.show()
+
+        if plot == "data":
+            print("er du her?")
+            return Epochs, mse_train, mse_test, r2_train, r2_test
+
+
+        z_model = self.prediction(self.X_train)
+        z_predict = self.prediction(self.X_test)
+
+        mse_train = (mean_squared_error(self.z_train_full, z_model))
+        mse_test = (mean_squared_error(self.z_test, z_predict))
+
+        r2_train = (r2_score(self.z_train_full, z_model))
+        r2_test = (r2_score(self.z_test, z_predict))
+
+
+        return mse_train, mse_test, r2_train, r2_test
 
 
 
@@ -404,5 +305,5 @@ class hidden_layer:   #let each layer be associated with the weights and biases 
 
     #Update the weights and biases
     def update_parameters(self, weights_gradient, bias_gradient, eta):
-        self.hidden_weights -= eta*weights_gradient   #This has been done wrong!!!
+        self.hidden_weights -= eta*weights_gradient
         self.hidden_bias -= eta*bias_gradient

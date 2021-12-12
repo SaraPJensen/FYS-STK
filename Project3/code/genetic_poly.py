@@ -337,8 +337,8 @@ class Population:
     def mutate(self, genes, mutations):
         #Makes a random mutation to a number of the genes by replacing them with a random number
         for i in range(mutations):
-            index = np.random.randint(1, len(genes))   #find where to swap, ensure that the first gene is 0 or 2
-            genes[index] = np.random.uniform(-1, 1)  #find where to swap
+            index = np.random.randint(1, len(genes))
+            genes[index] = np.random.uniform(-1, 1)  
         return genes
 
 

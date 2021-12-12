@@ -421,17 +421,16 @@ def main():
 
 
 
-    filename = "ODE_" + str(np.random.randint(0, 1000000))
+    filename = "ODE_tour" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"ODE - Pop_size: {pop_size} - Genes: {genes} - Method: tour 5 - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     #file.write("Diff. equation: ODE1, solution: y(x) = x + 2/x \n")
     file.write("Diff. equation: ODE4, solution: y(x) = sin(10x) \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
     print("Filename: ", filename)
-
 
 
     for i in range(generations):
@@ -441,9 +440,6 @@ def main():
         print()
 
         print("Generation: ", i)
-        print("Filename: ", filename)
-
-
 
         fitness, equation = Pop.fitness(write = True)
 
@@ -462,9 +458,10 @@ def main():
             break
 
 
-        Pop.breed_random(mutation_rate, genes)
+        Pop.breed_tournament(mutation_rate, genes)
 
     file.close()
+    print("Filename: ", filename)
 
 
     print()

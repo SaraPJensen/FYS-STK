@@ -133,39 +133,6 @@ class Chromosome:
 
 
 
-    def calc_fitness_print(self, x_range, t_range):   #use to print out the deviance from the differential eq and boundary conditions
-
-        if ("x" not in self.equation) or ("t" not in self.equation):
-            self.fitness = -1e10
-
-        else:
-            print("Equation: ", self.equation)
-            func = lambda x, t: eval(self.equation)
-            dM_dx = grad(grad(func, 0), 0)
-            dM_dt = grad(func, 1)
-
-            self.fitness = 0
-            for x in x_range:
-                for t in t_range:
-                    try:
-                        diff = (dM_dx(x, t) - dM_dt(x, t))**2
-
-                    except:
-                        diff = 1e10
-
-                    self.fitness -= diff
-
-            self.fitness /= (len(x_range))**2
-            print("Total diff eq deviance: ", self.fitness)
-
-            boundary = self.boundary_diff(func, x_range, t_range)
-
-            print("Boundary deviance: ", boundary)
-            self.fitness -= boundary*10
-
-        print()
-
-
 
     def __gt__(self, other):
         return self.fitness < other.fitness
@@ -264,25 +231,6 @@ class Population:
             for c in self.Chromosomes[:10]:
                 print("Fitness value: ", c.get_fitness())
 
-
-
-
-    def fitness_print(self):   #use to
-        for c in self.Chromosomes:
-            c.calc_fitness_print(self.x_range, self.t_range)
-
-
-        print()
-        for c in self.Chromosomes:
-            if (not c.get_fitness() != c.get_fitness() or math.isinf(c.get_fitness())) or not np.isfinite(c.get_fitness()):
-                self.Chromosomes.remove(c)
-
-        self.Chromosomes = sorted(self.Chromosomes)
-
-        print("Final chromosome fitness vals:")
-        for c in self.Chromosomes:
-            print("Fitness value: ", c.get_fitness())
-            print()
 
 
 
