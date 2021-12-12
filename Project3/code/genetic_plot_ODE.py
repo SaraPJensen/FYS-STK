@@ -76,7 +76,7 @@ def progress_top_random(eq):   #eq == "ODE" or "PDE"
 
 
 def main():
-    progress_top_random("ODE")
+    progress_top_random("PDE")
     #progress_top()
 
 

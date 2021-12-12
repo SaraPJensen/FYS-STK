@@ -237,7 +237,7 @@ class Population:
 
 
     def breed_mix(self, mutation, genes):   #this gives poor results
-        elite = self.size_pop // 20   #pass on the 5% best individuals
+        elite = self.size_pop // 10   #pass on the 5% best individuals
         parents = 2*self.size_pop - elite*2
 
         #Find the chromosomes to reproduce to the next generation by using half a normal distribution with
@@ -266,8 +266,8 @@ class Population:
             for index in indices:
                 new_genome[index] = self.past_gen[chroms[i+1]].return_genes()[index]
 
-            if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+            #if i % 4 == 0:   #do this for 50% of the chromosomes
+            new_genome = self.mutate(new_genome, mutation)
 
             self.Chromosomes[j] = Chromosome(new_genome)
 
@@ -277,7 +277,7 @@ class Population:
 
 
     def breed_swap(self, mutation, genes):
-        elite = self.size_pop // 20   #pass on the 5% best individuals
+        elite = self.size_pop // 10   #pass on the 5% best individuals
         parents = 2*self.size_pop - elite*2
         chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_pop, size = parents).astype(int)
 
@@ -303,8 +303,8 @@ class Population:
             new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
             new_genome[index:] = self.past_gen[chroms[i+1]].return_genes()[index:]
 
-            if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+            #if i % 4 == 0:   #do this for 50% of the chromosomes
+            new_genome = self.mutate(new_genome, mutation)
 
             self.Chromosomes[j] = Chromosome(new_genome)
 
@@ -314,7 +314,7 @@ class Population:
 
 
     def breed_tournament(self, mutation, genes):
-        elite = self.size_pop // 20   #must be an even number
+        elite = self.size_pop // 10
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -338,6 +338,7 @@ class Population:
             genome2[split:] = save_end
 
             genome1 = self.mutate(genome1, mutation)    #add mutations to half the new genes
+            genome2 = self.mutate(genome2, mutation)
 
             self.Chromosomes[j] = Chromosome(genome1)
             self.Chromosomes[j+1] = Chromosome(genome2)
@@ -349,7 +350,7 @@ class Population:
 
 
     def breed_random(self, mutation, genes):
-        elite = self.size_pop // 20   #must be an even number
+        elite = self.size_pop // 10   #must be an even number
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -398,17 +399,17 @@ def main():
 
     pop_size = 1000
     genes = 50
-    mutation_rate = 10
+    mutation_rate = 3   #5 %
     generations = 500
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
 
 
-    filename = "Diff_eq_mix" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_tour_mutation" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: mix - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: tournament 5 - Mutated: {mutation_rate} - Mutation rate: 100% - Elite: 10% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -420,10 +421,7 @@ def main():
         print()
         print()
         print("Generation: ", i)
-        print("Filename: ", filename)
         fitness, equation = Pop.fitness(write = True)
-
-        #Pop.fitness(write = False)
 
 
         length = len(fitness)
@@ -441,11 +439,11 @@ def main():
             break
 
 
-        Pop.breed_mix(mutation_rate, genes)
+        Pop.breed_tournament(mutation_rate, genes)
 
     file.close()
 
-
+    print("Filename: ", filename)
     print()
 
 

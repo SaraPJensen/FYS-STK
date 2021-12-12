@@ -179,15 +179,16 @@ def bias_variance(generations, filename):
 
     Pop_list = np.zeros(Sample, dtype = Population)
 
-    for i in range(B_runs):   #create all the required populations with bootstrapping, one for each resampling
+    for b in range(B_runs):   #create all the required populations with bootstrapping, one for each resampling
         X_train_boot, z_train_boot = resample(X_train, z_train)
 
-        Pop_list[i] = Population(pop_size, poly, generations, X_train_boot, X_test, z_train_boot, z_test)
+        Pop_list[b] = Population(pop_size, poly, generations, X_train_boot, X_test, z_train_boot, z_test)
 
 
-    z_predict_all = np.zeros(generations, B_runs, len(z_train))
+    z_predict_all = np.zeros(generations, len(z_test), B_runs)
 
-    for pop, run in zip(Pop_list, range(B_runs)):   #go through each population and let it evolve over time
+
+    for pop, b in zip(Pop_list, range(B_runs)):   #go through each population and let it evolve over time
         for g in range(generations):
 
             pop.fitness(write = True)
@@ -195,7 +196,8 @@ def bias_variance(generations, filename):
 
 
         z_model, z_predict, mse_train, mse_test = pop.get_variables()
-        z_predict_all[:, run, :] = z_predict.ravel()
+
+        z_predict_all[:, :, b] = z_predict
 
 
     MSE_test = np.zeros(generations)
@@ -208,6 +210,8 @@ def bias_variance(generations, filename):
     z_test = self.z_test.reshape((-1, 1))
 
     for g in generations:
+
+        #Which axis should these variables be calculated along? 1 or 2?? B_run is the final axis
 
         mse_test = np.mean( np.mean((z_test - z_predict_all[g, :, :])**2, axis=1, keepdims=True))
         bias = np.mean((z_test - np.mean(z_predict_all[g, :, :], axis=1, keepdims=True))**2)
@@ -239,6 +243,8 @@ def bias_variance(generations, filename):
 
         X_train = self.X_train[:, :n]
         X_test = self.X_test[:, :n]
+
+
 
         z_predictions = np.zeros((len(self.z_test), B_runs))   #matrix containing the values for different bootstrap runs
 

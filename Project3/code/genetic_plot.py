@@ -59,7 +59,7 @@ def progress_top():
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Fitness of the best chromosome for the Diffusion equation",
+        title = "Fitness of the best chromosome for the diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -89,7 +89,7 @@ def progress_avg10():
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Average fitness of the 10% best chromosomes for the Diffusion equation",
+        title = "Average fitness of the 10% best chromosomes for the diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -118,7 +118,7 @@ def progress_avg70():
     fig.update_layout(
         font_family="Garamond",
         font_size=30,
-        title = "Average fitness of the 70% best chromosomes for the Diffusion equation",
+        title = "Average fitness of the 70% best chromosomes for the diffusion equation",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -128,8 +128,8 @@ def progress_avg70():
 
 
 def main():
-    #progress_top()
+    progress_top()
     #progress_avg10()
-    progress_avg70()
+    #progress_avg70()
 
 main()
