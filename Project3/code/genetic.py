@@ -298,7 +298,7 @@ class Population:
 
         for i in range(len(chroms)):
             if chroms[i] > self.size_pop:
-                çhroms[i] = 0
+                chroms[i] = 0
 
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
@@ -335,7 +335,7 @@ class Population:
 
         for i in range(len(chroms)):
             if chroms[i] > self.size_pop:
-                çhroms[i] = 0
+                chroms[i] = 0
 
         self.past_gen = self.Chromosomes
 
@@ -457,10 +457,10 @@ def main():
 
 
 
-    filename = "Diff_eq_swap" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_mix" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: swap - Mutated: {mutation_rate} - Mutation rate: 50% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: mix - Mutated: {mutation_rate} - Mutation rate: 50% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -493,7 +493,7 @@ def main():
             break
 
 
-        Pop.breed_swap(mutation_rate, genes)
+        Pop.breed_mix(mutation_rate, genes)
 
     file.close()
 
