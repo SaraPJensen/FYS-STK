@@ -405,10 +405,10 @@ def main():
 
 
 
-    filename = "Diff_eq_tour_big_elite" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_random_big_elite" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: tournament 5 - Mutated: {mutation_rate} - Mutation rate: 50% - Elite: 10% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% - Elite: 10% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
@@ -441,7 +441,7 @@ def main():
             break
 
 
-        Pop.breed_tournament(mutation_rate, genes)
+        Pop.breed_random(mutation_rate, genes)
 
     file.close()
 
