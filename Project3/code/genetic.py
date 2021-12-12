@@ -266,8 +266,8 @@ class Population:
             for index in indices:
                 new_genome[index] = self.past_gen[chroms[i+1]].return_genes()[index]
 
-            if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+            #if i % 4 == 0:   #do this for 50% of the chromosomes
+            new_genome = self.mutate(new_genome, mutation)
 
             self.Chromosomes[j] = Chromosome(new_genome)
 
@@ -303,8 +303,8 @@ class Population:
             new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
             new_genome[index:] = self.past_gen[chroms[i+1]].return_genes()[index:]
 
-            if i % 4 == 0:   #do this for 50% of the chromosomes
-                new_genome = self.mutate(new_genome, mutation)
+            #if i % 4 == 0:   #do this for 50% of the chromosomes
+            new_genome = self.mutate(new_genome, mutation)
 
             self.Chromosomes[j] = Chromosome(new_genome)
 
@@ -338,6 +338,7 @@ class Population:
             genome2[split:] = save_end
 
             genome1 = self.mutate(genome1, mutation)    #add mutations to half the new genes
+            genome2 = self.mutate(genome2, mutation)
 
             self.Chromosomes[j] = Chromosome(genome1)
             self.Chromosomes[j+1] = Chromosome(genome2)
@@ -398,17 +399,17 @@ def main():
 
     pop_size = 1000
     genes = 50
-    mutation_rate = 10
+    mutation_rate = 3   #5 %
     generations = 500
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
 
 
-    filename = "Diff_eq_random_big_elite" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_random_mutation" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
-    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 50% - Elite: 10% \n")
+    file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: random - Mutated: {mutation_rate} - Mutation rate: 100% - Elite: 10% \n")
     file.write("Generation,avg_fitness_10,avg_fitness_70,top_fitness,top_equation \n")
     file.close()
 
