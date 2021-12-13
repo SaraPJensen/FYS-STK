@@ -6,13 +6,13 @@ from tqdm import tqdm
 class Diffusion_1D:
     def __init__(self, x1, t1, dx, r=0.5):
 
-        self.r = r
         self.dx = dx
-        self.dt = self.r * self.dx ** 2
+        self.dt = r * self.dx ** 2
+        self.r = self.dt * self.dx ** -2
 
 
-        self.nt = int(t1 / self.dt)
-        self.nx = int(x1 / self.dx)
+        self.nt = int(t1 / self.dt) + 1
+        self.nx = int(x1 / self.dx) + 1
 
         self.x = np.linspace(0, x1, self.nx)
         self.t = np.linspace(0, t1, self.nt)
@@ -21,8 +21,7 @@ class Diffusion_1D:
         self.u[0] = np.sin(np.pi * self.x)  # initial condition
 
     def solve(self):
-        pbar = tqdm(range(1, self.nt))
-        for i in pbar:
+        for i in range(1, self.nt):
             self.advance(i - 1)
         return self.u
 
