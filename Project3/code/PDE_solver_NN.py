@@ -1,14 +1,15 @@
 import autograd.numpy as np
 from autograd import elementwise_grad as ele_grad
 from tqdm import tqdm
-import warnings
-
-# warnings.filterwarnings("error", category=RuntimeWarning)
+from collections import defaultdict
 
 
 class Activations:
     def sigmoid(self, x):
-        return 1 / (1 - np.exp(-x))
+        return 1 / (1 + np.exp(-x))
+    
+    def tanh(self, x):
+        return np.tanh(x)
 
     def abs(self, x):
         return np.abs(x)
@@ -29,12 +30,13 @@ class Optimizer:
 
 
 class PDE_solver_NN_base(Activations):
+    """
+    Feed-Forward Neural Network for solving PDEs
+    """
     def __init__(self, 
-                 inp_nodes,
-                 nodes=[10,],          # nodes in each hidden layer
-                 output_node=1,
+                 nodes=[1, 10, 1],     # nodes in each layer, including input and output
                  activation="relu",    # actuvation function
-                 alpha=0,
+                 alpha=0,              # leaky relu
                  epochs=100,           # training epochs
                  eta0=0.001,           # initial learning rate. Implement eta method to change schedule. is constant by default
                  lmb=0,                # L2 regulizer
@@ -44,7 +46,7 @@ class PDE_solver_NN_base(Activations):
                  seed=21345,           # random seed for weight initialization
                  tol=1e-12             # lowest cost during training
                  ):
-        self.nodes = np.array([inp_nodes, *nodes, output_node])
+        self.nodes = np.asarray(nodes)
         self.rng = np.random.default_rng(seed)
         self.name = name
         self.tol = tol
@@ -57,6 +59,7 @@ class PDE_solver_NN_base(Activations):
         
         self.alpha = alpha  # linearity for activations below 0 (leaky relu factor)
         activations = {"sigmoid": self.sigmoid,
+                       "tanh": self.tanh,
                        "relu": self.PReLU,
                        "abs": self.abs
                        }
@@ -75,13 +78,13 @@ class PDE_solver_NN_base(Activations):
         for i in range(1, len(self.nodes)):
             n = self.nodes[i - 1]
             m = self.nodes[i]
-            if self.act_func.__name__ == "sigmoid":
-                s = np.sqrt(1 / (n))
-                P[i - 1] = self.rng.uniform(-0.1, s, (n + 1, m))
-            else:
+            if self.act_func.__name__ in ["sigmoid", "tanh"]:
+                s = np.sqrt(6 / (n + m))  # Xavier initialization
+                P[i - 1] = self.rng.uniform(-s, s, (n + 1, m))
+            else:  # He initialization
                 s = np.sqrt(6 / (1 + self.alpha**2) / (n + m))
                 P[i - 1] = self.rng.normal(0, s, (n + 1, m))
-            P[i - 1][-1, :] = 0.01
+            P[i - 1][-1, :] = 0.01  # biases
         self.P = P
 
     def train(self, X):
@@ -90,7 +93,7 @@ class PDE_solver_NN_base(Activations):
         print(f"Initial cost: {self.cost_func(P, X):.4f}")
 
         cost_func_grad = ele_grad(self.cost_func, 0)
-        self.history = np.zeros(self.epochs)
+        self.history = defaultdict(lambda: np.zeros(self.epochs))
         pbar = tqdm(range(self.epochs), desc=f"{self.cost_func(P, X):.10f}")
         for t in pbar:
             try:
@@ -111,7 +114,8 @@ class PDE_solver_NN_base(Activations):
             except KeyboardInterrupt:
                 break
         self.epochs = t
-        self.history = self.history[:t]
+        for key in self.history.keys():
+            self.history[key] = self.history[key][:t]
 
         print(f"Final cost: {self.cost_func(P, X):.4f}")
         self.P = P
@@ -123,7 +127,7 @@ class PDE_solver_NN_base(Activations):
         """
         Can be reimplemented to record different stuff during training
         """
-        self.history[t] = cf
+        self.history["cost"][t] = cf
 
     def feed_forward(self, x, P):
         prev = x
@@ -195,8 +199,10 @@ class PDE_solver_NN_base(Activations):
         """
         Return solution to PDE after network is trained
         """
-        return self.trial(*self.X.T, self.X, self.P)
-
+        if self.X.shape[1] != 1:
+            return self.trial(*self.X.T, self.X, self.P)
+        else:
+            return self.trial(self.X, self.P)
     def save(self, name):
         """ Save weights and biases """
         name = f"{name}_{self.act_func.__name__}"
@@ -221,8 +227,8 @@ class PDE_solver_NN_base(Activations):
             name += "_" + str(i)
         print(f"Saving train history of {name}")
         t = np.arange(self.epochs)
-        A = np.concatenate((t[:, None], self.history[:, None]), axis=1)
-        np.save("./nets/" + name, A)
+        self.history["epochs"] = np.arange(self.epochs)
+        np.save("./nets/" + name, dict(self.history))
 
     def load_history(self, name):
         """ Reload train history """
@@ -230,8 +236,8 @@ class PDE_solver_NN_base(Activations):
         for i in self.nodes[1:-1]:
             name += "_" + str(i)
         print(f"Loading train history of {name}")
-        A = np.load("./nets/" + name + ".npy", allow_pickle=True)
-        self.t, self.history = A.T
+        self.history = np.load("./nets/" + name + ".npy", allow_pickle=True).item()
+        self.t = self.history["epochs"]
         self.epochs = self.t[-1]
 
 

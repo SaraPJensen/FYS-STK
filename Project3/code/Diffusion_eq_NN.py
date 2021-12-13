@@ -16,50 +16,76 @@ class Diffusion(PDE_solver_NN_base):
 
     def trial(self, x, t, X, P):
         return np.sin(np.pi * x[:, None]) * (1 + t[:, None] * self(X, P))
+
+    # def eta(self, epoch):
+    #     if epoch > 50:
+    #         r = self.history["cost"][epoch - 3] / self.history["cost"][epoch - 1]
+    #         self.history["r"][epoch] = r
+    #         if r > 1:
+    #             eta = self.eta0 * r ** (30 * (1 - epoch / self.epochs))
+    #             self.history["eta"][epoch] = eta
+    #             return eta
+
+    #         self.history["eta"][epoch] = self.eta0
+    #         return self.eta0
+    #     self.history["eta"][epoch] = self.eta0
+        # return self.eta0
+
     def eta(self, epoch):
-        if epoch > 100:
-            r = self.history[epoch - 3] / self.history[epoch - 1]
-            if r > 1:
-                return self.eta0 * r ** (30 * (1 - epoch / self.epochs))
-            return self.eta0
-        return self.eta0
+        eta = self.eta0
+        self.history["eta"][epoch] = eta
+        return eta
+
+
 
 def main():
-    dx = 0.05
-    dt = 0.01
-    T = 5
-    nx = 1 / dx + 1
-    nt = T / dt + 1
-    x = np.linspace(0, 1, int(nx))
-    t = np.linspace(0, T, int(nt))
+    dx = 1e-1
+    dt = 0.5 * dx ** 2
+    T = 1.5
+    nx = int(1 / dx)
+    nt = int(T / dt)
+    x = np.linspace(0, 1, nx)
+    t = np.linspace(0, T, nt)
     x, t = np.meshgrid(x, t)
-    print(x.shape)
+    
     X = np.concatenate((x.reshape(-1, 1), t.reshape(-1, 1)), axis=1)
 
-    Solver = Diffusion(X.shape[1],
-                       nodes=[10, 40, 20, 10], 
-                       activation="relu",
+    # Solver = Diffusion(
+    #                    nodes=[2, 35, 20, 10, 1], 
+    #                    activation="abs",
+    #                    alpha=-1,
+    #                    epochs=500, 
+    #                    eta0=0.00008,
+    #                    lmb=0, 
+    #                    gamma=0.95, 
+    #                    load=False, 
+    #                    name=None, 
+    #                    seed=2021,
+    #                    )
+    Solver = Diffusion(
+                       nodes=[2, 30, 20, 1], 
+                       activation="tanh",
                        alpha=0,
                        epochs=500, 
-                       eta0=0.000005,
+                       eta0=0.002,
                        lmb=0, 
-                       gamma=0.8, 
+                       gamma=0.95, 
                        load=False, 
                        name=None, 
                        seed=2021,
                        )
     Solver.train(X)
-    # Solver.X = X
+
     solution = Solver.get_solution()  # trial function solution
     solution = solution.reshape(x.shape)
-    raw_solution = Solver(X, Solver.P)  # the way the net looks like without trial function
-    raw_solution = raw_solution.reshape(x.shape)
 
-    fig = go.Figure(data=[go.Scatter(x=Solver.t[10:], y=Solver.history[10:], mode="lines")])
+    fig = go.Figure(data=[go.Scatter(x=Solver.t[10:], y=Solver.history["cost"][10:], mode="lines")])
+    fig.show()
+    fig = go.Figure(data=[go.Scatter(x=Solver.t[10:], y=Solver.history["eta"][10:], mode="lines")])
     fig.show()
 
-    fig = go.Figure(data=[go.Surface(x=x, y=t, z=solution)])
-    fig.show()
+    # fig = go.Figure(data=[go.Surface(x=x, y=t, z=solution)])
+    # fig.show()
 
     # fig = go.Figure(data=[go.Surface(x=x, y=t * T, z=raw_solution)])
     # fig.show()
