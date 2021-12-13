@@ -255,7 +255,7 @@ First, elitism was used before any of the other reproduction operations. This in
 
 The selection scheme determines what chromosomes from the current are chosen as parents. Two different methods were here investigated; probabilistic selection and tournament selection. Assume the current generation contains \textit{C} individuals and \textit{NC} new chromosomes are to be created. For probabilistic selection, a list containing \textit{2NC} integers distributed according to half a normal distribution centred at 0 with standard deviation \textit{0.2C} is generated. These number are then iterated over in pairs, and are used as indices to choose which two individuals from the sorted list of chromosomes are to be chosen as parents. This ensures that the fittest individuals have a much higher chance of reproduction, but genotypic and phenotypic variance is still ensured by allowing the less fit individuals to reproduce some of the time. Tournament selection involves picking \textit{K} random integers in the range [0, C] and pick out the lowest two. These are then used as the indices to pick out the two parents from the sorted list of chromosomes. Note that both methods allows the same chromosome to be chosen as both parents, in which case the child will always be a perfect copy of the parent(s) before mutation. How the new chromosomes are generated from the two parents is then determined by the crossover scheme.
 
-The crossover scheme determines how new chromosomes are created from the past generation. Three different methods were investigated here. First, one can create a new genetic sequence which is a perfect mix of the genes of the two parents. \textit{0.5G} different integers are picked from the range [0, G], and these are used as the indices of the genes used from one parent, and the remaining genes are taken from the other parent at the loci not picked by the indices. Note that the loci of the genes in the sequence are always preserved. This is the method most analogous to how reproduction takes place in nature. Alternatively, a random index in the range [0, G] is chosen, and this is used as the crossover point, such that the genes before that point is taken from one parent and the genes after that point from the other parent. The two halves are then combined to create a new genetic sequence.
+The crossover scheme determines how new chromosomes are created from the past generation. Two different methods were investigated here. First, one can create a new genetic sequence which is a perfect mix of the genes of the two parents. \textit{0.5G} different integers are picked from the range [0, G], and these are used as the indices of the genes used from one parent, and the remaining genes are taken from the other parent at the loci not picked by the indices. Note that the loci of the genes in the sequence are always preserved. This is the method most analogous to how reproduction takes place in nature. Alternatively, a random index in the range [0, G] is chosen, and this is used as the crossover point, such that the genes before that point is taken from one parent and the genes after that point from the other parent. The two halves are then combined to create a new genetic sequence.
 
 After the crossover operation, a mutation operation is applied. Two rates are important in choosing how this is done. Firstly, one must decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
@@ -266,7 +266,7 @@ First, in order to test the algorithm, some of the results presented in \cite{La
 
 \begin{align*}
 	\frac{dy}{dx}  - \frac{2x - y}{x} = 0 \\
-	y(0.1) = 20.1                         \\
+	y(0.1) = 20.1    \\
 	x \in [0.1, 1],
 \end{align*}
 
@@ -274,7 +274,7 @@ with the analytic solution y(x) = x + 2/x.
 
 \begin{align*}
 	\frac{d^{2}y}{dx^{2}}  + 100y = 0 \\
-	y(0) = 0                          \\
+	y(0) = 0    \\
 	\frac{dy(0)}{dx} = 10,
 \end{align*}
 
@@ -284,32 +284,62 @@ The partial differential equation tested was:
 
 \begin{align*}
 	\frac{\partial^{2}u}{\partial x^{2}} + \frac{\partial^{2}u}{\partial y^{2}} + 2u(x, y) = 0 \\
-	y(0.1) = 20.1                                                                              \\
+	y(0.1) = 20.1       \\
 	x \in [0.1, 1],
 \end{align*}
 
 with the analytic solution u(x, y) = sin(x)cos(y).
 
-In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 5 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 95 \% of the new generation were generated through reproduction. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant.
+In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant.
 
-The genetic algorithm was used to attempt to solve the diffusion equation using three different methods of selection; mixing, swapping and tournament selection. The other variables were kept the same, apart from the maximum number of generations, which was reduced to 1000 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
+The genetic algorithm was used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same. The maximum number of generations was reduced to 500 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end. 
+
+A comparison of the two methods for the top chromosome, top 10 \% and the top 70 \% is shown in Figure \ref{fig:gen_default}. As can be seen, there are no major differences in the results obtained. The fitness of the top chromosome increases step-wise, whereas there is a gradual increase in the fitness of the top 10 \%. This shows that the best candidate solutions spread in the population through reproduction, and gradually take up a larger proportion of the population. Finally, there is no development to be spotted in the average fitness of the top 70 \%, which fluctuate significantly. This shows that more generations are needed before the fittest chromosomes spread that far, and even then the effects of random mutations between the generations might be sufficient to make enough of the chromosomes sufficiently unfit to prevent the average fitness from stabilising. 
+
+\begin{figure}[h]
+    \minipage{0.49\textwidth}
+    \includegraphics[width=\linewidth]{gen_top_default.png}
+    \endminipage\hfill
+    \minipage{0.49\textwidth}
+    \includegraphics[width=\linewidth]{gen_10_default.png}
+    \endminipage\hfill
+    \minipage{0.49\textwidth}
+    \includegraphics[width=\linewidth]{gen_70_default.png}
+    \endminipage
+    \caption{Three plots showing the fitness of the top chromosome, the average fitness of the 10 \% best chromosomes and the 70 \% best chromosomes respectively, using mixing and tournament selection.}
+    \label{fig:gen_default}
+\end{figure}
 
 
+\begin{figure}[h]
+    \minipage{0.49\textwidth}
+    \includegraphics[width=\linewidth]{gen_mix_var.png}
+    \endminipage\hfill
+    \minipage{0.49\textwidth}
+    \includegraphics[width=\linewidth]{gen_tour_var.png}
+    \endminipage
+    \caption{Plots of the fitness of the top gene as function of generations using slightly different variables, using mixing (upper plot) and tournament selection (lower plot).}
+    \label{fig:gen_var}
+\end{figure}
+
+\begin{figure}[h]
+    \includegraphics[width=\linewidth]{gen_top_random.png}
+    \caption{Plot of the fitness of the top gene as function of generations for the three different selection and crossover methods.}
+    \label{fig:gen_random}
+\end{figure}
+
+It was then attempted to independently change some of the other variables, namely the size of the elite group and the mutation rate. First, the size of the elite group was decreased to 5 \%. Secondly, the size of the elite group was set back to 10 \%, but the mutation scheme was changed. Instead of applying mutations to 10 genes in half of the new chromosomes, 3 genes were changed in all of the new chromosomes. This resulted in three different methods, and the fitness of the best chromosome over the generations using the different methods using mixing and tournament selection are shown in Figure  \ref{fig:gen_var}. 
 
 
-
-
-\section{Discussion}
-\subsection{Genetic Algorithm}
 In sum, the genetic algorithm employed successfully reproduces the results from \cite{Lagaris}, where fairly simple analytic expressions are found which fulfil the differential equation and the boundary conditions. However, large populations (1000 chromosomes) and many generations are needed before the desired results are obtained, and importantly, it is far from clear that these are found through cumulative selection, and not just by chance. Looking at the plots of the fitness of the fittest chromosome over the generations, it is clear that this tends to increase step-wise, rather than through a slow process of cumulative selection, which is the process the genetic algorithms are aiming to recreate. This should therefore be a source of worry. In fact, when analysing the algorithm of grammatical evolution employed, it is not surprising that there are few signs of cumulative selection in the results, for it is hard to see how the algorithm would be able to recreate this feature of evolution. To understand why, one must go back to the building block hypothesis and the notion of fitness landscapes. These ideas express two necessary conditions for evolution to take place which also apply to genetic algorithms. Firstly, as stated by the building-block hypothesis, the optimal solution must be built up from independent contributions from different building blocks, as encoded in the genes. Secondly, the fitness landscape expresses the requirement that evolution must be cumulative, such that small changes to the genotype (e.g. changing a few genes) does not normally lead to dramatic changes in the phenotype (here the resulting function). With the above grammar and algorithm used, however, neither requirement is met.
 
 To understand why, it might be useful to look at an example of two sets of genes, [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2] and [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]. The only difference in the genotype is the second gene, but whereas the first leads to the expression $sin(x)t$, the second gives the expression $\frac{xt}{6} + 2$. Thus, changing a single gene completely changes the expression generated, making gradual improvements to the expression by changing individual genes near impossible.
 
-One of the main problems with the grammar used, and how it becomes disanalogous with the process of natural selection, is in the dependence on the preceding genes in the interpretation of the current gene. In other words, the genes found at the different loci (positions in the genetic sequence) do not have any meaning independent of the genes found at the other loci. This breaks with the underlying assumption justifying the selection and crossover operations, where it is assumed that individual genes contribute to the fitness of the individual and are therefore ``good'' or ``bad'', such that mixing the genes of two fit individuals will give another fit individual. However, when this operation is performed using the above decoding scheme, the meaning of individual genes is completely changed by the change in the preceding genes, so the justification for the entire crossover-scheme breaks down. Thus, the structure of the analytical expressions is rarely preserved during crossover, especially not when the genes are mixed perfectly. Thus, the above algorithm seems to mostly work through brute force by guessing at a very high number of candidate solutions and preserving the best ones from each generation. With 1000 chromosomes and 1000 generations, it is far from surprising the the correct solution eventually pops up by chance, provided this is not too complicated. This means that generating new genes at random instead of using a selection process should give similar results, as long at the ``elite'' is still passed on unaltered over the generations. Note that this is only expected to give similar results for the top chromosome - completely replacing the remaining 95 \% of the population every generation will likely give a worse average fitness. 
+One of the main problems with the grammar used, and how it becomes disanalogous with the process of natural selection, is in the dependence on the preceding genes in the interpretation of the current gene. In other words, the genes found at the different loci (positions in the genetic sequence) do not have any meaning independent of the genes found at the other loci. This breaks with the underlying assumption justifying the selection and crossover operations, where it is assumed that individual genes contribute to the fitness of the individual and are therefore ``good'' or ``bad'', such that mixing the genes of two fit individuals will give another fit individual. However, when this operation is performed using the above decoding scheme, the meaning of individual genes is completely changed by the change in the preceding genes, so the justification for the entire crossover-scheme breaks down. Thus, the structure of the analytical expressions is rarely preserved during crossover, especially not when the genes are mixed perfectly. Thus, the above algorithm seems to mostly work through brute force by guessing at a very high number of candidate solutions and preserving the best ones from each generation. With 1000 chromosomes and 1000 generations, it is far from surprising the the correct solution eventually pops up by chance, provided this is not too complicated. This means that generating new genes at random instead of using a selection process should give similar results, as long at the ``elite'' is still passed on unaltered over the generations. Note that this is only expected to give similar results for the top chromosome - completely replacing the remaining 90 \% of the population every generation will likely give a worse average fitness. 
 
-To test this assumption, a XXX third random selection scheme was introduced. Here, 
+To test this assumption, a third random selection scheme was introduced. Here, after passing on the elite, consisting of the 10 \% best chromosomes, the remaining 90 \% were generated using the same random method as was used in the first generation when the chromosomes were first initialised. A comparison of the three methods is shows in Figure \ref{fig:gen_random}. 
 
-%This is likely the reason why this method was found to be worse than when a single crossover-point was used, since in the latter case, the expression is fairly likely to be passed on unaltered from one parent, the other parent only contributing with genes at the end of the chromosome which are never used for decoding. 
+Why do we find the simple solutions but not this one? Because it is very unlikely for the complete solution to come up by chance, given how long it is. 
 
 This is, however, very far from the intended mechanism with which the genetic algorithm is meant to work, and to call it machine learning is simply wrong. To improve it, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper.  
 
