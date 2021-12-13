@@ -41,7 +41,10 @@ class Symmetric_matrix(PDE_solver_NN_base):
 
     def assess(self):
         true_vals, true_vecs = np.linalg.eig(self.A)
-        val, vec = self.eig()
+        # val, vec = self.eig()
+        vec = self(self.t_max, self.P).reshape(-1,)
+        vec /= np.linalg.norm(vec)
+        val = (vec.T @ self.A @ vec) / (vec.T @ vec)
         
         idx = np.argmin(abs(true_vals - val))
         true_val = true_vals[idx]
@@ -50,9 +53,13 @@ class Symmetric_matrix(PDE_solver_NN_base):
         true_vec *= np.sign(true_vec[0])
         vec *= np.sign(vec[0])
 
-        val_err = np.log10(val / true_val)
+        val_err = val - true_val
         vec_err = np.log10(vec / true_vec)
-
+        print(true_vals)
+        print(val_err)
+        print(vec_err)
+        print(vec)
+        print(val, true_val)
         return val_err, vec_err
 
 
@@ -68,9 +75,7 @@ def main():
     nT = 101
     t = np.linspace(0, tmax, nT)
 
-    Übernetz = Symmetric_matrix(1,
-                              nodes=[12, 12],
-                              output_node=n,
+    Solver = Symmetric_matrix(nodes=[1, 12, 12, n],
                               activation="sigmoid",
                               epochs=3000,
                               eta0=0.0000034,
@@ -80,11 +85,11 @@ def main():
                               name=None,
                               seed=seed,
                               )
-    Übernetz.symmetrix(A, x, t)
-    print(Übernetz.assess())
-
-    fig = go.Figure(data=go.Scatter(y=Übernetz.history, mode="lines"))
-    fig.show()
+    Solver.symmetrix(A, x, t)
+    # print(Solver.A)
+    (Solver.assess())
+    # fig = go.Figure(data=go.Scatter(y=Solver.history, mode="lines"))
+    # fig.show()
 
 
 
