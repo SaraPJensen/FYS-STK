@@ -117,7 +117,7 @@ Note that a crucial premise for genetic algorithms, which is the so-called the b
 
 
 \subsubsection{Differential Equations and Grammatical Evolution}
-Genetic algorithms have been found to be useful in various optimisation problems, as suggested by the importance of the notion of the fitness landscape in the framework. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their  \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}.
+Genetic algorithms have been found to be useful in various optimisation problems, as suggested by the importance of the notion of the fitness landscape in the framework. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}.
 
 \subsection{Differential equation for eigenvectors of symmetrix matrices}
 While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are complete different beasts, however. While possible to solve, more effor is needed to implement in an explicit scheme. This is where the power of neural networks come in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
@@ -130,8 +130,12 @@ for $t>0$ are the eigenvectors of the symmetric $n\times n$ matrix $A$. $x(0)$ i
 
 
 \section{Methods}
+The code where the algorithms are implemented can be found on the \href{https://github.com/SaraPJensen/FYS-STK/tree/main/Project3/code}{GitHub for this paper}.
 
 \subsection{Neural networks}
+There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The implement PDE-solver network in this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus most will not be recounted here, only the parameters what was then found to be interesting, and the differences made in the new implementation.
+
+In \cite{p2HO}, the activation function was found to be especially important for getting good results. 
 
 For \eqref{eq:diff}, with initial and boundary conditions \eqref{eq:boundary},
 \begin{equation}
