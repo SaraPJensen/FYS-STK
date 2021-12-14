@@ -86,7 +86,40 @@ It is easily verifiable that the specific analytic solution is
 \end{equation*}
 
 \subsection{Explicit Schemes}
+Traditionally, differential equations have been solved using numerical finite difference methods, either explicit or implicit. Here, the results obtained using the different machine learning algorithms will be compared with the explicit forward Euler method. First, discretise the variables as follows.
 
+\begin{align*}
+x \rightarrow x_{i} = i\Delta x   \\
+t \rightarrow t_{j} = j \Delta t   \\
+u(x, t)  \rightarrow u_{i}^{j}
+\end{align*}
+
+such that the lower index of u refers to the spatial step and the upper index to the temporal step. 
+
+The necessary derivatives are given by
+
+\begin{align*}
+\frac{\partial^2u_i^j}{\partial x^2} & = \frac{u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}}{\Delta x^{2}},   \\
+\frac{\partial u_i^j}{\partial t} & = \frac{u_{i}^{j+1} - u_{i}^{j}}{\Delta t}.   \\
+\end{align*}
+
+Combining the two and solving for $u_{i}^{j+1}$ gives
+
+\begin{equation*}
+u_{i}^{j+1} = r(u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}) + u_{i}^{j},
+\end{equation*}
+
+where 
+
+\begin{equation*}
+r = \frac{\Delta t}{\Delta x^{2}}. 
+\end{equation*}
+
+Thus, given all the spatial steps at the current time-step, all spatial times are future time-steps can be found by iteratively solving the above equation. Further, the step sizes $\Delta x$ and $\Delta t$ for the explicit scheme are related by the stability criterion
+
+\begin{equation*}
+\frac{\Delta t}{\Delta x^{2}} = \le \frac{1}{2}. 
+\end{equation*}
 
 \subsection{Neural Network}
 A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
@@ -102,7 +135,6 @@ where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independant variables, and $g(\
 is used rather than the actual solution. Here $b(\mathbf{x})$ ensures that the trial function gives correct initial and boundary values, while $h(\mathbf{x})$ ensures that $N(\mathbf{x})$ has no contribution at these points.
 
 Then, through $E$ iterations, the weights and biases $P$ and updated using the backpropagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
-
 
 
 
