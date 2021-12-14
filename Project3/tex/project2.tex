@@ -67,14 +67,12 @@ Further, Yi et. al. showed that the eigenvalues of a symmetrix matrix can be des
 \section{Theory}
 
 The temperature gradient $u(x, t)$ in a rod of length $L=1$ can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
-\begin{equation}
-	\label{eq:diff}
+\begin{equation}\label{eq:diff}
 	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}
 \end{equation},
 
 where $x$ is the length along the rod, and $t$ is time. The boundary and intial conditions are
-\begin{align*}
-	\label{eq:boundary}
+\begin{align*}\label{eq:boundary}
 	u(0, t) & = 0,             \\
 	u(L, t) & = 0, \numberthis \\
 	u(x, 0) & = sin(\pi x).
@@ -124,17 +122,21 @@ Thus, given all the spatial steps at the current time-step, all spatial times ar
 \subsection{Neural Network}
 A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
 
+\subsubsection{Cost function}
 In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. For solving a PDE, it can generally be written as
 \begin{align*}
 	f(\mathbf{x}, g(\mathbf{x}), g'(\mathbf{x}), g''(\mathbf{x}), \dots, g^{(n)}(\mathbf{x})) = 0,
 \end{align*}
-where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independant variables, and $g(\mathbf{x})$ the solution of the PDE. $f^2$ is then a natural choice of the cost function. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$. In order to take care of the boundary and initial conditions, a trial-function
+where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independant variables, and $g(\mathbf{x})$ the solution of the PDE. $f^2$ is then a natural choice of the cost function. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$.
+Then, through $E$ iterations, the weights and biases $P$ and updated using the backpropagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
+
+\subsubsection{Trial function}\label{sec:trialf}
+In order to take care of the boundary and initial conditions, a trial-function
 \begin{align*}
 	g_t(\mathbf{x}) = b(\mathbf{x}) + h(\mathbf{x}, N(\mathbf{x}, P))
 \end{align*}
 is used rather than the actual solution. Here $b(\mathbf{x})$ ensures that the trial function gives correct initial and boundary values, while $h(\mathbf{x})$ ensures that $N(\mathbf{x})$ has no contribution at these points.
 
-Then, through $E$ iterations, the weights and biases $P$ and updated using the backpropagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
 
 
 
@@ -168,19 +170,37 @@ for $t>0$ are the eigenvectors of the symmetric $n\times n$ matrix $A$. $x(0)$ i
 The code where the algorithms are implemented can be found on the \href{https://github.com/SaraPJensen/FYS-STK/tree/main/Project3/code}{GitHub for this paper}.
 
 \subsection{Neural networks}
-There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The PDE-solver network implemented for this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus will not be detailed here. This includes a learning rate $\eta$, $L_2$-regularization $\lambda$ and momentum-parameter $\gamma$. Further, the activation functions studied were sigmoid, tanh, and parametrized ReLU (PReLU). PReLU is a generalized form of ReLU and Leaky ReLU, taking a parameter $\alpha$ setting the slope of the negative activation. The weights were initialized using normalized Xavier-initialization in the case of sigmoid and tanh activation functions, while He-initialization was used for PReLU. 
+There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The PDE-solver network implemented for this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus will not be detailed here. This includes a learning rate $\eta$, $L_2$-regularization $\lambda$ and momentum-parameter $\gamma$. Further, the activation functions studied were sigmoid, tanh, and parametrized ReLU (PReLU). PReLU is a generalized form of ReLU and Leaky ReLU, taking a parameter $\alpha$ setting the slope of the negative activation. The weights were initialized using normalized Xavier-initialization in the case of sigmoid and tanh activation functions, while He-initialization was used for PReLU.
 
-, and thus most will not be recounted here, only the parameters what was then found to be interesting, and the differences made in the new implementation.
 
-While the best method for determining the best parameters for a neural network if searching the entire hyperparameter-space, this is very time-consuming, and will spend a lot of time on some parameter values giving quite bad results. Therefore, a sort of manual grid-search was performed, one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they was in turn tweaked one by one until an optimal value was found for the set of other parameters.  This will not ensure the globally optimal parameter set, 
-The $L_2$-regularization 
-In \cite{p2HO}, the choice of activation function was found to be especially important for getting good results. 
+While the best method for determining the best parameters for a neural network is searching the entire hyperparameter-space, this is very time-consuming, and will spend a lot of time on some parameter values giving quite bad results. Therefore, a manual grid-search was performed, optimizing one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they were in turn tweaked one by one until an optimal value was found for the set of other parameters, while training for a fix set of epochs. A repeat of the process was done to reoptimize the previously set parameters. This method will not ensure the globally optimal parameter set, but will quickly lead to reasonably good results.
 
-For \eqref{eq:diff}, with initial and boundary conditions \eqref{eq:boundary},
+Specifically, the $L_2$-regularization parameter $\lambda$ was in previous work found to not give benefitial results when non-zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems like over - or underflow, in order to ensure as quick convergence as possible.
+
+One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
+The specific expressions were as follows, in order of presented above
+\begin{align*}
+	\eta(t) & = \eta_0,
+	\\
+	\eta(t) & = \eta_0 (1 - t),
+	\\
+	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9),
+	\\
+	\eta(t) & = \eta_0 (2 - \cos(t)),
+	\\
+	\eta(t) & = \eta_0 \cos(t),
+\end{align*}
+where $t$ is the current epoch, divided by total number of epochs.
+
+\subsubsection{Solving the differential equation}
+When solving the differential equation \eqref{eq:diff}, both the explicit scheme (xxx ref expl scheme), and the neural network were used. The results were compared to the analytical solution. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit (xxx ref stability limit). The same stabiliy criteria is not appliable to the neural network, so
+
+The trial function used to solve the differential equation \eqref{eq:diff} with initial and boundary conditions \eqref{eq:boundary}, satisfying the conditions set in \ref{sec:trialf} was
 \begin{equation}
-	u_t(x, t, N) = \sin{(\pi x)}[1 + tN(x, t, P)]
+	u_t(x, t, N) = \sin{(\pi x)}[1 + tN(x, t, P)].
 \end{equation}
-satisfies the requirements of a trial function.
+
+
 
 \subsection{Genetic Algorithm}
 The outline of the algorithm is as follows. A population-class is defined containing a list of \textit{C} chromosomes with randomly generated sequences of \textit{G} genes. For each generation, the genetic sequence of each chromosome is decoded and its corresponding analytic expression is generated. The fitness value of each chromosome is then calculated, and the list of chromosomes ordered according to their fitness. Chromosomes whose fitness is \texttt{nan} or \texttt{inf} are removed from the list before crossover. The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome.
@@ -319,16 +339,16 @@ First, in order to test the algorithm, some of the results presented in \cite{La
 
 \begin{align*}
 	\frac{dy}{dx}  - \frac{2x - y}{x} = 0 \\
-	y(0.1) = 20.1    \\
+	y(0.1) = 20.1                         \\
 	x \in [0.1, 1],
 \end{align*}
 
 with the analytic solution y(x) = x + 2/x.
 
 \begin{align}
-\label{eq:ODE}
+	\label{eq:ODE}
 	\frac{d^{2}y}{dx^{2}}  + 100y = 0 \\
-	y(0) = 0    \\
+	y(0) = 0                          \\
 	\frac{dy(0)}{dx} = 10,
 \end{align}
 
@@ -337,9 +357,9 @@ with the analytic solution y(x) = sin(10x).
 The partial differential equation tested was:
 
 \begin{align}
-\label{eq:PDE}
+	\label{eq:PDE}
 	\frac{\partial^{2}u}{\partial x^{2}} + \frac{\partial^{2}u}{\partial y^{2}} + 2u(x, y) = 0 \\
-	y(0.1) = 20.1       \\
+	y(0.1) = 20.1                                                                              \\
 	x \in [0.1, 1],
 \end{align}
 
@@ -348,72 +368,72 @@ with the analytic solution u(x, y) = sin(x)cos(y).
 \subsubsection{Diffusion Equation}
 In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant.
 
-The genetic algorithm was used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same. The maximum number of generations was reduced to 500 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end. 
+The genetic algorithm was used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same. The maximum number of generations was reduced to 500 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
 
-A comparison of the two methods for the top chromosome, top 10 \% and the top 70 \% is shown in Figure \ref{fig:gen_default}. As can be seen, there are no major differences in the results obtained. The fitness of the top chromosome increases step-wise, whereas there is a gradual increase in the fitness of the top 10 \%. This shows that the best candidate solutions spread in the population through reproduction, and gradually take up a larger proportion of the population. Finally, there is no development to be spotted in the average fitness of the top 70 \%, which fluctuate significantly. This shows that more generations are needed before the fittest chromosomes spread that far, and even then the effects of random mutations between the generations might be sufficient to make enough of the chromosomes sufficiently unfit to prevent the average fitness from stabilising. 
+A comparison of the two methods for the top chromosome, top 10 \% and the top 70 \% is shown in Figure \ref{fig:gen_default}. As can be seen, there are no major differences in the results obtained. The fitness of the top chromosome increases step-wise, whereas there is a gradual increase in the fitness of the top 10 \%. This shows that the best candidate solutions spread in the population through reproduction, and gradually take up a larger proportion of the population. Finally, there is no development to be spotted in the average fitness of the top 70 \%, which fluctuate significantly. This shows that more generations are needed before the fittest chromosomes spread that far, and even then the effects of random mutations between the generations might be sufficient to make enough of the chromosomes sufficiently unfit to prevent the average fitness from stabilising.
 
 \begin{figure}[h]
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_top_default.png}
-    \endminipage\hfill
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_10_default.png}
-    \endminipage\hfill
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_70_default.png}
-    \endminipage
-    \caption{Three plots showing the fitness of the top chromosome, the average fitness of the 10 \% best chromosomes and the 70 \% best chromosomes respectively, using mixing and tournament selection.}
-    \label{fig:gen_default}
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_top_default.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_10_default.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_70_default.png}
+	\endminipage
+	\caption{Three plots showing the fitness of the top chromosome, the average fitness of the 10 \% best chromosomes and the 70 \% best chromosomes respectively, using mixing and tournament selection.}
+	\label{fig:gen_default}
 \end{figure}
 
 
 \begin{figure}[h]
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_mix_var.png}
-    \endminipage\hfill
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_tour_var.png}
-    \endminipage
-    \caption{Plots of the fitness of the top gene as function of generations using slightly different variables, using mixing (upper plot) and tournament selection (lower plot).}
-    \label{fig:gen_var}
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_mix_var.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_tour_var.png}
+	\endminipage
+	\caption{Plots of the fitness of the top gene as function of generations using slightly different variables, using mixing (upper plot) and tournament selection (lower plot).}
+	\label{fig:gen_var}
 \end{figure}
 
 
-It was then attempted to independently change some of the other variables, namely the size of the elite group and the mutation rate. First, the size of the elite group was decreased to 5 \%. Secondly, the size of the elite group was set back to 10 \%, but the mutation scheme was changed. Instead of applying mutations to 10 genes in half of the new chromosomes, 3 genes were changed in all of the new chromosomes. This resulted in three different methods, and the fitness of the best chromosome over the generations using the different methods using mixing and tournament selection are shown in Figure  \ref{fig:gen_var}. As can be seen, the differences are small, though the method using a smaller elite gives the best results both for tournament selection and mixing. However, no definite conclusions can be drawn from this single instance, for given the strong stochastic element of the algorithm, large samples would be needed to determine a definite trend. This was  unfortunately not possible due to time constraints. 
+It was then attempted to independently change some of the other variables, namely the size of the elite group and the mutation rate. First, the size of the elite group was decreased to 5 \%. Secondly, the size of the elite group was set back to 10 \%, but the mutation scheme was changed. Instead of applying mutations to 10 genes in half of the new chromosomes, 3 genes were changed in all of the new chromosomes. This resulted in three different methods, and the fitness of the best chromosome over the generations using the different methods using mixing and tournament selection are shown in Figure  \ref{fig:gen_var}. As can be seen, the differences are small, though the method using a smaller elite gives the best results both for tournament selection and mixing. However, no definite conclusions can be drawn from this single instance, for given the strong stochastic element of the algorithm, large samples would be needed to determine a definite trend. This was  unfortunately not possible due to time constraints.
 
 \subsubsection{Critical Evaluation}
 In sum, the genetic algorithm employed successfully reproduces the results from \cite{Lagaris}, where fairly simple analytic expressions are found which fulfil the differential equation and the boundary conditions. However, large populations (1000 chromosomes) and many generations are needed before the desired results are obtained, and importantly, it is far from clear that these are found through cumulative selection, and not just by chance. Looking at the plots of the fitness of the fittest chromosome over the generations, it is clear that this tends to increase step-wise, rather than through a slow process of cumulative selection, which is the process the genetic algorithms are aiming to recreate. This should therefore be a source of worry. In fact, when analysing the algorithm of grammatical evolution employed, it is not surprising that there are few signs of cumulative selection in the results, for it is hard to see how the algorithm would be able to recreate this feature of evolution. To understand why, one must go back to the building block hypothesis and the notion of fitness landscapes. These ideas express two necessary conditions for evolution to take place which also apply to genetic algorithms. Firstly, as stated by the building-block hypothesis, the optimal solution must be built up from independent contributions from different building blocks, as encoded in the genes. Secondly, the fitness landscape expresses the requirement that evolution must be cumulative, such that small changes to the genotype (e.g. changing a few genes) does not normally lead to dramatic changes in the phenotype (here the resulting function). With the above grammar and algorithm used, however, neither requirement is met.
 
 To understand why, it might be useful to look at an example of two sets of genes, [0, 2, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2] and [0, 0, 0, 4, 2, 5, 7, 3, 6, 8, 9, 2]. The only difference in the genotype is the second gene, but whereas the first leads to the expression $sin(x)t$, the second gives the expression $\frac{xt}{6} + 2$. Thus, changing a single gene completely changes the expression generated, making gradual improvements to the expression by changing individual genes near impossible.
 
-One of the main problems with the grammar used, and how it becomes disanalogous with the process of natural selection, is in the dependence on the preceding genes in the interpretation of the current gene. In other words, the genes found at the different loci (positions in the genetic sequence) do not have any meaning independent of the genes found at the other loci. This breaks with the underlying assumption justifying the selection and crossover operations, where it is assumed that individual genes contribute to the fitness of the individual and are therefore ``good'' or ``bad'', such that mixing the genes of two fit individuals will give another fit individual. However, when this operation is performed using the above decoding scheme, the meaning of individual genes is completely changed by the change in the preceding genes, so the justification for the entire crossover-scheme breaks down. Thus, the structure of the analytical expressions is rarely preserved during crossover, especially not when the genes are mixed perfectly. Thus, the above algorithm seems to mostly work through brute force by guessing at a very high number of candidate solutions and preserving the best ones from each generation. With 1000 chromosomes and 1000 generations, it is far from surprising the the correct solution eventually pops up by chance, provided this is not too complicated. This means that generating new genes at random instead of using a selection process should give similar results, as long at the ``elite'' is still passed on unaltered over the generations. Note that this is only expected to give similar results for the top chromosome - completely replacing the remaining 90 \% of the population every generation will likely give a worse average fitness. 
+One of the main problems with the grammar used, and how it becomes disanalogous with the process of natural selection, is in the dependence on the preceding genes in the interpretation of the current gene. In other words, the genes found at the different loci (positions in the genetic sequence) do not have any meaning independent of the genes found at the other loci. This breaks with the underlying assumption justifying the selection and crossover operations, where it is assumed that individual genes contribute to the fitness of the individual and are therefore ``good'' or ``bad'', such that mixing the genes of two fit individuals will give another fit individual. However, when this operation is performed using the above decoding scheme, the meaning of individual genes is completely changed by the change in the preceding genes, so the justification for the entire crossover-scheme breaks down. Thus, the structure of the analytical expressions is rarely preserved during crossover, especially not when the genes are mixed perfectly. Thus, the above algorithm seems to mostly work through brute force by guessing at a very high number of candidate solutions and preserving the best ones from each generation. With 1000 chromosomes and 1000 generations, it is far from surprising the the correct solution eventually pops up by chance, provided this is not too complicated. This means that generating new genes at random instead of using a selection process should give similar results, as long at the ``elite'' is still passed on unaltered over the generations. Note that this is only expected to give similar results for the top chromosome - completely replacing the remaining 90 \% of the population every generation will likely give a worse average fitness.
 
-To test this assumption, a third random selection scheme was introduced. Here, after passing on the elite, consisting of the 10 \% best chromosomes, the remaining 90 \% were generated using the same random method as was used in the first generation when the chromosomes were first initialised. A comparison of the three methods is shows in Figure \ref{fig:gen_random}. As can be seen, randomly selecting new genes at each generation gives similar results to the other methods tested. This might be an indication that also the two former methods also work through pseudo-random processes, for since small changes in the genotype often lead to complete alterations in the phenotype (the analytic expression), mixing and tournament selection with mutations practically approaches pseudo-random processes changing the phenotypes completely at each generation. To verify this further, similar plots were made for the second ODE (eq. \eqref{eq:ODE}) and the PDE (eq. \eqref{eq:PDE}) tested above, and the results are shown in Figure \ref{fig:gen_ODE}. The results further support the assumption, where in this case randomly changing the genes at each generation actually performs better. 
+To test this assumption, a third random selection scheme was introduced. Here, after passing on the elite, consisting of the 10 \% best chromosomes, the remaining 90 \% were generated using the same random method as was used in the first generation when the chromosomes were first initialised. A comparison of the three methods is shows in Figure \ref{fig:gen_random}. As can be seen, randomly selecting new genes at each generation gives similar results to the other methods tested. This might be an indication that also the two former methods also work through pseudo-random processes, for since small changes in the genotype often lead to complete alterations in the phenotype (the analytic expression), mixing and tournament selection with mutations practically approaches pseudo-random processes changing the phenotypes completely at each generation. To verify this further, similar plots were made for the second ODE (eq. \eqref{eq:ODE}) and the PDE (eq. \eqref{eq:PDE}) tested above, and the results are shown in Figure \ref{fig:gen_ODE}. The results further support the assumption, where in this case randomly changing the genes at each generation actually performs better.
 
 \begin{figure}[h]
-    \includegraphicsmaybe[width=\linewidth]{gen_top_random.png}
-    \caption{Plot of the fitness of the top gene as function of generations for the three different selection and crossover methods.}
-    \label{fig:gen_random}
+	\includegraphicsmaybe[width=\linewidth]{gen_top_random.png}
+	\caption{Plot of the fitness of the top gene as function of generations for the three different selection and crossover methods.}
+	\label{fig:gen_random}
 \end{figure}
 
 \begin{figure}[h]
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_ODE.png}
-    \endminipage\hfill
-    \minipage{0.49\textwidth}
-    \includegraphicsmaybe[width=\linewidth]{gen_PDE.png}
-    \endminipage
-    \caption{Plots of the fitness of the top gene as function of generations for the ODE and PDE using tournament selection and randomly changing all the genes at each generation.}
-    \label{fig:gen_ODE}
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_ODE.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{gen_PDE.png}
+	\endminipage
+	\caption{Plots of the fitness of the top gene as function of generations for the ODE and PDE using tournament selection and randomly changing all the genes at each generation.}
+	\label{fig:gen_ODE}
 \end{figure}
 
-One might wonder why the analytical solutions are found for the ODEs and the PDE tested, but not for the diffusion equation. This is likely because of the sheer length of the functional expression in terms of the genes, which is 25 genes long for the diffusion equation. Randomly reproducing this sequence is far less likely than to randomly generate the genetic sequence coding for e.g. sin(x)cos(y). Note that the likelihood of randomly selecting the genes for a given analytical expression will not just be a function of the length of the expression, but also of the types of components needed from the grammar. This is because the different components are found taking the modulus with respect to different numbers. 
+One might wonder why the analytical solutions are found for the ODEs and the PDE tested, but not for the diffusion equation. This is likely because of the sheer length of the functional expression in terms of the genes, which is 25 genes long for the diffusion equation. Randomly reproducing this sequence is far less likely than to randomly generate the genetic sequence coding for e.g. sin(x)cos(y). Note that the likelihood of randomly selecting the genes for a given analytical expression will not just be a function of the length of the expression, but also of the types of components needed from the grammar. This is because the different components are found taking the modulus with respect to different numbers.
 
-Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this. 
+Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this.
 
 \section{Conclusion}
 
-The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations. 
+The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
 
 
 \bibliographystyle{plain}
