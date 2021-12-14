@@ -1,4 +1,4 @@
-\documentclass[multicolumn, 12pt]{extarticle}
+\documentclass[multicolumn, 10pt]{extarticle}
 \usepackage[english]{babel}
 \usepackage{NotesTeX}
 \usepackage{subfigure}
@@ -79,9 +79,9 @@ where $x$ is the length along the rod, and $t$ is time. The boundary and intial 
 \end{align*}
 
 It is easily verifiable that the specific analytic solution is
-\begin{equation*}
+\begin{equation}\label{eq:anal}
 	u(x, t) = e^{-\pi^2t}\sin(\pi x).
-\end{equation*}
+\end{equation}
 
 \subsection{Explicit Schemes}
 
@@ -127,11 +127,15 @@ Genetic algorithms have been found to be useful in various optimisation problems
 \subsection{Differential equation for eigenvectors of symmetrix matrices}
 While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are complete different beasts, however. While possible to solve, more effor is needed to implement in an explicit scheme. This is where the power of neural networks come in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
 
-Zhang Yi and Yan Fu showed in \cite{symmetric} that the attractors of the solutions to the non-linear differential equation
-\begin{equation*}
+Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetrix $n\times n$ matrix $A$. It will here be stated without proof, as this can be found in their paper. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
+\begin{equation}\label{eq:diff_sym}
 	\dot{x}(t) = x(0)^Tx(0)Ax(t)-x(t)^TAx(t)x(t)
-\end{equation*}
-for $t>0$ are the eigenvectors of the symmetric $n\times n$ matrix $A$. $x(0)$ is any vector $\in \mathbb{R}^n$. The solution $x(t)$ is as before the output layer of the neural network, evaluated at $t>0$, while $x(0)$ is an arbitrary initial vector.
+\end{equation}
+
+for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$. Then the corresponding eigenvalue can then be found as 
+\begin{equation}
+	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
+\end{equation}
 
 
 \section{Methods}
@@ -147,21 +151,21 @@ Specifically, the $L_2$-regularization parameter $\lambda$ was in previous work 
 
 One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
 The specific expressions were as follows, in order of presented above
-\begin{align*}
+\begin{align*}\label{eq:ls}
 	\eta(t) & = \eta_0,
 	\\
 	\eta(t) & = \eta_0 (1 - t),
 	\\
-	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9),
+	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9), \numberthis
 	\\
 	\eta(t) & = \eta_0 (2 - \cos(t)),
 	\\
 	\eta(t) & = \eta_0 \cos(t),
 \end{align*}
-where $t$ is the current epoch, divided by total number of epochs.
+where $t$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before dereasing again, allowing for convergence into local minimum. The increasing cosine is counterintuevly increasing the learning rate with time, to see how this affects the results, while the normal cosine has it decreasing, but slowly. Many more could have been tested, but these give a nice range of behaviours to test.
 
 \subsubsection{Solving the differential equation}
-When solving the differential equation \eqref{eq:diff}, both the explicit scheme (xxx ref expl scheme), and the neural network were used. The results were compared to the analytical solution. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit (xxx ref stability limit). The same stabiliy criteria is not appliable to the neural network, so
+When solving the differential equation \eqref{eq:diff}, both the explicit scheme (xxx ref expl scheme), and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit (xxx ref stability limit). The same stabiliy criteria is not appliable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The naural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore the neural network is only used for the first set of stepsizes.
 
 The trial function used to solve the differential equation \eqref{eq:diff} with initial and boundary conditions \eqref{eq:boundary}, satisfying the conditions set in \ref{sec:trialf} was
 \begin{equation}
@@ -301,6 +305,22 @@ After the crossover operation, a mutation operation is applied. Two rates are im
 
 \section{Results and Discussion}
 
+\subsection{Neural network and explicit scheme}
+For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 2 hidden layers, the first with 30 nodes, the second with 20.
+
+With these parameters, the learning schedules in \eqref{eq:ls} were tried, now runing for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, startting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods. However, while the increasing cosine starts of the best, it makes a sudden sharp jump, far above the top of the figure, peaking at around 2, before making its way down again. Such sudden jumps are common when the gradient descent has to get out of a local minimum. While it is quite possible this schedule would have given the lowest cost at the end, had it not been for this jump, such spikes give uncertainty in the results. It can therefor be concluded that the constant learning rate is best, as it gives good and consistent results.
+
+\begin{figure}[tb]
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{ls_shapes.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{cost_ls.png}
+	\endminipage\hfill
+	\caption{Top: Shape of learning schedules in \eqref{eq:ls} over 5000 epochs. Bottom: cost function as function of epoch for the last 4000 epochs of the simulation.}
+	\label{fig:ls}
+\end{figure}
+
 \subsection{Genetic Algorithm}
 \subsubsection{Verification}
 First, in order to test the algorithm, some of the results presented in \cite{Lagaris} were reproduced, namely two ordinary differential equations (ODEs) and one partial differential equation (PDE). The following two ordinary differential equations were tested:
@@ -402,6 +422,10 @@ Finally, it is important to stress that the results here obtained are fairly unr
 \section{Conclusion}
 
 The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
+
+\appendix
+\section{And now for something completely different}
+Bias-variance tradeoff. Maybe
 
 
 \bibliographystyle{plain}
