@@ -28,10 +28,11 @@
 
 \onecolumn
 
+
 \graphicspath{{../plots/}}
 \newcommand{\includegraphicsmaybe}[2][]{\IfFileExists{../plots/#2}{\includegraphics[#1]{#2}}{\includegraphics[width=0.7\linewidth]{giffel.jpg}}}
 
-%\collaborationImg{\includegraphics[width=30mm]{UIO.png}}
+
 
 \author{\Large Sara Pernille Jensen \& Håkon Olav Torvik}
 \title{\Huge P3: We did a thing}
@@ -135,9 +136,13 @@ for $t>0$ are the eigenvectors of the symmetric $n\times n$ matrix $A$. $x(0)$ i
 The code where the algorithms are implemented can be found on the \href{https://github.com/SaraPJensen/FYS-STK/tree/main/Project3/code}{GitHub for this paper}.
 
 \subsection{Neural networks}
-There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The implement PDE-solver network in this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus most will not be recounted here, only the parameters what was then found to be interesting, and the differences made in the new implementation.
+There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The PDE-solver network implemented for this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus will not be detailed here. This includes a learning rate $\eta$, $L_2$-regularization $\lambda$ and momentum-parameter $\gamma$. Further, the activation functions studied were sigmoid, tanh, and parametrized ReLU (PReLU). PReLU is a generalized form of ReLU and Leaky ReLU, taking a parameter $\alpha$ setting the slope of the negative activation. The weights were initialized using normalized Xavier-initialization in the case of sigmoid and tanh activation functions, while He-initialization was used for PReLU. 
 
-In \cite{p2HO}, the activation function was found to be especially important for getting good results. 
+, and thus most will not be recounted here, only the parameters what was then found to be interesting, and the differences made in the new implementation.
+
+While the best method for determining the best parameters for a neural network if searching the entire hyperparameter-space, this is very time-consuming, and will spend a lot of time on some parameter values giving quite bad results. Therefore, a sort of manual grid-search was performed, one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they was in turn tweaked one by one until an optimal value was found for the set of other parameters.  This will not ensure the globally optimal parameter set, 
+The $L_2$-regularization 
+In \cite{p2HO}, the choice of activation function was found to be especially important for getting good results. 
 
 For \eqref{eq:diff}, with initial and boundary conditions \eqref{eq:boundary},
 \begin{equation}
