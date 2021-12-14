@@ -335,6 +335,16 @@ The crossover scheme determines how new chromosomes are created from the past ge
 
 After the crossover operation, a mutation operation is applied. Two rates are important in choosing how this is done. Firstly, one must decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
+\subsection{Finding eigenvalues of symmetrix matrices}
+A symmtrix $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
+\begin{equation*}
+	A=\frac{Q^T+Q}{2}.
+\end{equation*}
+
+A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed
+
+
+
 \section{Results and Discussion}
 
 \subsection{Neural network and explicit scheme}
