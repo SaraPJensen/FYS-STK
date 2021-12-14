@@ -87,37 +87,37 @@ It is easily verifiable that the specific analytic solution is
 Traditionally, differential equations have been solved using numerical finite difference methods, either explicit or implicit. Here, the results obtained using the different machine learning algorithms will be compared with the explicit forward Euler method. First, discretise the variables as follows.
 
 \begin{align*}
-x \rightarrow x_{i} = i\Delta x   \\
-t \rightarrow t_{j} = j \Delta t   \\
-u(x, t)  \rightarrow u_{i}^{j}
+	x \rightarrow x_{i} = i\Delta x  \\
+	t \rightarrow t_{j} = j \Delta t \\
+	u(x, t)  \rightarrow u_{i}^{j}
 \end{align*}
 
-such that the lower index of u refers to the spatial step and the upper index to the temporal step. 
+such that the lower index of u refers to the spatial step and the upper index to the temporal step.
 
 The necessary derivatives are given by
 
 \begin{align*}
-\frac{\partial^2u_i^j}{\partial x^2} & = \frac{u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}}{\Delta x^{2}},   \\
-\frac{\partial u_i^j}{\partial t} & = \frac{u_{i}^{j+1} - u_{i}^{j}}{\Delta t}.   \\
+	\frac{\partial^2u_i^j}{\partial x^2} & = \frac{u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}}{\Delta x^{2}}, \\
+	\frac{\partial u_i^j}{\partial t}    & = \frac{u_{i}^{j+1} - u_{i}^{j}}{\Delta t}.                    \\
 \end{align*}
 
 Combining the two and solving for $u_{i}^{j+1}$ gives
 
-\begin{equation*}
-u_{i}^{j+1} = r(u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}) + u_{i}^{j},
-\end{equation*}
+\begin{equation}\label{eq:euler}
+	u_{i}^{j+1} = r(u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}) + u_{i}^{j},
+\end{equation}
 
-where 
+where
 
 \begin{equation*}
-r = \frac{\Delta t}{\Delta x^{2}}. 
+	r = \frac{\Delta t}{\Delta x^{2}}.
 \end{equation*}
 
 Thus, given all the spatial steps at the current time-step, all spatial times are future time-steps can be found by iteratively solving the above equation. Further, the step sizes $\Delta x$ and $\Delta t$ for the explicit scheme are related by the stability criterion
 
-\begin{equation*}
-\frac{\Delta t}{\Delta x^{2}} = \le \frac{1}{2}. 
-\end{equation*}
+\begin{equation}\label{eq:stability_crit}
+	\frac{\Delta t}{\Delta x^{2}} \le \frac{1}{2}.
+\end{equation}
 
 \subsection{Neural Network}
 A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
@@ -164,7 +164,7 @@ Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equatio
 	\dot{x}(t) = x(0)^Tx(0)Ax(t)-x(t)^TAx(t)x(t)
 \end{equation}
 
-for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$. Then the corresponding eigenvalue can then be found as 
+for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$. Then the corresponding eigenvalue can then be found as
 \begin{equation}
 	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
 \end{equation}
@@ -181,7 +181,7 @@ While the best method for determining the best parameters for a neural network i
 
 Specifically, the $L_2$-regularization parameter $\lambda$ was in previous work found to not give benefitial results when non-zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems like over - or underflow, in order to ensure as quick convergence as possible.
 
-One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
+One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. It is often benefitial to decrease the learning rate, as it allows for the convergence into a minimum. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
 The specific expressions were as follows, in order of presented above
 \begin{align*}\label{eq:ls}
 	\eta(t) & = \eta_0,
@@ -194,10 +194,10 @@ The specific expressions were as follows, in order of presented above
 	\\
 	\eta(t) & = \eta_0 \cos(t),
 \end{align*}
-where $t$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before dereasing again, allowing for convergence into local minimum. The increasing cosine is counterintuevly increasing the learning rate with time, to see how this affects the results, while the normal cosine has it decreasing, but slowly. Many more could have been tested, but these give a nice range of behaviours to test.
+where $t$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before dereasing again, allowing for convergence into local minimum. The increasing cosine is counterintuetivly increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top figure in \ref{fig:ls}.
 
 \subsubsection{Solving the differential equation}
-When solving the differential equation \eqref{eq:diff}, both the explicit scheme (xxx ref expl scheme), and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit (xxx ref stability limit). The same stabiliy criteria is not appliable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The naural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore the neural network is only used for the first set of stepsizes.
+When solving the differential equation \eqref{eq:diff}, both the explicit scheme \eqref{eq:euler}, and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit \eqref{eq:stability_crit}. The same stabiliy criteria is not appliable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The naural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore the neural network is only used for the first set of stepsizes.
 
 The trial function used to solve the differential equation \eqref{eq:diff} with initial and boundary conditions \eqref{eq:boundary}, satisfying the conditions set in \ref{sec:trialf} was
 \begin{equation}
@@ -338,9 +338,13 @@ After the crossover operation, a mutation operation is applied. Two rates are im
 \section{Results and Discussion}
 
 \subsection{Neural network and explicit scheme}
-For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 2 hidden layers, the first with 30 nodes, the second with 20.
+For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 6 hidden layers, each with 10 nodes.
 
-With these parameters, the learning schedules in \eqref{eq:ls} were tried, now runing for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, startting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods. However, while the increasing cosine starts of the best, it makes a sudden sharp jump, far above the top of the figure, peaking at around 2, before making its way down again. Such sudden jumps are common when the gradient descent has to get out of a local minimum. While it is quite possible this schedule would have given the lowest cost at the end, had it not been for this jump, such spikes give uncertainty in the results. It can therefor be concluded that the constant learning rate is best, as it gives good and consistent results.
+With these parameters, the learning schedules in \eqref{eq:ls} were applied, now runing for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best, although starting out as the highest. This is likely due so having an initially lower learning rate.
+
+After about 3000 epochs, the increasing cosine makes a massive leap up, before falling back down, though never reaching as low levels as before the spike. While the exact cause of this is not know, it is common behaviour when the gradient descent takes a leap to get out of a local minimum.
+
+
 
 \begin{figure}[tb]
 	\minipage{0.49\textwidth}
