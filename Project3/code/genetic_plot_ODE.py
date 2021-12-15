@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 
 def progress_top():
+    '''
+    Plots the fitness of the top chromosome over the generations for the different diff. eqs. solved.
+    '''
     Equation = ["ODE1", "ODE2", "PDE"]
 
     method = "tour"
@@ -38,14 +41,15 @@ def progress_top():
 
 
 def progress_top_random(eq):   #eq == "ODE" or "PDE"
+    '''
+    Plots the fitness of the top chromosome over the generations for the chosen diff. eq. using tournament selection and random selection.
+    '''
 
-    #Equation = ["ODE", "PDE"]
     Method = ["tour", "random"]
     Title = ["Tournament", "Random"]
 
     fig = go.Figure()
 
-    #for eq in Equation:
 
     for method, title in zip(Method, Title):
 
@@ -76,7 +80,10 @@ def progress_top_random(eq):   #eq == "ODE" or "PDE"
 
 
 def main():
-    progress_top_random("PDE")
+    '''
+    Calls on the function of choice.
+    '''
+    #progress_top_random("ODE")
     #progress_top()
 
 

@@ -14,6 +14,9 @@ warnings.filterwarnings("ignore")
 
 
 class Chromosome:
+    '''
+    Generates an object for each chromosome in the population. The genetic sequence is read and translated into an analytic expression in the constructor.
+    '''
     def __init__(self, genome):
         self.genome = genome
         self.g = 0
@@ -23,11 +26,14 @@ class Chromosome:
 
             self.equation += "+" + self.expression(self.genome[self.g])
 
-        if "stop" in self.equation:
+        if "stop" in self.equation:  #if no complete expression was found after reading all the genes, set the expression to "0.0"
             self.equation = "0.0"
 
 
     def read_genes(self):
+        '''
+        Read through the genetic sequence to construct the analytic expression
+        '''
         self.g += 1
 
         if self.g > (len(self.genome) - 1):
@@ -37,6 +43,9 @@ class Chromosome:
 
 
     def expression(self, index, stop = False):
+        '''
+        Inserts expression
+        '''
         if index == "stop":
             return "stop"
 
@@ -50,6 +59,9 @@ class Chromosome:
 
 
     def operator(self, index, stop = False):
+        '''
+        Inserts operator
+        '''
         if index == "stop":
             return "stop"
 
@@ -57,7 +69,11 @@ class Chromosome:
         ope = {0: "+", 1: "-", 2: "*", 3: "/"}
         return ope[i]
 
+
     def func(self, index, stop = False):
+        '''
+        Inserts functional expression
+        '''
         if index == "stop":
             return "stop"
 
@@ -67,6 +83,9 @@ class Chromosome:
 
 
     def digit(self, index, stop = False):
+        '''
+        Inserts digit
+        '''
         if index == "stop":
             return "stop"
 
@@ -80,6 +99,9 @@ class Chromosome:
 
 
     def boundary_diff(self, func,  x_range, t_range):
+        '''
+        Calculate and return the fitness due to deviance from the boundary conditions.
+        '''
         x_0 = 0
         x_L = 0
         t_0 = 0
@@ -105,6 +127,10 @@ class Chromosome:
 
 
     def calc_fitness(self, x_range, t_range):
+        '''
+        Calculate the total fitness, both due to deviance from boundary conditions and from the differential equation.
+        It the expression does not contain either x or t, set the fitness very low (uninteresting answer).
+        '''
 
         if ("x" not in self.equation) or ("t" not in self.equation):
             self.fitness = -1e10
@@ -135,10 +161,17 @@ class Chromosome:
 
 
     def __gt__(self, other):
+        '''
+        Define how the object should be sorted, in reverse order.
+        '''
         return self.fitness < other.fitness
 
     def set_fitness(self, fitness):
+        '''
+        Set the fitness by force form the outside
+        '''
         self.fitness = fitness
+
 
     def get_fitness(self):
         return self.fitness
@@ -185,6 +218,10 @@ print(Ex2.get_equation())
 
 
 class Population:
+    '''
+    Construct the population containing all the chromosome-objects.
+    The genes are selected randomly for the first generation.
+    '''
     def __init__(self, size_pop, size_chrom, generations, x_range, t_range):
         self.size_pop = size_pop    #no. of chromosomes
         self.size_chrom = size_chrom    #no. of genes in each chromosome
@@ -205,6 +242,10 @@ class Population:
 
 
     def fitness(self, write = True):
+        '''
+        Calculate the fitness of each chromosome and sort them in order of fitness, the fittest first.
+        If write = True, return the fitness values of all the chromosomes and the equation of the best choromosomes, so this can be written to file.
+        '''
         for c in self.Chromosomes:
             c.calc_fitness(self.x_range, self.t_range)
 
@@ -236,8 +277,12 @@ class Population:
 
 
 
-    def breed_mix(self, mutation, genes):   #this gives poor results
-        elite = self.size_pop // 10   #pass on the 5% best individuals
+    def breed_mix(self, mutation, genes):
+        '''
+        Reproduction scheme. Pass on the elite unchanged, use probabilistic selection and mix the genes of the two parents perfectly to create a child,
+        before mutations are applied to half of the new children.
+        '''
+        elite = self.size_pop // 10   #pass on the 10% best individuals
         parents = 2*self.size_pop - elite*2
 
         #Find the chromosomes to reproduce to the next generation by using half a normal distribution with
@@ -266,7 +311,7 @@ class Population:
             for index in indices:
                 new_genome[index] = self.past_gen[chroms[i+1]].return_genes()[index]
 
-            #if i % 4 == 0:   #do this for 50% of the chromosomes
+            if i % 4 == 0:   #do this for 50% of the chromosomes
             new_genome = self.mutate(new_genome, mutation)
 
             self.Chromosomes[j] = Chromosome(new_genome)
@@ -274,46 +319,14 @@ class Population:
             i += 2
             j += 1
 
-
-
-    def breed_swap(self, mutation, genes):
-        elite = self.size_pop // 10   #pass on the 5% best individuals
-        parents = 2*self.size_pop - elite*2
-        chroms = halfnorm.rvs(loc = 0, scale = 0.2*self.size_pop, size = parents).astype(int)
-
-        for i in range(len(chroms)):
-            if chroms[i] > self.size_pop:
-                chroms[i] = 0
-
-        self.past_gen = self.Chromosomes
-
-        self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
-
-        for e in range(elite):   #pass on the best individuals to the next generation, must be an even number
-            self.Chromosomes[e] = self.past_gen[e]
-
-        i = 0
-        j = elite
-
-        while i < parents:
-
-            index = np.random.randint(0, 0.6 * genes -1)   #find where to swap
-            new_genome = np.zeros(genes)
-
-            new_genome[:index] = self.past_gen[chroms[i]].return_genes()[:index]  #use the first half of the genes from one chromosome, the second half of the other
-            new_genome[index:] = self.past_gen[chroms[i+1]].return_genes()[index:]
-
-            #if i % 4 == 0:   #do this for 50% of the chromosomes
-            new_genome = self.mutate(new_genome, mutation)
-
-            self.Chromosomes[j] = Chromosome(new_genome)
-
-            i += 2
-            j += 1
 
 
 
     def breed_tournament(self, mutation, genes):
+        '''
+        Reproduction scheme. Pass on the elite unchanged, use tournament selection to select the two parents. Use each pair of parents to create two new children using swapping.
+        Mutations are applied to half the new children.
+        '''
         elite = self.size_pop // 10
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
@@ -350,7 +363,10 @@ class Population:
 
 
     def breed_random(self, mutation, genes):
-        elite = self.size_pop // 10   #must be an even number
+        '''
+        Reproduction scheme. Pass on the elite unchanged. The rest of the chromosomes are created randomly.
+        '''
+        elite = self.size_pop // 10
         self.past_gen = self.Chromosomes
         self.Chromosomes = np.zeros(self.size_pop, dtype=Chromosome)
 
@@ -374,7 +390,9 @@ class Population:
 
 
     def mutate(self, genome, mutations):
-        #Makes a random mutation to a number of the genes by replacing them with a random number
+        '''
+        Apply "mutations" random mutations to the genome by replacing the genes with a random number.
+        '''
         for i in range(mutations):
             index = np.random.randint(1, len(genome))   #find where to swap, ensure that the first gene is 0 or 2
             genome[index] = np.random.randint(0, 255)   #find where to swap
@@ -382,6 +400,9 @@ class Population:
 
 
     def print_eqs(self, number):
+        '''
+        Print out all the equations and their corresponding fitness, if you should so desire.
+        '''
         for c in self.Chromosomes[:number]:
             print(c.get_equation())
             print(c.get_fitness())
@@ -391,9 +412,11 @@ class Population:
 
 
 
-
-
 def main():
+    '''
+    Run the simulation. Everything is hard-coded, so need to change the variables to decide on variables such as population size, genome size, mutation rate and number of generations.
+    The results are written to a file.
+    '''
     x_range = np.linspace(0.0, 1, 10)
     t_range = np.linspace(0.0, 1, 10)
 
@@ -404,9 +427,7 @@ def main():
 
     Pop = Population(pop_size, genes, generations, x_range, t_range)
 
-
-
-    filename = "Diff_eq_tour_mutation" + str(np.random.randint(0, 1000000))
+    filename = "Diff_eq_tour" + str(np.random.randint(0, 1000000))
 
     file = open(f"data/{filename}.csv", "w")
     file.write(f"Diffusion equation - Pop_size: {pop_size} - Genes: {genes} - Method: tournament 5 - Mutated: {mutation_rate} - Mutation rate: 100% - Elite: 10% \n")
@@ -414,6 +435,7 @@ def main():
     file.close()
 
     print("Filename: ", filename)
+
 
 
     for i in range(generations):
