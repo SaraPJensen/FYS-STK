@@ -1,4 +1,4 @@
-\documentclass[multicolumn, 12pt]{extarticle}
+\documentclass[multicolumn, 10pt]{extarticle}
 \usepackage[english]{babel}
 \usepackage{NotesTeX}
 \usepackage{subfigure}
@@ -79,45 +79,45 @@ where $x$ is the length along the rod, and $t$ is time. The boundary and intial 
 \end{align*}
 
 It is easily verifiable that the specific analytic solution is
-\begin{equation*}
+\begin{equation}\label{eq:anal}
 	u(x, t) = e^{-\pi^2t}\sin(\pi x).
-\end{equation*}
+\end{equation}
 
 \subsection{Explicit Schemes}
 Traditionally, differential equations have been solved using numerical finite difference methods, either explicit or implicit. Here, the results obtained using the different machine learning algorithms will be compared with the explicit forward Euler method. First, discretise the variables as follows.
 
 \begin{align*}
-x \rightarrow x_{i} = i\Delta x   \\
-t \rightarrow t_{j} = j \Delta t   \\
-u(x, t)  \rightarrow u_{i}^{j}
+	x \rightarrow x_{i} = i\Delta x  \\
+	t \rightarrow t_{j} = j \Delta t \\
+	u(x, t)  \rightarrow u_{i}^{j}
 \end{align*}
 
-such that the lower index of u refers to the spatial step and the upper index to the temporal step. 
+such that the lower index of u refers to the spatial step and the upper index to the temporal step.
 
 The necessary derivatives are given by
 
 \begin{align*}
-\frac{\partial^2u_i^j}{\partial x^2} & = \frac{u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}}{\Delta x^{2}},   \\
-\frac{\partial u_i^j}{\partial t} & = \frac{u_{i}^{j+1} - u_{i}^{j}}{\Delta t}.   \\
+	\frac{\partial^2u_i^j}{\partial x^2} & = \frac{u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}}{\Delta x^{2}}, \\
+	\frac{\partial u_i^j}{\partial t}    & = \frac{u_{i}^{j+1} - u_{i}^{j}}{\Delta t}.                    \\
 \end{align*}
 
 Combining the two and solving for $u_{i}^{j+1}$ gives
 
-\begin{equation*}
-u_{i}^{j+1} = r(u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}) + u_{i}^{j},
-\end{equation*}
+\begin{equation}\label{eq:euler}
+	u_{i}^{j+1} = r(u_{i+1}^{j} - 2u_{i}^{j} + u_{i-1}^{j}) + u_{i}^{j},
+\end{equation}
 
-where 
+where
 
 \begin{equation*}
-r = \frac{\Delta t}{\Delta x^{2}}. 
+	r = \frac{\Delta t}{\Delta x^{2}}.
 \end{equation*}
 
 Thus, given all the spatial steps at the current time-step, all spatial times are future time-steps can be found by iteratively solving the above equation. Further, the step sizes $\Delta x$ and $\Delta t$ for the explicit scheme are related by the stability criterion
 
-\begin{equation*}
-\frac{\Delta t}{\Delta x^{2}} = \le \frac{1}{2}. 
-\end{equation*}
+\begin{equation}\label{eq:stability_crit}
+	\frac{\Delta t}{\Delta x^{2}} \le \frac{1}{2}.
+\end{equation}
 
 \subsection{Neural Network}
 A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
@@ -159,11 +159,15 @@ Genetic algorithms have been found to be useful in various optimisation problems
 \subsection{Differential equation for eigenvectors of symmetrix matrices}
 While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are complete different beasts, however. While possible to solve, more effor is needed to implement in an explicit scheme. This is where the power of neural networks come in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
 
-Zhang Yi and Yan Fu showed in \cite{symmetric} that the attractors of the solutions to the non-linear differential equation
-\begin{equation*}
+Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetrix $n\times n$ matrix $A$. It will here be stated without proof, as this can be found in their paper. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
+\begin{equation}\label{eq:diff_sym}
 	\dot{x}(t) = x(0)^Tx(0)Ax(t)-x(t)^TAx(t)x(t)
-\end{equation*}
-for $t>0$ are the eigenvectors of the symmetric $n\times n$ matrix $A$. $x(0)$ is any vector $\in \mathbb{R}^n$. The solution $x(t)$ is as before the output layer of the neural network, evaluated at $t>0$, while $x(0)$ is an arbitrary initial vector.
+\end{equation}
+
+for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$. Then the corresponding eigenvalue can then be found as
+\begin{equation}
+	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
+\end{equation}
 
 
 \section{Methods}
@@ -177,23 +181,23 @@ While the best method for determining the best parameters for a neural network i
 
 Specifically, the $L_2$-regularization parameter $\lambda$ was in previous work found to not give benefitial results when non-zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems like over - or underflow, in order to ensure as quick convergence as possible.
 
-One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
+One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. It is often benefitial to decrease the learning rate, as it allows for the convergence into a minimum. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
 The specific expressions were as follows, in order of presented above
-\begin{align*}
+\begin{align*}\label{eq:ls}
 	\eta(t) & = \eta_0,
 	\\
 	\eta(t) & = \eta_0 (1 - t),
 	\\
-	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9),
+	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9), \numberthis
 	\\
 	\eta(t) & = \eta_0 (2 - \cos(t)),
 	\\
 	\eta(t) & = \eta_0 \cos(t),
 \end{align*}
-where $t$ is the current epoch, divided by total number of epochs.
+where $t$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before dereasing again, allowing for convergence into local minimum. The increasing cosine is counterintuetivly increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top figure in \ref{fig:ls}.
 
 \subsubsection{Solving the differential equation}
-When solving the differential equation \eqref{eq:diff}, both the explicit scheme (xxx ref expl scheme), and the neural network were used. The results were compared to the analytical solution. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit (xxx ref stability limit). The same stabiliy criteria is not appliable to the neural network, so
+When solving the differential equation \eqref{eq:diff}, both the explicit scheme \eqref{eq:euler}, and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit \eqref{eq:stability_crit}. The same stabiliy criteria is not appliable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The naural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore the neural network is only used for the first set of stepsizes.
 
 The trial function used to solve the differential equation \eqref{eq:diff} with initial and boundary conditions \eqref{eq:boundary}, satisfying the conditions set in \ref{sec:trialf} was
 \begin{equation}
@@ -331,7 +335,37 @@ The crossover scheme determines how new chromosomes are created from the past ge
 
 After the crossover operation, a mutation operation is applied. Two rates are important in choosing how this is done. Firstly, one must decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
+\subsection{Finding eigenvalues of symmetrix matrices}
+A symmtrix $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
+\begin{equation*}
+	A=\frac{Q^T+Q}{2}.
+\end{equation*}
+
+A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed
+
+
+
 \section{Results and Discussion}
+
+\subsection{Neural network and explicit scheme}
+For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 6 hidden layers, each with 10 nodes.
+
+With these parameters, the learning schedules in \eqref{eq:ls} were applied, now runing for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best, although starting out as the highest. This is likely due so having an initially lower learning rate.
+
+After about 3000 epochs, the increasing cosine makes a massive leap up, before falling back down, though never reaching as low levels as before the spike. While the exact cause of this is not know, it is common behaviour when the gradient descent takes a leap to get out of a local minimum.
+
+
+
+\begin{figure}[tb]
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{ls_shapes.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\includegraphicsmaybe[width=\linewidth]{cost_ls.png}
+	\endminipage\hfill
+	\caption{Top: Shape of learning schedules in \eqref{eq:ls} over 5000 epochs. Bottom: cost function as function of epoch for the last 4000 epochs of the simulation.}
+	\label{fig:ls}
+\end{figure}
 
 \subsection{Genetic Algorithm}
 \subsubsection{Verification}
@@ -434,6 +468,10 @@ Finally, it is important to stress that the results here obtained are fairly unr
 \section{Conclusion}
 
 The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
+
+\appendix
+\section{And now for something completely different}
+Bias-variance tradeoff. Maybe
 
 
 \bibliographystyle{plain}
