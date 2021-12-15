@@ -5,41 +5,13 @@ from matplotlib import cm
 import numpy as np
 import pandas as pd
 
-def Plotly(equation):
-    func = lambda x, t: eval(equation)
-    x_range = np.linspace(0.000001, 1, 20)   #prevent division by zero
-    t_range = np.linspace(0.000001, 1, 20)
-
-    x, t = np.meshgrid(x_range, t_range)
-    T = func(x, t)
-
-    fig = go.Figure(data=[go.Surface(x=x, y=t, z=T)])
-    fig.show()
-
-
-
-def Plot(equation):
-    func = lambda x, t: eval(equation)
-    x_range = np.linspace(0.000001, 1, 20)   #prevent division by zero
-    t_range = np.linspace(0.000001, 1, 20)
-
-    x, t = np.meshgrid(x_range, t_range)
-    T = func(x, t)
-
-    fig_predict = plt.figure()
-    ax_predict = fig_predict.gca(projection='3d')
-
-    surf_predict = ax_predict.plot_surface(x, t, T, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False)
-
-    fig_predict.colorbar(surf_predict, shrink=0.5, aspect=5)
-    plt.show()
-
-
 
 def progress_top():
-    method = ["mix", "swap", "tour", "random"]
-    Method = ["Mix", "Swap", "Tournament", "Random"]
+    '''
+    Plots the fitness of the best chromosome at each generation for the different methods used to solve the diffusion equation.
+    '''
+    method = ["mix", "tour", "random"]
+    Method = ["Mixing", "Tournament", "Random"]
 
     fig = go.Figure()
 
@@ -54,12 +26,12 @@ def progress_top():
             y = df["top_fitness"][:500],
             mode="lines",
             line=dict(width = 5),
-            name = f"{title} selection"))
+            name = title))
 
     fig.update_layout(
         font_family="Garamond",
-        font_size=30,
-        title = "Fitness of the best chromosome for the diffusion equation",
+        font_size=35,
+        title = "Fitness of the best chromosome",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -68,9 +40,12 @@ def progress_top():
 
 
 def progress_avg10():
+    '''
+    Plots the average fitness of the 10 % best chromosomes at each generation for the different methods used to solve the diffusion equation.
+    '''
 
-    method = ["mix", "swap", "tour", "random"]
-    Method = ["Mix", "Swap", "Tournament", "Random"]
+    method = ["mix", "tour"]
+    Method = ["Mixing", "Tournament"]
 
     fig = go.Figure()
 
@@ -84,12 +59,12 @@ def progress_avg10():
             y = df["avg_fitness_10"][:500],
             mode="lines",
             line=dict(width = 5),
-            name = f"{title} selection"))
+            name = title))
 
     fig.update_layout(
         font_family="Garamond",
-        font_size=30,
-        title = "Average fitness of the 10% best chromosomes for the diffusion equation",
+        font_size=35,
+        title = "Average fitness of the 10% best chromosomes",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -98,8 +73,11 @@ def progress_avg10():
 
 
 def progress_avg70():
-    method = ["mix", "swap", "tour", "random"]
-    Method = ["Mix", "Swap", "Tournament", "Random"]
+    '''
+    Plots the average fitness of the 70 % best chromosomes at each generation for the different methods used to solve the diffusion equation.
+    '''
+    method = ["mix", "tour"]
+    Method = ["Mixing", "Tournament"]
 
     fig = go.Figure()
 
@@ -109,16 +87,54 @@ def progress_avg70():
         df = pd.read_csv(path, header=1, sep=",")
 
         fig.add_trace(go.Scatter(
-            x = df["Generation"][2:500],
-            y = df["avg_fitness_70"][2:500],
+            x = df["Generation"][:500],
+            y = df["avg_fitness_70"][:500],
             mode="lines",
             line=dict(width = 5),
-            name = f"{title} selection"))
+            name = title))
 
     fig.update_layout(
         font_family="Garamond",
-        font_size=30,
-        title = "Average fitness of the 70% best chromosomes for the diffusion equation",
+        font_size=35,
+        title = "Average fitness of the 70% best chromosomes",
+        xaxis_title="Generation",
+        yaxis_title= "Fitness")
+
+    fig.show()
+
+
+def variable_comparison(method):   #method = "mix" or "tour"
+    '''
+    Plots the fitness of the best chromosome at each generation for the different variables used to solve the diffusion equation, either using mixing or tournament selection.
+    '''
+
+    Var = ["", "_elite", "_mutation"]
+    Title = ["Default variables", "Smaller elite", "Different mutation scheme"]
+
+    if method == "tour":
+        name = "tournament selection"
+
+    else:
+        name = "mixing"
+
+    fig = go.Figure()
+
+    for var, title in zip(Var, Title):
+
+        path = f"data/Diff_eq_{method}{var}.csv"
+        df = pd.read_csv(path, header=1, sep=",")
+
+        fig.add_trace(go.Scatter(
+            x = df["Generation"][:500],
+            y = df["top_fitness"][:500],
+            mode="lines",
+            line=dict(width = 5),
+            name = title))
+
+    fig.update_layout(
+        font_family="Garamond",
+        font_size=35,
+        title = f"Fitness of the best chromosome using {name}",
         xaxis_title="Generation",
         yaxis_title= "Fitness")
 
@@ -127,9 +143,16 @@ def progress_avg70():
 
 
 
+
+
 def main():
-    progress_top()
+    '''
+    Calls of the functions of choice.
+    '''
+    #progress_top()
     #progress_avg10()
     #progress_avg70()
+    #variable_comparison("mix")
+    #variable_comparison("tour")
 
 main()
