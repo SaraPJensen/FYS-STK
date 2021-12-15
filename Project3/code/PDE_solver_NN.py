@@ -115,10 +115,7 @@ class PDE_solver_NN_base(Activations):
 
                     if cf < self.tol or np.isnan(cf):
                         break
-                    if t % 2 == 0:
-                        pbar.set_description("🕺".join(f"{cf:.10f}"))
-                    else:
-                        pbar.set_description("💃".join(f"{cf:.10f}"))
+                    pbar.set_description(f"{cf:.10f}")
                     self.record(t, cf, X, P)
 
             except KeyboardInterrupt:
