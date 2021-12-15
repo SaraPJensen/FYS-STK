@@ -178,7 +178,9 @@ Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equatio
 \end{equation}
 
 for $t>0$, will, for large $t$, converge to an eigenvector of $A$, denoted $\nu$. The corresponding eigenvalue can then be found as
+
 \begin{equation}
+\label{eq:eigval}
 	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
 \end{equation}
 
@@ -340,15 +342,22 @@ The crossover scheme determines how new chromosomes are created from the past ge
 
 After the crossover operation, a mutation operation is applied. Here, one must first decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
+
 \subsection{Finding eigenvalues of symmetric matrices}
-A symmtric $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
+A symmetric $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
 \begin{equation*}
+
 	A=\frac{Q^T+Q}{2}.
-\end{equation*}
+\end{equation}
 
-A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed
+A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed in this case, as there are no initial or boundary conditions to consider. When evaluating the differential equation, this is done for $t=t_{max}$, which is set to a sufficiently high value of $t_{max}=100$.
 
+A standard linear algebra library was used to find the eigenvalues and vectors of the matrix $A$, for comparison with the value found by the neural network. When comparing these, the log of the relative error was calculated as
 
+\begin{equation}\label{eq_rel_err}
+	\Delta_{rel} = \log_{10}\left(\frac{y_c - y_t}{y_t}\right),
+\end{equation}
+where $y_c$ is our computed value, and $y_t$ the 'true' found by the library.
 
 \section{Results and Discussion}
 
@@ -473,6 +482,68 @@ To test this assumption, a third random selection scheme was introduced. Here, a
 One might wonder why the analytical solutions are found for the ODEs and the PDE tested, but not for the diffusion equation. This is likely because of the sheer length of the functional expression in terms of the genes, which is 24 genes long for the diffusion equation. Randomly reproducing this sequence is far less likely than to randomly generate the genetic sequence coding for e.g. sin(x)cos(y). Note that the likelihood of randomly selecting the genes for a given analytical expression will not just be a function of the length of the expression, but also of the types of components needed from the grammar. This is because the different components are found taking the modulus with respect to different numbers.
 
 Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this.
+
+\subsection{Finding eigenvector of symmetrix matrix}
+A symmetrix matrix $A$ was generated using \eqref{eq:symmat}, giving
+
+
+\newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
+
+\begin{equation*}
+	\scalemath{0.8}{
+		A = \begin{bmatrix}
+			-0.0005 & 0.0130  & 0.5017  & 1.0018  & -0.8294 & 0.5650  \\
+			0.0130  & 0.5403  & -0.5811 & -0.0028 & 0.3717  & -1.2035 \\
+			0.5017  & -0.5811 & -0.8638 & 0.3562  & 0.2334  & -0.8832 \\
+			1.0018  & -0.0028 & 0.3562  & 0.9973  & 0.5236  & -1.4400 \\
+			-0.8294 & 0.3717  & 0.2334  & 0.5236  & 0.3191  & 1.1358  \\
+			0.5650  & -1.2035 & -0.8832 & -1.4400 & 1.1358  & -0.1203 \\
+		\end{bmatrix}}.
+\end{equation*}
+
+Using a standard linear algebra library, the eigenvalues were obtained as
+\begin{align*}
+	\lambda_1 & = -3.1388, \\
+	\lambda_2 & = 2.5308,  \\
+	\lambda_3 & = -0.8786, \\
+	\lambda_4 & = 0.0559,  \\
+	\lambda_5 & = 1.2885,  \\
+	\lambda_6 & = 1.0142.
+\end{align*}
+
+The startvector generated was
+\begin{equation*}
+	x(0) = \begin{pmatrix}
+		0.7598  \\
+		1.8274  \\
+		-0.6607 \\
+		-0.8078 \\
+		0.8878  \\
+		-0.2174
+	\end{pmatrix}.
+\end{equation*}
+
+A neural network with 2 hidden layers, each with 30 nodes, a constant learning rate of $\eta_0=0.0003$, and no momentum or $L_2$-regularisation parameter was initialized with the activation function $tanh$. Using the network to solve \eqref{eq:diff_sym} with this $A$ and $x(0)$, after 50 epochs, the resulting vector at $t=100$ was
+\begin{equation*}
+	x(t_{max}) = \begin{pmatrix}
+		0.6751 \\
+		0.5289 \\
+		0.3373 \\
+		0.0054 \\
+		0.0156 \\
+		0.3878
+	\end{pmatrix}.
+\end{equation*}
+
+Using \eqref{eq:eigval}, the corresponding eigenvalue was $$\lambda = 0.05587217366620945.$$ This is similar to $\lambda_4$. Using the non-rounded value, the log of the relative error was $-4.97$. The log of the largest relative error for each element in the computed eigenvector was $-1.33$.
+
+Each component of the of the computed eigenvector was plotted as a function of epoch, to see how fast it converges. This is shown in Figure \ref{fig:eigvec_converge}.
+
+\begin{figure}
+	\centering
+	\includegraphicsmaybe{eig_vec_conv.png}
+\end{figure}
+
 
 \section{Conclusion}
 

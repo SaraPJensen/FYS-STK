@@ -5,20 +5,19 @@ from collections import defaultdict
 
 
 class Activations:
+    """ Implemented activation functions """
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
     
     def tanh(self, x):
         return np.tanh(x)
 
-    def abs(self, x):
-        return np.abs(x)
-
     def PReLU(self, x):
         return np.where(x > 0, x, self.alpha * x)
 
 
 class Optimizer:
+    """ Optimizer for momentum gradient decent """
     def __init__(self, gamma=0, layer_sizes=None):
         self.g = min(1, max(gamma, 0))  # ensure between 0 and 1
         self.prev_v = [np.zeros((i + 1, 1)) for i in layer_sizes]
@@ -61,7 +60,6 @@ class PDE_solver_NN_base(Activations):
         activations = {"sigmoid": self.sigmoid,
                        "tanh": self.tanh,
                        "relu": self.PReLU,
-                       "abs": self.abs
                        }
         self.act_func = activations[activation]
 
@@ -74,6 +72,12 @@ class PDE_solver_NN_base(Activations):
             self.load_history(name)
 
     def initialize_weights(self):
+        """
+        Initializes network parameter weights and biases.
+        Weights are initialised using Xavier for sigmoid and tanh,
+        and He for prelu
+        Biases are set to 0.01
+        """
         P = [None] * (len(self.nodes) - 1)
         for i in range(1, len(self.nodes)):
             n = self.nodes[i - 1]
@@ -87,7 +91,10 @@ class PDE_solver_NN_base(Activations):
             P[i - 1][-1, :] = 0.01  # biases
         self.P = P
 
-    def train(self, X):
+    def train(self, X, save=True):
+        """
+        Trains neural network, updates network parameters
+        """
         P = self.P
         self.X = X
         print(f"Initial cost: {self.cost_func(P, X):.4f}")
@@ -103,21 +110,25 @@ class PDE_solver_NN_base(Activations):
                     update = self.Optim(self.eta(t) * Lgrad, L)
                     P[L] = P[L] - update
 
-                cf = self.cost_func(P, X)
+                if save:
+                    cf = self.cost_func(P, X)
 
-                if cf < self.tol or np.isnan(cf):
-                    break
-
-                pbar.set_description(f"{cf:.10f}")
-                self.record(t, cf, X, P)
+                    if cf < self.tol or np.isnan(cf):
+                        break
+                    if t % 2 == 0:
+                        pbar.set_description("🕺".join(f"{cf:.10f}"))
+                    else:
+                        pbar.set_description("💃".join(f"{cf:.10f}"))
+                    self.record(t, cf, X, P)
 
             except KeyboardInterrupt:
                 break
+
         self.epochs = t
         for key in self.history.keys():
             self.history[key] = self.history[key][:t]
 
-        print(f"Final cost: {self.cost_func(P, X):.4f}")
+        print(f"Final cost: {self.cost_func(P, X):.5f}")
         self.P = P
         if self.name is not None:
             self.save_history(self.name)
@@ -126,6 +137,7 @@ class PDE_solver_NN_base(Activations):
     def record(self, t, cf, X, P):
         """
         Can be reimplemented to record different stuff during training
+        Takes the evaluated cost function, as this is already calculated for the pbar
         """
         self.history["cost"][t] = cf
 
@@ -138,52 +150,37 @@ class PDE_solver_NN_base(Activations):
             prev = a
         return z
 
-    def __call__(self, x, P):
+    def __call__(self, X, P):
         """ Used to evaluate network """
-        return self.feed_forward(x, P)
+        return self.feed_forward(X, P)
 
     def cost_func(self, P, X):
         """
         Calculates error as difference between lhs and rhs of PDE
         returnes the normalized square error
         """
-        error = (self.lhs(X, P) - self.rhs(X, P)) ** 2
+        error = self.diff_eq(X, P) ** 2
         return np.sum(error) / error.shape[0]
 
-    def lhs(self, X, P):
+    def diff_eq(self, X, P):
         """
-        Left-hand side of differential equation,
+        Differential equation ordered so it should be 0.
         must be implemented separately through inheritance
 
         Should only take X and P as arguments,
-        and return the lhs evaluated with the trial function
+        and return f(x, u(x), u'(x) ...) evaluated with the trial function
         Derivatives taken with autograd.elementwise_grad (ele_grad)
 
         Example:
         PDE: d^2/dx^2 u(x, t) = d/dt u(x, t)
-        lhs = ele_grad(ele_grad(trial, 0), 0)(x, t, X, P)
-        rhs = ele_grad(trial, 1)(x, t, X, P)
+        lhs = ele_grad(ele_grad(trial, 0), 0)(x, t, P)
+        rhs = ele_grad(trial, 1)(x, t, P)
+        diff_eq = lhs - rhs
 
         trial function enforces boundary/initial conditions.
         Must be a function of the weights and biases of the network M,
         as such: self(X, P), where X is the datapoints, and P the weights/biases
         Simply pass the X and P from lhs/rhs to the trial func, and furhter on to self()
-        """
-        raise NotImplementedError
-
-    def rhs(self, X, P):
-        """
-        Right-hand side of differential equation,
-        must be implemented separately through inheritance
-        See lhs for more documentation
-        """
-        raise NotImplementedError
-
-    def trial(self, X, P):
-        """
-        Trial func is specific to PDE and boundary conditions,
-        must be implemented separately through inheritance
-        See lhs for more documentation
         """
         raise NotImplementedError
 
@@ -199,17 +196,16 @@ class PDE_solver_NN_base(Activations):
         """
         Return solution to PDE after network is trained
         """
-        if self.X.shape[1] != 1:
-            return self.trial(*self.X.T, self.X, self.P)
-        else:
-            return self.trial(self.X, self.P)
+        x = [i[:, None] for i in self.X.T]
+        return self.trial(*x, self.P)
+
     def save(self, name):
         """ Save weights and biases """
         name = f"{name}_{self.act_func.__name__}"
         for i in self.nodes[1:-1]:
             name += "_" + str(i)
         print(f"Saving net {name}")
-        np.save("./nets/" + name, np.asarray(self.P))
+        np.save("./nets/" + name, np.asarray(self.P, dtype=object))
 
     def load(self, name):
         """ Load weights and biases """
