@@ -294,9 +294,9 @@ Using \textit{f} as defined in eq. \eqref{eq:f-cost}, the contribution to the fi
 In the case of the diffusion equation,
 
 \begin{align*}
-	& D(M_{i}) =
+	 & D(M_{i}) =
 	\\
-	& - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2.
+	 & - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2.
 \end{align*}
 
 The factor of $1/N^{2}$ is not strictly necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable.
@@ -369,10 +369,10 @@ After about 3000 epochs, the increasing cosine makes a massive leap up, before f
 
 \begin{figure}[tb]
 	\minipage{0.49\textwidth}
-	\includegraphicsmaybe[width=\linewidth]{ls_shapes.png}
+	\includegraphicsmaybe[width=\linewidth]{NN_ls_shapes.png}
 	\endminipage\hfill
 	\minipage{0.49\textwidth}
-	\includegraphicsmaybe[width=\linewidth]{cost_ls.png}
+	\includegraphicsmaybe[width=\linewidth]{NN_cost_ls.png}
 	\endminipage\hfill
 	\caption{Top: Shape of learning schedules in \eqref{eq:ls} over 5000 epochs. Bottom: cost function as function of epoch for the last 4000 epochs of the simulation.}
 	\label{fig:ls}
@@ -537,7 +537,7 @@ Each component of the of the computed eigenvector was plotted as a function of e
 
 \begin{figure}
 	\centering
-	\includegraphicsmaybe[width=\linewidth]{eig_vec_conv.png}
+	\includegraphicsmaybe[width=\linewidth]{NN_eig_vec_conv.png}
 	\caption{}
 	\label{fig:eigvec_converge}
 \end{figure}
