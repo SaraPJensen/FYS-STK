@@ -1,4 +1,4 @@
-\documentclass[multicolumn, 10pt]{extarticle}
+\documentclass[multicolumn, 9pt]{extarticle}
 \usepackage[english]{babel}
 \usepackage{NotesTeX}
 \usepackage{subfigure}
@@ -470,8 +470,8 @@ One might wonder why the analytical solutions are found for the ODEs and the PDE
 
 Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this.
 
-\subsection{Finding eigenvector of symmetrix matrix}
-A symmetrix matrix $A$ was generated using \eqref{eq:symmat}, giving
+\subsection{Finding eigenvector of symmetric matrix}
+A symmetric matrix $A$ was generated using \eqref{eq:symmat}, giving
 
 
 \newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
@@ -522,14 +522,41 @@ A neural network with 2 hidden layers, each with 30 nodes, a constant learning r
 	\end{pmatrix}.
 \end{equation*}
 
-Using \eqref{eq:eigval}, the corresponding eigenvalue was $$\lambda = 0.05587217366620945.$$ This is similar to $\lambda_4$. Using the non-rounded value, the log of the relative error was $-4.97$. The log of the largest relative error for each element in the computed eigenvector was $-1.33$.
+Using \eqref{eq:eigval}, the corresponding eigenvalue was $$\lambda = 0.05587217366620945.$$ This is similar to the smallest (in absolute terms) eigenvector, $\lambda_4$. Using the non-rounded value, the log of the relative error was $-4.97$. The log of the largest relative error of each element in the computed eigenvector was $-1.33$.
 
-Each component of the of the computed eigenvector was plotted as a function of epoch, to see how fast it converges. This is shown in Figure \ref{fig:eigvec_converge}.
+Each component of the of the computed eigenvector was plotted as a function of epoch, to see how fast it converges. This is shown in Figure \ref{fig:eigvec_converge}. Most of the elements seem to have converged already after about 30 epochs, though then the relative error of the eigenvalue was bigger, with the log of it at $-3.25$. After 100 epochs, it was even better, at $-5.94$, though this seems to be close to a limit, as after 200 epochs, it was marginarlly better, at $-5.95$.
 
 \begin{figure}
 	\centering
-	\includegraphicsmaybe{eig_vec_conv.png}
+	\includegraphicsmaybe[width=\linewidth]{eig_vec_conv.png}
+	\caption{}
+	\label{fig:eigvec_converge}
 \end{figure}
+
+While for many purposes the value obtained here might be accurate enough, it is in general not a great result, considering the process needed to find optimal parameters, and even after that the process is slower than the eigensolver from the standard library. Further, this method is only good for finding a \textit{single} eigenvalue and corresponding vector. While neural networks is a good method for solving the differential equation for finding a eigenvector of a symmetric matrix, this is not a good method for finding a  eigenvector of a symmetric matrix.
+
+Theorem 4 in \cite{symmetric} states that the solution should converge to the eigenvector corresponding to the largest eigenvalue of $A$. We got the opposite, having it converge to the smallest. To determine if this was always the case, 1000 different symmetric matrices and start vectors $x(0)$ was generated. Table \ref{tab:idx_cnt} shows how what percentage each rank of eigenvalue was observed, with 1 correspondig to the smallest, 6 to the largest, and None meaning the training resulted in overflow and thus no result. Half the time, the eigenvalue was the smallest.
+
+\begin{table}[tb]
+	\centering
+	\caption{Number of times the resulting eigenvalue had the given rank in the sorted ordering of all eigenvalues of $A$, with 1 being the smallest, and 6 largest.}
+	\label{tab:idx_cnt}
+	\begin{tabular}{cc}
+		\toprule
+		Rank & Count \\
+		\midrule
+		1    & 506   \\
+		2    & 184   \\
+		3    & 84    \\
+		4    & 57    \\
+		5    & 27    \\
+		6    & 29    \\
+		None & 113   \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
 
 
 \section{Conclusion}
