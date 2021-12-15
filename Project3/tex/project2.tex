@@ -1,4 +1,4 @@
-\documentclass[multicolumn, 10pt]{extarticle}
+\documentclass[multicolumn, 9pt]{extarticle}
 \usepackage[english]{babel}
 \usepackage{NotesTeX}
 \usepackage{subfigure}
@@ -57,21 +57,33 @@
 \twocolumn
 \section{Introduction}
 
-The theoretical basis for machine learning and artificial intellegence was developed many decades ago, with the term \textit{machine learning} being coined in 1959. But it is only in the last decade or so where deep learning have seen widespread use, making complex data analysis possible. Advances in computing power is one of the main reasons for this, but also refining of the statistical methods have been important in yielding good results. Today, neural networks form an integral part of many algorithms, being able to solve new problems, or old problems more efficiently. In \cite{p2S} and \cite{p2HO}, feed forward neural networks were used to both fit continous data, as well as classification.
+The theoretical basis for machine learning and artificial intelligence was developed many decades ago, with the term \textit{machine learning} being coined in 1959. However, it is only in the last decade or so where deep learning have seen widespread use, making complex data analysis possible. Advances in computing power is one of the main reasons for this, but also refining of the statistical methods have been important in yielding good results. Today, neural networks form an integral part of many algorithms, and is often able to solve both new problems and old problems more efficiently. In previous work \cite{p2S} \cite{p2HO}, feed forward neural networks were successfully used to fit both continuous data and fo classification. Here, the aim will be use machine learning to solve a partial differential equation. 
 
-Partial differential equations with many independent variables are notoriously hard to solve analytically. The Navier-Stokes equations, describing the motion of viscous fluids, is a famous equation with no known exact solution. There exist numerical schemes to solve it in certain cases. An alternative could be to use neural networks. This paper will show that machine learning can solve PDEs. Specifically, the equation studied is the one-dimensional diffusion equation. First, a feed forward neural network is used. Secondly, a genetic algorithm building on the theory of natural selection is applied on the same problem. It will also be solved analytically and with an explicit scheme to compare accuracy and efficiency.
+Partial differential equations with many independent variables are notoriously hard to solve analytically. For example, the Navier-Stokes equations, describing the motion of viscous fluids, is a famous equation with no known exact solution. Numerous finite difference methods exist for solving such difficult equations numerically, and in recent years, different machine learning algorithms have also been employed for this purpose. In this paper, the one-dimensional diffusion equation will be attempted solved using a feed forward neural network and a genetic algorithm. For comparison of accuracy and efficiency, it will also be solved using the more traditional forward Euler scheme. The analytic solution will also be given. 
 
-Further, Yi et. al. showed that the eigenvalues of a symmetrix matrix can be described by a differential equation, solvable by a neural network \cite{symmetric}. These findings will be replacted here, displaying an application of neural network-differential equation solvers.
+Further, Yi et. al. showed that the eigenvalues of a symmetric matrix can be described by a differential equation, solvable by a neural network \cite{symmetric}. Inspired by their work, a similar method was here used, displaying an application of neural network-differential equation solvers. 
 
+XXX outline of report
 
 \section{Theory}
+In its most general form, a PDE can be written as: 
+
+\begin{align}
+\label{eq:f-cost}
+	f(\mathbf{x}, g(\mathbf{x}), g'(\mathbf{x}), g''(\mathbf{x}), \dots, g^{(n)}(\mathbf{x})) = 0,
+\end{align}
+
+where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independent variables, and $g(\mathbf{x})$ the solution of the PDE. 
 
 The temperature gradient $u(x, t)$ in a rod of length $L=1$ can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
 \begin{equation}\label{eq:diff}
-	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t}
-\end{equation},
+	\frac{\partial^2 u(x, t) }{\partial x^2} = \frac{\partial u(x, t)}{\partial t},
+\end{equation}
 
-where $x$ is the length along the rod, and $t$ is time. The boundary and intial conditions are
+where $x$ is the length along the rod, and $t$ is time. 
+
+
+The boundary and initial conditions are
 \begin{align*}\label{eq:boundary}
 	u(0, t) & = 0,             \\
 	u(L, t) & = 0, \numberthis \\
@@ -84,7 +96,7 @@ It is easily verifiable that the specific analytic solution is
 \end{equation}
 
 \subsection{Explicit Schemes}
-Traditionally, differential equations have been solved using numerical finite difference methods, either explicit or implicit. Here, the results obtained using the different machine learning algorithms will be compared with the explicit forward Euler method. First, discretise the variables as follows.
+Traditionally, differential equations have been solved using numerical finite difference methods, either explicit or implicit. Here, the results obtained using the different machine learning algorithms was compared with those obtained using the explicit forward Euler method. First, discretise the variables as follows.
 
 \begin{align*}
 	x \rightarrow x_{i} = i\Delta x  \\
@@ -92,7 +104,7 @@ Traditionally, differential equations have been solved using numerical finite di
 	u(x, t)  \rightarrow u_{i}^{j}
 \end{align*}
 
-such that the lower index of u refers to the spatial step and the upper index to the temporal step.
+such that the lower index of \textit{u} refers to the spatial step and the upper index to the temporal step.
 
 The necessary derivatives are given by
 
@@ -113,22 +125,20 @@ where
 	r = \frac{\Delta t}{\Delta x^{2}}.
 \end{equation*}
 
-Thus, given all the spatial steps at the current time-step, all spatial times are future time-steps can be found by iteratively solving the above equation. Further, the step sizes $\Delta x$ and $\Delta t$ for the explicit scheme are related by the stability criterion
+Thus, given all the spatial steps at the current time-step, all spatial steps at future time-steps can be found by iteratively solving the above equation. Finally, the step sizes $\Delta x$ and $\Delta t$ for the explicit scheme are related by the stability criterion
 
 \begin{equation}\label{eq:stability_crit}
 	\frac{\Delta t}{\Delta x^{2}} \le \frac{1}{2}.
 \end{equation}
 
 \subsection{Neural Network}
-A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularize the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the funcion value of a continous function at a certain point, or a discrete classification label, like wether a tumor is malginent or not. Under supervised learning, this prediction is compared to a true value to find the error. The backprogation algorithm then calculates the gradients of the weights and biases which will minimize the error, and update them appropriately. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strenghts and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
+A feed forward neural network consist of $L$ layers, each with a set number of nodes. The layers are connected by weights and biases $P$, such that each node takes the value of a weighted sum of the nodes in the previous layer. An activation function is used to regularise the value each node can take. Some input is placed in the input layer, from where it is fed forward through the network, until it reaches the output layer. This is a prediction of the input data, which can be the function value of a continuous function at a certain point, or a discrete classification label, like whether a tumour is malignant or not. Under supervised learning, this prediction is compared with a true value to find the error. The back-propagation algorithm then calculates the gradients of the weights and biases which will minimise the error, and update them accordingly. Over several iterations, the network can become very accurate, and successfully predict results from new data. A full description of the architecture and inner workings of a feed forward neural network, along with discussion of strengths and weaknesses associated with such a method, can be found in \cite{p2S} and \cite{p2HO}.
 
 \subsubsection{Cost function}
-In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. For solving a PDE, it can generally be written as
-\begin{align*}
-	f(\mathbf{x}, g(\mathbf{x}), g'(\mathbf{x}), g''(\mathbf{x}), \dots, g^{(n)}(\mathbf{x})) = 0,
-\end{align*}
-where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independant variables, and $g(\mathbf{x})$ the solution of the PDE. $f^2$ is then a natural choice of the cost function. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$.
-Then, through $E$ iterations, the weights and biases $P$ and updated using the backpropagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
+In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used. 
+
+Looking at equation \eqref{eq:f-cost}, $f^2$ is then a natural choice of the cost function when optimising the solution of a PDF. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$.
+Then, through $E$ iterations, the weights and biases $P$ are updated using the back-propagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
 
 \subsubsection{Trial function}\label{sec:trialf}
 In order to take care of the boundary and initial conditions, a trial-function
@@ -141,30 +151,33 @@ is used rather than the actual solution. Here $b(\mathbf{x})$ ensures that the t
 
 
 \subsection{Genetic Algorithms}
-Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland} is still in use today.
+Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his students and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland} is still in use today.
 
-The main idea behind genetic algorithms is to take inspiration from the unsupervised Darwinian evolution of populations of living organisms over generations and create an analogous machine learning algorithm. There are three main principles of Darwinian evolution which are usually considered the necessary and sufficient conditions for natural selection to occur. These are a) phenotypic variation, b) differential fitness, and c) heritability \cite{Mitchell}. Phenotypic variation is the population level property of there being variation in the phenotypic traits of the individuals in that population, and not just genotypic variation. Genotype is the complete set of genes of an individual, while phenotype is the observable traits of an individual. Differential fitness is the property that survival and reproduction rates vary between the individuals in the population, and heritability is the property that some traits are passed onto offspring from their parents.
+The main idea behind genetic algorithms is to take inspiration from the unsupervised Darwinian evolution of populations of living organisms over generations and create an analogous machine learning algorithm. Before exploring the specific algorithm, it will therefore be useful to take a look at some of the main underlying principles of evolution. 
 
-Over the generations, the individuals in the population gradually become better adapted to the environment in which they live as a result of cumulative selection. This requires that not only the final change is favourable, but the adaptive shift at each step must have provided an improvement in order for it to have been selected for.  This idea is well represented by the idea of ``fitness landscapes'', introduced by Sewall Wright in the 1930's \cite{Sewall}. These landscapes, also known as adaptive landscapes or evolutionary landscapes, provide a visualisation of the link between the genotypes or phenotypes and the individual's adaptive fitness or success. The adaptive success of the individual is represented by the height of its position in the landscape, and individuals with similar genotypes are expected to be located nearby each other in the landscape. These landscapes can be multidimensional, although the exact parameters along the other axes will be complex functions of the environment, and are rarely studied in detail. Instead, such landscapes provide a useful metaphor and tool for visualising evolutionary optimisation, where the population as a whole is expected to move towards higher points in the landscape over time. Furthermore, it makes it easy to understand how populations can end up at local minima with suboptimal traits which evolution struggles to ''improve'', since moving to the true optimum would require an initial descent in the landscape, which cannot happen through cumulative selection. Random mutations can in some cases help to prevent this, but not always.
+There are three main principles of Darwinian evolution which are usually considered the necessary and sufficient conditions for natural selection to occur. These are a) phenotypic variation, b) differential fitness, and c) heritability \cite{Eyal}. Phenotypic variation is the population level property of there being variation in the phenotypic traits of the individuals in that population, and not just genotypic variation. Genotype is the complete set of genes of an individual, while phenotype is the observable traits of an individual. Differential fitness is the property that survival and reproduction rates vary between the individuals in a population, and heritability the property that some traits are passed onto offspring from their parents through their genes. 
 
-Applying this to machine learning, it is common to initialise a ``population'' of ``chromosomes'', which form a set of candidate solutions. Each chromosome is encoded as a list of genes following a set of encoding and decoding rules determined by the algorithms. Each gene then encodes an element of the candidate solution. For each generation, the ``fitness'' of each chromosome is evaluated based on some metric which is summarised in the cost function. The fitness of the individuals then determines their chance of reproduction.
-A new generation of chromosomes is then generated through reproduction (crossover) and mutation, where the fittest chromosomes from the past generation are most likely to have their genes passed on. A range of different algorithms can be used for these two steps. Over the generations, it is hoped that the fitness of the candidate solutions will increase until a sufficiently good model is reached. However, the concept of fitness landscapes apply equally well to such machine learning algorithms as to the evolutionary process. There will be always be a significant risk of getting stuck at local maxima in the landscape, where the evolutionary process stagnates at a sub-optimal solution. Getting stuck in such local extrema is an ever-present problem in all of machine learning. Genetic algorithms thus stands out in that the mutation operator helps at getting out of these stagnation points, increasing the chances of reaching the global maxima in the fitness landscape.
+Over the generations, the individuals in the population gradually become better adapted to the environment in which they live as a result of cumulative selection. This requires that not only the final change is favourable, but the adaptive shift at each step must have provided an improvement in order for it to have been selected for.  This requirement is well represented by the idea of ``fitness landscapes'', introduced by Sewall Wright in the 1930's \cite{Sewall}. These landscapes, also known as adaptive landscapes or evolutionary landscapes, provide a visualisation of the link between the genotype or phenotype and the individual's adaptive fitness or success. The adaptive success of the individual is represented by the height of its position in the landscape, and individuals with similar genotypes and phenotypes are expected to be located nearby each other in the landscape. These landscapes can be multidimensional, although the exact parameters along the other axes will be complex functions of the environment, and are rarely studied in detail. Instead, such landscapes provide a useful metaphor and tool for visualising the process of evolutionary optimisation, where the population as a whole is expected to move towards higher points in the landscape over time. Furthermore, it makes it easy to understand how populations can end up at local minima with suboptimal traits which evolution struggles to ''improve'', since moving to the true optimum would require an initial descent in the landscape, which cannot happen through cumulative selection. Random mutations can in some cases help to prevent this, but not always.
 
-Note that a crucial premise for genetic algorithms, which is the so-called the building-block hypothesis, stating that the optimal solution is a combination of smaller elements \cite{Eyal}. At least partly independently of each other, these building blocks must provide a selective advantage to the individual in order to be selected for. Over the generations, cumulative selection ensures that the best building blocks spread in the population, until all the best building blocks have been combined in a single individual chromosome to form the optimal solution.
+Applying this to machine learning, one starts with a ``population'' of ``chromosomes'', each of which is a candidate solution, usually randomly initiated. Each chromosome is encoded as a list of genes following a set of encoding and decoding rules determined by the algorithms. Each gene then encodes an element of the candidate solution. For each generation, the ``fitness'' of each chromosome is evaluated based on some metric which is summarised in the cost function. The fitness of the individuals then determines their chance of reproduction.
+A new generation of chromosomes is then generated through reproduction (selection and crossover) and mutation, where the fittest chromosomes from the past generation are most likely to have their genes passed on. A range of different algorithms can be used for these two steps. Over the generations, it is hoped that the fitness of the candidate solutions will increase until a sufficiently good model is reached, giving an optimisation problem. The concept of fitness landscapes thus apply equally well to such machine learning algorithms as to the evolutionary process. There will be always be a significant risk of getting stuck at local maxima in the landscape, where the evolutionary process stagnates at a sub-optimal solution. Getting stuck in such local extrema is an ever-present problem in all of machine learning, not just for genetic algorithms. However, genetic algorithms stands out in that the mutation operator helps at getting out of these stagnation points, increasing the chances of reaching the global maxima in the fitness landscape.
+
+Finally, a crucial premise for this algorithm to work is the so-called the building-block hypothesis, stating that the optimal solution is a combination of smaller elements \cite{Eyal}. At least partly independently of each other, these building blocks must provide a selective advantage to the individual in order to be selected for. Over the generations, cumulative selection ensures that the best building blocks spread in the population, until all the best building blocks have been combined in a single individual chromosome to form the optimal solution.
 
 
 \subsubsection{Differential Equations and Grammatical Evolution}
-Genetic algorithms have been found to be useful in various optimisation problems, as suggested by the importance of the notion of the fitness landscape in the framework. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}.
+Genetic algorithms have been found to be useful in various optimisation problems. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}.
 
-\subsection{Differential equation for eigenvectors of symmetrix matrices}
-While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are complete different beasts, however. While possible to solve, more effor is needed to implement in an explicit scheme. This is where the power of neural networks come in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
+\subsection{Differential equation for eigenvectors of symmetric matrices}
+While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are completely different beasts, however. While possible to solve, more effort is needed to implement in an explicit scheme. This is where the power of neural networks comes in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
 
-Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetrix $n\times n$ matrix $A$. It will here be stated without proof, as this can be found in their paper. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
+Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetric $n\times n$ matrix $A$. It will here be stated without proof, and the reader is referred to their \cite{symmetric} for further details. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
+
 \begin{equation}\label{eq:diff_sym}
 	\dot{x}(t) = x(0)^Tx(0)Ax(t)-x(t)^TAx(t)x(t)
 \end{equation}
 
-for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$. Then the corresponding eigenvalue can then be found as
+for $t>0$, will, for large $t$, converge to an eigenvector of $A$, denoted $\nu$. The corresponding eigenvalue can then be found as
 \begin{equation}
 	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
 \end{equation}
@@ -174,30 +187,29 @@ for $t>0$, will for large $t$, converge to an eigenvector of $A$, denoted $\nu$.
 The code where the algorithms are implemented can be found on the \href{https://github.com/SaraPJensen/FYS-STK/tree/main/Project3/code}{GitHub for this paper}.
 
 \subsection{Neural networks}
-There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The PDE-solver network implemented for this paper has all the same features as the on made for regression and classification problems, described and extensively studied in \cite{p2HO}, and thus will not be detailed here. This includes a learning rate $\eta$, $L_2$-regularization $\lambda$ and momentum-parameter $\gamma$. Further, the activation functions studied were sigmoid, tanh, and parametrized ReLU (PReLU). PReLU is a generalized form of ReLU and Leaky ReLU, taking a parameter $\alpha$ setting the slope of the negative activation. The weights were initialized using normalized Xavier-initialization in the case of sigmoid and tanh activation functions, while He-initialization was used for PReLU.
+There are many hyper-parameters governing the efficiency and accuracy of a Neural Network. The PDE-solver network implemented for this paper has all the same features as the one made for regression and classification problems, described and extensively studied in \cite{p2HO}, so will not be detailed here. This includes a learning rate $\eta$, an $L_2$-regularisation term $\lambda$ and a momentum-parameter $\gamma$. Further, the activation functions studied were sigmoid, tanh, and parametrised ReLU (PReLU). PReLU is a generalised form of ReLU and Leaky ReLU, taking a parameter $\alpha$ setting the slope of the negative activation. The weights were initialised using normalised Xavier-initialisation in the case of sigmoid and tanh activation functions, while He-initialisation was used for PReLU.
 
+While the best method for determining the best parameters for a neural network is searching the entire hyperparameter-space, this is very time-consuming, and requires spending a lot of time on some parameter values giving quite bad results. Therefore, a manual grid-search was performed, optimising one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they were in turn tweaked one by one until an optimal value was found for the set of other parameters, while training for a fixed number of epochs. A repeat of the process was done to re-optimise the previously set parameters. This method will not ensure the globally optimal parameter set, but will quickly lead to reasonably good results.
 
-While the best method for determining the best parameters for a neural network is searching the entire hyperparameter-space, this is very time-consuming, and will spend a lot of time on some parameter values giving quite bad results. Therefore, a manual grid-search was performed, optimizing one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they were in turn tweaked one by one until an optimal value was found for the set of other parameters, while training for a fix set of epochs. A repeat of the process was done to reoptimize the previously set parameters. This method will not ensure the globally optimal parameter set, but will quickly lead to reasonably good results.
+Specifically, the optimal value of the $L_2$-regularisation parameter $\lambda$ was found to be zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems, like over- or under-flow, in order to ensure as quick convergence as possible.
 
-Specifically, the $L_2$-regularization parameter $\lambda$ was in previous work found to not give benefitial results when non-zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems like over - or underflow, in order to ensure as quick convergence as possible.
-
-One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. It is often benefitial to decrease the learning rate, as it allows for the convergence into a minimum. An experiment with 5 different functions was set up. These include a constant $\eta$, linearly decreasing $\eta$, a parabola, a cosine decresing from 1, and a cosine increasing from 1.
-The specific expressions were as follows, in order of presented above
+One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. It is often beneficial to decrease the learning rate, as it allows for the convergence into a minimum. An experiment with 5 different functions was set up. These include a constant $\eta$, a linearly decreasing $\eta$, a parabola, a cosine decreasing from 1, and a cosine increasing from 1.
+The specific expressions were as follows, in the same order as above
 \begin{align*}\label{eq:ls}
-	\eta(t) & = \eta_0,
+	\eta(e) & = \eta_0,
 	\\
-	\eta(t) & = \eta_0 (1 - t),
+	\eta(e) & = \eta_0 (1 - e),
 	\\
-	\eta(t) & = \eta_0 (0.3t^4-t^3+0.6t+0.9), \numberthis
+	\eta(e) & = \eta_0 (0.3e^4-e^3+0.6e+0.9), \numberthis
 	\\
-	\eta(t) & = \eta_0 (2 - \cos(t)),
+	\eta(e) & = \eta_0 (2 - \cos(e)),
 	\\
-	\eta(t) & = \eta_0 \cos(t),
+	\eta(e) & = \eta_0 \cos(e),
 \end{align*}
-where $t$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before dereasing again, allowing for convergence into local minimum. The increasing cosine is counterintuetivly increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top figure in \ref{fig:ls}.
+where $e$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before decreasing again, allowing for convergence into a local minimum. The increasing cosine is counterintuitively increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top figure in Figure \ref{fig:ls}.
 
 \subsubsection{Solving the differential equation}
-When solving the differential equation \eqref{eq:diff}, both the explicit scheme \eqref{eq:euler}, and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability limit \eqref{eq:stability_crit}. The same stabiliy criteria is not appliable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The naural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore the neural network is only used for the first set of stepsizes.
+When solving the differential equation \eqref{eq:diff}, both the explicit scheme \eqref{eq:euler}, and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability criterion \eqref{eq:stability_crit}. The same stability criterion is not applicable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The neural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore, the neural network was only used for the first set of step sizes.
 
 The trial function used to solve the differential equation \eqref{eq:diff} with initial and boundary conditions \eqref{eq:boundary}, satisfying the conditions set in \ref{sec:trialf} was
 \begin{equation}
@@ -205,12 +217,12 @@ The trial function used to solve the differential equation \eqref{eq:diff} with 
 \end{equation}
 
 
-
 \subsection{Genetic Algorithm}
-The outline of the algorithm is as follows. A population-class is defined containing a list of \textit{C} chromosomes with randomly generated sequences of \textit{G} genes. For each generation, the genetic sequence of each chromosome is decoded and its corresponding analytic expression is generated. The fitness value of each chromosome is then calculated, and the list of chromosomes ordered according to their fitness. Chromosomes whose fitness is \texttt{nan} or \texttt{inf} are removed from the list before crossover. The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome.
+The outline of the algorithm used is as follows. A population-class is defined containing a list of \textit{C} chromosomes with randomly generated sequences of \textit{G} genes. For each generation, the genetic sequence of each chromosome is decoded and its corresponding analytic expression is generated. The fitness value of each chromosome is then calculated, and the list of chromosomes ordered according to their fitness. 
+The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some, or all, of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome. In this case, \textit{C} was set to 1000, \textit{G} to 50.
 
 \subsubsection{Grammar}
-Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}.  The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithms always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2.
+Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}. The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithm used always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2.
 
 \begin{table}[h]
 	\centering
@@ -267,76 +279,69 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
 \end{table}
 
 
-The analytic solution to the problem studied is encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 10, 2, 0, 3, 10, 2, 5, 2, 2, 0, 0, 3, 10, 2, 3].
+For reference, the analytic solution to the problem studied can be encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 10, 2, 0, 3, 10, 2, 5, 2, 2, 0, 0, 3, 10, 2, 3].
 
 \subsubsection{Fitness evaluation}
 The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations.
 
-The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. The same number of points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the negative is used. Thus, the true solution has a fitness of 0. Define each candidate solution is labelled $M_{i}(x, t)$ for x $\in [x_{0}, x_{1}]$ and t $\in [t_{0}, t_{1}]$, both with \textit{N} points.
+The ranges and number of collocation points, \textit{N}, for each variable \textit{x} and \textit{t} must be given. 10 points were used for both variables. The fitness is calculated by adding the squared residuals of the collocation points for the differential equations and the squared error at the boundaries. Since the squared residual will always be a positive number, and the optimal model will have a residual of 0, to keep with the metaphor from the fitness landscape of the fittest individual having the highest fitness score, the fitness was defined as the negative of the squared residuals. Thus, the true solution has a fitness of 0. Each candidate solution is labelled $M_{i}(x, t)$ for \textit{x} $\in [x_{0}, x_{1}]$ and \textit{t} $\in [t_{0}, t_{1}]$, both with \textit{N} points.
 
-For a function $u(x, t)$, the differential equation can be expressed as is expressed in the form:
-
-\begin{equation*}
-	f \left( x, t, u, \frac{\partial u}{\partial x}, \frac{\partial u}{\partial t}, \frac{\partial^2 u }{\partial x^2}, \frac{\partial^2 u}{\partial t^2} \right) = 0
-\end{equation*}
-
-
-The contribution to the fitness from the partial differential equation is then given by:
+Using \textit{f} as defined in eq. \eqref{eq:f-cost}, the contribution to the fitness from the partial differential equation is given by
 
 \begin{equation*}
-	D(M_{i}) = -\frac{1}{N^{2}}\sum_{k, l=1}^{N} f^2
+	D(M_{i}) = -\frac{1}{N^{2}}\sum_{k, l=1}^{N} f^2.
 \end{equation*}
 
-In the case of the diffusion equation:
+In the case of the diffusion equation,
 
 \begin{align*}
 	 & D(M_{i}) =                                                                                                                                       \\
-	 & - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2
+	 & - \frac{1}{N^{2}} \sum_{k, l=1}^{N} \left( \frac{\partial^2 M_i(x_k, t_l) }{\partial x^2} - \frac{\partial M_i(x_k, t_l)}{\partial t} \right) ^2.
 \end{align*}
 
-The factor of $1/N^{2}$ is not necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable.
+The factor of $1/N^{2}$ is not strictly necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable.
 
 
-The contribution to the fitness from the boundary conditions is given by:
+The contribution to the fitness from the boundary conditions is given by
 
 \begin{align*}
-	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(x_0, t_l)- u(x_0, t_l)\right) ^2 \\
-	B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(x_1, t_l)- u(x_1, t_l))^2              \\
-	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_0)- u(x_k, t_0))^2              \\
-	B_4(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_1)- u(x_k, t_1))^2              \\
+	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(x_0, t_l)- u(x_0, t_l)\right) ^2, \\
+	B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(x_1, t_l)- u(x_1, t_l))^2,              \\
+	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_0)- u(x_k, t_0))^2,              \\
+	B_4(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, t_1)- u(x_k, t_1))^2.              \\
 \end{align*}
 
-In the given problem:
+In the given problem, these are
 
 \begin{align*}
-	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(0, t_l)\right) ^2     \\
-	B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(L, t_l))^2                  \\
-	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2 \\
+	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(0, t_l)\right) ^2,     \\
+	B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(L, t_l))^2,                  \\
+	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2. \\
 \end{align*}
 
 
-The total fitness is then:
+The total fitness is then
 
 \begin{align*}
 	F(M_{i}) & = D(M_{i}) + \lambda  ( B_1(M_{i})            \\
-	         & +  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  )
+	         & +  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  ).
 \end{align*}
 
-Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This can be useful if one factor contributed much more to the fitness than the other.
+Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This is useful if one factor contributes much more to the fitness than the other. 
 
 \subsubsection{Reproduction}
 There exists a range of different algorithms for creating the next generation of chromosomes from the current generation. The main elements  of the algorithm for reproduction are the selection, crossover and mutation schemes used.
 
-First, elitism was used before any of the other reproduction operations. This involves a predetermined number  \textit{E}of the fittest individuals to be passed onto the next generation unaltered (without mutations), whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations.
+First, elitism was used before any of the other reproduction operations. This involves a predetermined number  \textit{E} of the fittest individuals being passed onto the next generation unaltered (without mutations), whilst still being used for reproduction. This ensures that the highest fitness value never decreases between generations. 
 
-The selection scheme determines what chromosomes from the current are chosen as parents. Two different methods were here investigated; probabilistic selection and tournament selection. Assume the current generation contains \textit{C} individuals and \textit{NC} new chromosomes are to be created. For probabilistic selection, a list containing \textit{2NC} integers distributed according to half a normal distribution centred at 0 with standard deviation \textit{0.2C} is generated. These number are then iterated over in pairs, and are used as indices to choose which two individuals from the sorted list of chromosomes are to be chosen as parents. This ensures that the fittest individuals have a much higher chance of reproduction, but genotypic and phenotypic variance is still ensured by allowing the less fit individuals to reproduce some of the time. Tournament selection involves picking \textit{K} random integers in the range [0, C] and pick out the lowest two. These are then used as the indices to pick out the two parents from the sorted list of chromosomes. Note that both methods allows the same chromosome to be chosen as both parents, in which case the child will always be a perfect copy of the parent(s) before mutation. How the new chromosomes are generated from the two parents is then determined by the crossover scheme.
+The selection scheme determines what chromosomes from the current generation are chosen as parents. Two different methods were here investigated; probabilistic selection and tournament selection. Assume the current generation contains \textit{C} individuals and \textit{C-E} new chromosomes are to be created. For probabilistic selection, a list containing \textit{2(C-E)} integers distributed according to half a normal distribution centred at 0 with standard deviation \textit{0.2C} is generated. These numbers are then iterated over in pairs, and are used as indices to choose which two individuals from the sorted list of chromosomes are to be chosen as parents. This ensures that the fittest individuals have a much higher chance of reproduction, but genotypic and phenotypic variance is still ensured by allowing the less fit individuals to reproduce some of the time. Tournament selection involves picking \textit{K} random integers in the range [0, \textit{C}] and picking out the lowest two. These are then used as the indices to pick out the two parents from the sorted list of chromosomes. Note that both methods allow the same chromosome to be chosen as both parents, in which case the child will always be a perfect copy of the parent(s) before mutation. How the new chromosomes are generated from the two parents is then determined by the crossover scheme. 
 
-The crossover scheme determines how new chromosomes are created from the past generation. Two different methods were investigated here. First, one can create a new genetic sequence which is a perfect mix of the genes of the two parents. \textit{0.5G} different integers are picked from the range [0, G], and these are used as the indices of the genes used from one parent, and the remaining genes are taken from the other parent at the loci not picked by the indices. Note that the loci of the genes in the sequence are always preserved. This is the method most analogous to how reproduction takes place in nature. Alternatively, a random index in the range [0, G] is chosen, and this is used as the crossover point, such that the genes before that point is taken from one parent and the genes after that point from the other parent. The two halves are then combined to create a new genetic sequence.
+The crossover scheme determines how new chromosomes are created from the past generation. Two different methods were investigated here. First, one can create a new genetic sequence which is a perfect mix of the genes of the two parents. Call this method ``mixing''. \textit{0.5G} different integers are picked from the range [0, G], and these are used as the indices of the genes used from one parent, and the remaining genes are taken from the other parent at the loci not picked by the indices. Note that the loci of the genes in the sequence are always preserved. This is the method most analogous to how reproduction takes place in nature. Alternatively, a random index in the range [0, G] is chosen, and this is used as the crossover point, such that the genes before that point is taken from one parent and the genes after that point from the other parent. The two halves are then combined to create a new genetic sequence. Call this method ``swapping''. 
 
-After the crossover operation, a mutation operation is applied. Two rates are important in choosing how this is done. Firstly, one must decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
+After the crossover operation, a mutation operation is applied. Here, one must first decide what percentage of the new chromosomes are to have their genes mutated, and secondly how many of the genes are to be changed. The mutation operation itself works by randomly picking a given number of indices in the range [1, G] (the first gene was always constrained to be 0 or 2) to determine the loci of the genes to be changed. The genes at the chosen loci are then replaced by random integers in the range [0, 255].
 
-\subsection{Finding eigenvalues of symmetrix matrices}
-A symmtrix $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
+\subsection{Finding eigenvalues of symmetric matrices}
+A symmtric $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements $q_{ij} \sim \mathcal{N}(0,1)$, by
 \begin{equation*}
 	A=\frac{Q^T+Q}{2}.
 \end{equation*}
@@ -350,7 +355,7 @@ A vector $x(0)$ was generated similarly. The neural network was then used to sol
 \subsection{Neural network and explicit scheme}
 For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 6 hidden layers, each with 10 nodes.
 
-With these parameters, the learning schedules in \eqref{eq:ls} were applied, now runing for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best, although starting out as the highest. This is likely due so having an initially lower learning rate.
+With these parameters, the learning schedules in \eqref{eq:ls} were applied, now running for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best, although starting out as the highest. This is likely due so having an initially lower learning rate.
 
 After about 3000 epochs, the increasing cosine makes a massive leap up, before falling back down, though never reaching as low levels as before the spike. While the exact cause of this is not know, it is common behaviour when the gradient descent takes a leap to get out of a local minimum.
 
@@ -372,37 +377,42 @@ After about 3000 epochs, the increasing cosine makes a massive leap up, before f
 First, in order to test the algorithm, some of the results presented in \cite{Lagaris} were reproduced, namely two ordinary differential equations (ODEs) and one partial differential equation (PDE). The following two ordinary differential equations were tested:
 
 \begin{align*}
-	\frac{dy}{dx}  - \frac{2x - y}{x} = 0 \\
-	y(0.1) = 20.1                         \\
-	x \in [0.1, 1],
+	\frac{dy}{dx}  - \frac{2x - y}{x} &= 0, \\
+	y(0.1) &= 20.1,                         \\
+	x &\in [0.1, 1],
 \end{align*}
 
-with the analytic solution y(x) = x + 2/x.
+with the analytic solution $y(x) = x + 2/x$.
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 	\label{eq:ODE}
-	\frac{d^{2}y}{dx^{2}}  + 100y = 0 \\
-	y(0) = 0                          \\
-	\frac{dy(0)}{dx} = 10,
-\end{align}
+	\frac{d^{2}y}{dx^{2}}  + 100y &= 0, \\
+	y(0) &= 0,                          \\
+	\frac{dy(0)}{dx} &= 10,
+\end{aligned}
+\end{equation}
 
-with the analytic solution y(x) = sin(10x).
+with the analytic solution $y(x) = \text{sin}(10x)$.
 
 The partial differential equation tested was:
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 	\label{eq:PDE}
-	\frac{\partial^{2}u}{\partial x^{2}} + \frac{\partial^{2}u}{\partial y^{2}} + 2u(x, y) = 0 \\
-	y(0.1) = 20.1                                                                              \\
-	x \in [0.1, 1],
-\end{align}
+	\frac{\partial^{2}u}{\partial x^{2}} + \frac{\partial^{2}u}{\partial y^{2}} + 2u(x, y) &= 0, \\
+	y(0.1) &= 20.1,                                                                              \\
+	x &\in [0.1, 1],
+\end{aligned}
+\end{equation}
 
-with the analytic solution u(x, y) = sin(x)cos(y).
+with the analytic solution $u(x, y) = \text{sin}(x)\text{cos}(y)$.
+
+In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (same as was used by Tsoulos and Lagaris \cite{Lagaris}). The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. $\lambda$ was set to 10, and 10 collocation points were used. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is clearly significant. 
+
 
 \subsubsection{Diffusion Equation}
-In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (the same as was used by Tsoulos and Lagaris \cite{Lagaris}), this because of time constraints. The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is significant.
-
-The genetic algorithm was used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same. The maximum number of generations was reduced to 500 due to time constraints. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Secondly, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
+The genetic algorithm was then used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same as above. The maximum number of generations was reduced to 500 due to time constraints. $\lambda$ was set to 1, and 10 collocation points were used. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Additionally, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end. 
 
 A comparison of the two methods for the top chromosome, top 10 \% and the top 70 \% is shown in Figure \ref{fig:gen_default}. As can be seen, there are no major differences in the results obtained. The fitness of the top chromosome increases step-wise, whereas there is a gradual increase in the fitness of the top 10 \%. This shows that the best candidate solutions spread in the population through reproduction, and gradually take up a larger proportion of the population. Finally, there is no development to be spotted in the average fitness of the top 70 \%, which fluctuate significantly. This shows that more generations are needed before the fittest chromosomes spread that far, and even then the effects of random mutations between the generations might be sufficient to make enough of the chromosomes sufficiently unfit to prevent the average fitness from stabilising.
 
@@ -432,8 +442,7 @@ A comparison of the two methods for the top chromosome, top 10 \% and the top 70
 	\label{fig:gen_var}
 \end{figure}
 
-
-It was then attempted to independently change some of the other variables, namely the size of the elite group and the mutation rate. First, the size of the elite group was decreased to 5 \%. Secondly, the size of the elite group was set back to 10 \%, but the mutation scheme was changed. Instead of applying mutations to 10 genes in half of the new chromosomes, 3 genes were changed in all of the new chromosomes. This resulted in three different methods, and the fitness of the best chromosome over the generations using the different methods using mixing and tournament selection are shown in Figure  \ref{fig:gen_var}. As can be seen, the differences are small, though the method using a smaller elite gives the best results both for tournament selection and mixing. However, no definite conclusions can be drawn from this single instance, for given the strong stochastic element of the algorithm, large samples would be needed to determine a definite trend. This was  unfortunately not possible due to time constraints.
+It was then attempted to independently change some of the other variables, namely the size of the elite group and the mutation rate. First, the size of the elite group was reduced to 5 \%. Secondly, the size of the elite group was set back to 10 \%, but the mutation scheme was changed. Instead of applying mutations to 10 genes in half of the new chromosomes, 3 genes were changed in all of the new chromosomes. This resulted in three different methods, and the fitness of the best chromosome over the generations for the different methods using mixing and tournament selection are shown in Figure \ref{fig:gen_var}. As can be seen, the differences are small, though the method using a smaller elite gives the best results both for tournament selection and mixing. However, no definite conclusions can be drawn from this single instance, for given the strong stochastic element of the algorithm, large samples would be needed to determine a definite trend. This was  unfortunately not possible due to time constraints. 
 
 \subsubsection{Critical Evaluation}
 In sum, the genetic algorithm employed successfully reproduces the results from \cite{Lagaris}, where fairly simple analytic expressions are found which fulfil the differential equation and the boundary conditions. However, large populations (1000 chromosomes) and many generations are needed before the desired results are obtained, and importantly, it is far from clear that these are found through cumulative selection, and not just by chance. Looking at the plots of the fitness of the fittest chromosome over the generations, it is clear that this tends to increase step-wise, rather than through a slow process of cumulative selection, which is the process the genetic algorithms are aiming to recreate. This should therefore be a source of worry. In fact, when analysing the algorithm of grammatical evolution employed, it is not surprising that there are few signs of cumulative selection in the results, for it is hard to see how the algorithm would be able to recreate this feature of evolution. To understand why, one must go back to the building block hypothesis and the notion of fitness landscapes. These ideas express two necessary conditions for evolution to take place which also apply to genetic algorithms. Firstly, as stated by the building-block hypothesis, the optimal solution must be built up from independent contributions from different building blocks, as encoded in the genes. Secondly, the fitness landscape expresses the requirement that evolution must be cumulative, such that small changes to the genotype (e.g. changing a few genes) does not normally lead to dramatic changes in the phenotype (here the resulting function). With the above grammar and algorithm used, however, neither requirement is met.
@@ -461,7 +470,7 @@ To test this assumption, a third random selection scheme was introduced. Here, a
 	\label{fig:gen_ODE}
 \end{figure}
 
-One might wonder why the analytical solutions are found for the ODEs and the PDE tested, but not for the diffusion equation. This is likely because of the sheer length of the functional expression in terms of the genes, which is 25 genes long for the diffusion equation. Randomly reproducing this sequence is far less likely than to randomly generate the genetic sequence coding for e.g. sin(x)cos(y). Note that the likelihood of randomly selecting the genes for a given analytical expression will not just be a function of the length of the expression, but also of the types of components needed from the grammar. This is because the different components are found taking the modulus with respect to different numbers.
+One might wonder why the analytical solutions are found for the ODEs and the PDE tested, but not for the diffusion equation. This is likely because of the sheer length of the functional expression in terms of the genes, which is 24 genes long for the diffusion equation. Randomly reproducing this sequence is far less likely than to randomly generate the genetic sequence coding for e.g. sin(x)cos(y). Note that the likelihood of randomly selecting the genes for a given analytical expression will not just be a function of the length of the expression, but also of the types of components needed from the grammar. This is because the different components are found taking the modulus with respect to different numbers.
 
 Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this.
 
