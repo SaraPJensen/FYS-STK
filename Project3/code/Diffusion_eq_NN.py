@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 from PDE_solver_NN import PDE_solver_NN_base
 
 
-
 class Diffusion(PDE_solver_NN_base):
     def diff_eq(self, X, P):
         x, t = X.T
@@ -19,10 +18,11 @@ class Diffusion(PDE_solver_NN_base):
         return np.sin(np.pi * x) * (1 + t * self(X, P))
 
     def eta(self, epoch):
-        # t = epoch / self.epochs
-        # eta = self.eta0 * (0.3 * t**4 - t**3 + 0.6 * t + 0.9)
-        return self.eta0
-    
+        e = epoch / self.epochs
+        p = 0.3 * e**4 - e**3 + 0.6 * e + 0.9
+        return p * self.eta0
+
+
 def main():
     dx = 1e-1
     dt = 0.5 * dx ** 2
@@ -45,7 +45,7 @@ def main():
                     epochs=500, 
                     eta0=0.002,
                     lmb=0, 
-                    gamma=0.9, 
+                    gamma=0.95, 
                     load=False, 
                     name=None, 
                     seed=2021,
@@ -54,14 +54,14 @@ def main():
         Solver.train(X)
         print("\n"*2)
 
-    # solution = Solver.get_solution()  # trial function solution
-    # solution = solution.reshape(x.shape)
+    solution = Solver.get_solution()  # trial function solution
+    solution = solution.reshape(x.shape)
 
-    # fig = go.Figure(data=[go.Scatter(x=Solver.t[10:], y=Solver.history["cost"][10:], mode="lines")])
-    # fig.show()
+    fig = go.Figure(data=[go.Scatter(x=Solver.t[10:], y=Solver.history["cost"][10:], mode="lines")])
+    fig.show()
 
-    # fig = go.Figure(data=[go.Surface(x=x, y=t, z=solution)])
-    # fig.show()
+    fig = go.Figure(data=[go.Surface(x=x, y=t, z=solution)])
+    fig.show()
 
 if __name__ == "__main__":
     main()
