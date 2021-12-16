@@ -282,6 +282,8 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
 
 For reference, the analytic solution to the problem studied, \eqref{eq:anal}, can be encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 10, 2, 0, 3, 10, 2, 5, 2, 2, 0, 0, 3, 10, 2, 3].
 
+When encoding the chromosome to an expression, it is read until the encoding scheme reaches an end, even if there still are more genes to be read. These are then trash-genes, not contributing to the phenotype of that indvidual. During crossover or mutation, these genes can become used.
+
 \subsubsection{Fitness evaluation}
 The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations.
 
@@ -304,7 +306,7 @@ In the case of the diffusion equation,
 The factor of $1/N^{2}$ is not strictly necessary, but it normalises the fitness to make solutions obtained with different number of collocation points comparable.
 
 
-The contribution to the fitness from the boundary conditions is given by
+The contribution to the fitness from the boundary and intial conditions $u$ is given by
 
 \begin{align*}
 	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(x_0, t_l)- u(x_0, t_l)\right) ^2, \\
@@ -318,15 +320,16 @@ In the given problem, these are
 \begin{align*}
 	B_1(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} \left( M_i(0, t_l)\right) ^2,     \\
 	B_2(M_{i}) & = -\frac{1}{N} \sum_{l=1}^{N} (M_i(L, t_l))^2,                  \\
-	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2. \\
+	B_3(M_{i}) & = -\frac{1}{N} \sum_{k=1}^{N} (M_i(x_k, 0) - sin(\pi x_{k}))^2, \\
+	B_4(M_i)   & = 0.
 \end{align*}
 
 
 The total fitness is then
 
 \begin{align*}
-	F(M_{i}) & = D(M_{i}) + \lambda  ( B_1(M_{i})             \\
-	         & +  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  ).
+	F(M_{i}) & = D(M_{i}) + \lambda  [  B_1(M_{i})            \\
+	         & +  B_2(M_{i})  +  B_3(M_{i})  + B_4(M_{i})  ].
 \end{align*}
 
 Where the parameter $\lambda$ is a penalising parameter which can be changed to tune the penalising contribution from the boundary conditions compared to the differential equation. This is useful if one factor contributes much more to the fitness than the other.
@@ -349,7 +352,7 @@ A symmetric $6\times6$ matrix $A$ was generated from a matrix $Q$ with elements 
 	A=\frac{Q^T+Q}{2}.
 \end{equation}
 
-A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed in this case, as there are no initial or boundary conditions to consider. When evaluating the differential equation, this is done for $t=t_{max}$, which is set to a sufficiently high value of $t_{max}=100$.
+A vector $x(0)$ was generated similarly. The neural network was then used to solve \eqref{eq:diff_sym}. No trial function was needed in this case, as there are no initial or boundary conditions to consider. When evaluating the differential equation, this is done for $t=t_{max}$, which is set to a sufficiently high value, where $t_{max}=100$ was found to be sufficient.
 
 A standard linear algebra library was used to find the eigenvalues and vectors of the matrix $A$, for comparison with the value found by the neural network. When comparing these, the log of the relative error was calculated as
 
@@ -416,10 +419,10 @@ The partial differential equation tested was:
 
 with the analytic solution $u(x, y) = \text{sin}(x)\text{cos}(y)$.
 
-In all three cases the population the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (same as was used by Tsoulos and Lagaris \cite{Lagaris}). The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. $\lambda$ was set to 10, and 10 collocation points were used. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is clearly significant.
+In all three cases the number of chromosomes in the population was set to 1000, and the maximum number of generations to 1000 (same as was used by Tsoulos and Lagaris). The size of the genome was set to 50 genes. The elite size was set to 10 \% of the population, and these individuals were passed straight onto the next generation without mutations. The remaining 90 \% of the new generation were generated through reproduction, using tournament selection with 5 contestants with swapping as crossover method, as was used by Tsoulos and Lagaris \cite{Lagaris}. Of these, half the chromosomes experienced mutations, and 10 randomly selected genes were then mutated. $\lambda$ was set to 10, and 10 collocation points were used. All three analytic solutions were found after between 19 and 112 generations. Running the same programs several times, however, showed significant variance in the number of generations needed, so the stochastic element of the algorithm is clearly significant.
 
 \subsubsection{Diffusion Equation}
-The genetic algorithm was then used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same as above. The maximum number of generations was reduced to 500 due to time constraints. $\lambda$ was set to 1, and 10 collocation points were used. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Additionally, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
+The genetic algorithm was then used to attempt to solve the diffusion equation using two different combinations of selection and crossover methods. First, tournament selection was used in combination with swapping (denote this ``tournament''). Secondly, probabilistic selection was combined with perfect mixing of the genes (denote this ``mixing''). The elite size was kept at 10 \%, and the mutation rate the same as before. The maximum number of generations was reduced to 500 due to time constraints. $\lambda$ was set to 1, and 10 collocation points were used. In no case was the exact analytical solution found. To study the improvement over the generations, three different variables were used. The most important is the fitness value of the top chromosome. Additionally, the average fitness value of the top 10 \% and 70\% of the chromosomes was calculated, this in order to study the increased fitness of the population as a whole, i.e. how the fitter chromosomes become more dominant in the population. It is important to note, however, that it is in no way necessary for the average fitness of the population to be high to get a good result, since only the optimal solution will be of interest in the end.
 
 A comparison of the two methods for the top chromosome, top 10 \% and the top 70 \% is shown in Figure \ref{fig:gen_default}. As can be seen, there are no major differences in the results obtained. The fitness of the top chromosome increases step-wise, whereas there is a gradual increase in the fitness of the top 10 \%. This shows that the best candidate solutions spread in the population through reproduction, and gradually take up a larger proportion of the population. Finally, there is no development to be spotted in the average fitness of the top 70 \%, which fluctuate significantly. This shows that more generations are needed before the fittest chromosomes spread that far, and even then the effects of random mutations between the generations might be sufficient to make enough of the chromosomes sufficiently unfit to prevent the average fitness from stabilising.
 
@@ -481,8 +484,10 @@ One might wonder why the analytical solutions are found for the ODEs and the PDE
 
 Finally, it is important to stress that the results here obtained are fairly unreliable because of the sheer lack of data. As mentioned, there is a strong stochastic element to the functioning of the algorithm, so many repetitions would be needed to make reliable comparisons between the different methods. However, given the theoretical arguments above and the lack of falsifying evidence, it seems fair to assume that the genetic algorithm tested does not work through the intended mechanism, though further research would be needed to draw any definite conclusions regarding this.
 
+One way to adress the problem of genes not having meaning independent of the loci and other genes could be to re-structure the way encoding happens. Instead of parsing the chromosome linearly, adding to the final expression, a tree could be built, where each expression form a sub-tree. It would then be possible for the crossover scheme to swap sub-trees, and not the entire remining section of the chromosme below the crossover point. This reduces the change of the expression changing completely during reproduction, rather only changing the particulars of it. This method has not been tested, and is only presented as inspiration for future work.
+
 \subsection{Finding eigenvector of symmetric matrix}
-A symmetric matrix $A$ was generated using \eqref{eq:symmat}, giving
+A symmetric matrix $A$ was generated using \eqref{eq:symmat}. The matrix used was
 
 
 \newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
@@ -566,6 +571,8 @@ Theorem 4 in \cite{symmetric} states that the solution should converge to the ei
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+Due to the problems with the genetic algorithm discussed above, it was not attempted to be used for find the eigenvalue of a symmetric matrix.
 
 
 \section{Conclusion}
