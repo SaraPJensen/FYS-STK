@@ -35,12 +35,12 @@
 
 
 \author{\Large Sara Pernille Jensen \& Håkon Olav Torvik}
-\title{\Huge P3: We did a thing}
+\title{\Huge Solving differential equations with machine learning: applications of Neural Networks and Genetic Algorithms }
 \affiliation{\large FYS-STK4155 – Applied Data Analysis and Machine Learning
 \\Autumn 2021\\Department of Physics\\University of Oslo\\\\\today}
 \begin{document}
 \abstract{
-	The very concrete abstract.
+	Machine learning algorithms have many applications, and were in this paper used to solve partial differential equations and non-linear differential equations. The methods used were a feed forward neural network and a genetic algorithm inspired by darwinian evolution. While the neural network gave good results when solving the diffusion equation, it was slow and considerably slower than explicit solvers. The genetic algorithm was able to find the solution to simple differential equations, but was unable to find it for the diffusion equation. Fundamental flaws were found in the algorithm, and ways to fix these were discussed. Finally, the neural network was used to solve a non-linear differential equation where the solutions were eigenvectors of a symmetric matrix. This can be used to solve differential equaions reformulatable as eigenvalue problems.
 }
 
 % Ting til gjennomlesning:
@@ -607,7 +607,7 @@ A neural network was used to numerically solve a partial differential equation. 
 
 The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
 
-The neural network-differential equation solver was applied to find the eigenvalues of a symmetrix matrix. While being a quite quick and accurate method, it only gives one eigenvalue for a choice of initial vector. Thus many vectors are needed to find them all. This does not take very much time, and so can be used to solve differential equations which can be reformulated as eigenvalue problems. 
+The neural network-differential equation solver was applied to find the eigenvalues of a symmetrix matrix. While being a quite quick and accurate method, it only gives one eigenvalue for a choice of initial vector. Thus many vectors are needed to find them all. This does not take very much time, and so can be used to solve differential equations which can be reformulated as eigenvalue problems.
 
 
 \bibliographystyle{plain}
