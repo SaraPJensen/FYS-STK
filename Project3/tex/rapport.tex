@@ -167,7 +167,8 @@ Finally, a crucial premise for this algorithm to work is the so-called the build
 \subsubsection{Differential Equations and Grammatical Evolution}
 Genetic algorithms have been found to be useful in various optimisation problems. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their 2006 paper \textit{Genetic Programming and Evolvable Machines} \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris.
 
-\subsection{Differential equation for eigenvectors of symmetric matrices}
+\subsection{Eigenvalue problems}
+
 While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are completely different beasts, however. While possible to solve, more effort is needed to implement in an explicit scheme. This is where the power of machine learning comes in, as they only need an expression to evaluate, which is easy to set up. This is one of the main reasons why differential equation solving neural networks and genetic algorithms are interesting.
 
 Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetric $n\times n$ matrix $A$. It will here be stated without proof, and the reader is referred to \cite{symmetric} for further details. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
@@ -182,6 +183,8 @@ for $t>0$, will, for large $t$, converge to an eigenvector of $A$, denoted $\nu$
 \end{equation}
 
 The neural network will be able to apprixmate the solution to $x(t)$, while the genetic algorithms find an expression that give solutions close to the analytical solution.
+
+The reason this is interesting is that many differential equations can be reformulated as a eigenvalue problem, with a symmetric matrix. Thus,to solve a differential equation, the eigenvectors and eigenvalues of a symmetric matrix represent the solution.
 
 
 \section{Methods}
@@ -364,13 +367,11 @@ where $y_c$ is our computed value, and $y_t$ the 'true' found by the library.
 \section{Results and Discussion}
 
 \subsection{Neural network and explicit scheme}
-For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 6 hidden layers, each with 10 nodes.
+For $\Delta x=0.1$, $\Delta t=\Delta x^2/2$ and $T=1.5$, and a constant learning rate $\eta(t)=\eta_0$, the parameters that were found to give the lowest cost after 500 epochs, where $\eta_0=0.002$, $\lambda=0$, $\gamma=0.95$, using tanh as activation function and with 4 hidden layers, the first with 10 nodes, the next two with 20, and the last with 10.
 
-With these parameters, the learning schedules in \eqref{eq:ls} were applied, now running for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best, although starting out as the highest. This is likely due so having an initially lower learning rate.
+With these parameters, the learning schedules in \eqref{eq:ls} were applied, now running for 5000 epochs. In the top figure of \ref{fig:ls}, the value of each learning rate is shown as function of epoch. In the bottom, the value of the cost function is shown, starting at epoch 1000, until the end of the simulation. This was to see better the the differences when the cost gets low. All learning schedules decrease sharply, slowly converging towards the end of the simulation. The linear decrease is by far the worst of the 5 methods, and the parabola the best. Interestingly, increasing the learning rate towards the end also gave better results than keeping it constant.
 
-After about 3000 epochs, the increasing cosine makes a massive leap up, before falling back down, though never reaching as low levels as before the spike. While the exact cause of this is not know, it is common behaviour when the gradient descent takes a leap to get out of a local minimum.
-
-
+None of these leraning schedules takes into account the history of learning. An adaptive learning rate could change according to what would give faster convergence in the moment. This is left for future work on the matter.
 
 \begin{figure}[tb]
 	\minipage{0.49\textwidth}
@@ -382,6 +383,31 @@ After about 3000 epochs, the increasing cosine makes a massive leap up, before f
 	\caption{Top: Shape of learning schedules in \eqref{eq:ls} over 5000 epochs. Bottom: cost function as function of epoch for the last 4000 epochs of the simulation.}
 	\label{fig:ls}
 \end{figure}
+
+Now, the solution from the neural network trained above was compared to the explicit solver with both $\Delta x=0.1$ and $\Delta x=0.01$, and the analytical solution. 3 points in time was chosen, and the 4 solutions was plotted as function of $x$. These are shown in Figure \ref{fig:compare}. At all times the solution from the explicit solver with $\Delta x=0.01$ was indistinguashible from the analytic solution. The other explicit solver have too low values, with the relative error increasing with time, which is as expected. At the time, the neural solver was more accurate than one of the explicit solvers, with a low relative error. However, at the next time step, it was worse, giving too high solution. At $T=1.5$, the analytical solution was nearly flat, as seen at the magnitude of the curve. Both the explicit solvers gave results as expected. The neural network however did not, being too high, and not symmetic. While the absolute error is small, the relative error is very high.
+
+\begin{figure}[tb]
+	\minipage{0.49\textwidth}
+	\textbf{a}
+	\includegraphicsmaybe[width=\linewidth]{NN_u_sol_t02.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\textbf{b}
+	\includegraphicsmaybe[width=\linewidth]{NN_u_sol_t075.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\textbf{c}
+	\includegraphicsmaybe[width=\linewidth]{NN_u_sol_t150.png}
+	\endminipage\hfill
+	\minipage{0.49\textwidth}
+	\textbf{d}
+	\includegraphicsmaybe[width=\linewidth]{NN_u_sol_t150_zoomed.png}
+	\endminipage\hfill
+	\caption{Solution of the differential equation, with explicit solvers with 2 step sizes, the neural network, and the analytical solution. \textbf{a}: Solution at $T=0.2$. \textbf{b}: Solution at $T=0.75$. \textbf{c}: Solution at $T=1.5$. \textbf{d}: Solution at $T=1.5$, zoomed in on the scale of the analytical solution.}
+	\label{fig:compare}
+\end{figure}
+
+While possible to solve this PDE with a neural network, this is more complex, less accurate and more inefficient than an explicit numerical solution. While the explicit solver with the smallest step size finished in 2 seconds, 40 minutes was needed to train the neural network to get these results, and then the higher step size was used, so using the same step size would have been completely non-viable. For more complex, non-linear PDEs, the neural network solver might be a better tool than explicit schemes, though this was not the case here.
 
 \subsection{Genetic Algorithm}
 \subsubsection{Verification}
@@ -549,25 +575,25 @@ Each component of the of the computed eigenvector was plotted as a function of e
 	\label{fig:eigvec_converge}
 \end{figure}
 
-While for many purposes the value obtained here might be accurate enough, it is in general not a great result, considering the process needed to find optimal parameters, and even after that the process is slower than the eigensolver from the standard library. Further, this method is only good for finding a \textit{single} eigenvalue and corresponding vector. While neural networks is a good method for solving the differential equation for finding a eigenvector of a symmetric matrix, this is not a good method for finding a  eigenvector of a symmetric matrix.
+While for many purposes the value obtained here might be accurate enough, it is in general not a great result, considering the process needed to find optimal parameters, and even after that the process is slower than the eigensolver from the standard library. Further, this method is only good for finding a \textit{single} eigenvalue and corresponding vector. While neural networks is a good method for solving the differential equation for finding a eigenvector of a symmetric matrix, this is not a good method for finding a  eigenvector of a symmetric matrix. It would be benefitial if the neural network was generalisable to find an eigenvalue of a symmmetric matrix without needing to be retrained, though if this is case was not tested. Such analyis is outside the scope of this paper, and left for future work.
 
-Theorem 4 in \cite{symmetric} states that the solution should converge to the eigenvector corresponding to the largest eigenvalue of $A$. We got the opposite, having it converge to the smallest. To determine if this was always the case, 1000 different symmetric matrices and start vectors $x(0)$ was generated. Table \ref{tab:idx_cnt} shows how what percentage each rank of eigenvalue was observed, with 1 correspondig to the smallest, 6 to the largest, and None meaning the training resulted in overflow and thus no result. Half the time, the eigenvalue was the smallest.
+Theorem 4 in \cite{symmetric} states that the solution should converge to the eigenvector corresponding to the largest eigenvalue of $A$. We got the opposite, having it converge to the smallest. To determine if this was always the case, 1000 different symmetric matrices and start vectors $x(0)$ was generated. Table \ref{tab:idx_cnt} shows how what percentage each rank of eigenvalue was observed, with 1 correspondig to the smallest, 6 to the largest, and None meaning the training resulted in overflow and thus no result. The middle column presents the count for each rank when the matrix $A$ was changed every time, while the right column shows the result keeping the matrix $A$ constant. In both cases, the results are similar, so the choice of $A$ affects the rank less than the choice of $x(0)$. This was to be expected. In both cases, about half the eigenvalues was the smallest, with the frequency decreasing for higher ranks. The properties of the vectors giving the different ranks were not studied.
 
 \begin{table}[tb]
 	\centering
 	\caption{Number of times the resulting eigenvalue had the given rank in the sorted ordering of all eigenvalues of $A$, with 1 being the smallest, and 6 largest.}
 	\label{tab:idx_cnt}
-	\begin{tabular}{cc}
+	\begin{tabular}{ccc}
 		\toprule
-		Rank & Count \\
+		Rank & Random $A$ & Constant  $A$ \\
 		\midrule
-		1    & 506   \\
-		2    & 184   \\
-		3    & 84    \\
-		4    & 57    \\
-		5    & 27    \\
-		6    & 29    \\
-		None & 113   \\
+		1    & 506        & 544           \\
+		2    & 184        & 244           \\
+		3    & 84         & 69            \\
+		4    & 57         & 65            \\
+		5    & 27         & 15            \\
+		6    & 29         & 12            \\
+		None & 113        & 51            \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -577,11 +603,11 @@ Due to the problems with the genetic algorithm discussed above, it was not attem
 
 \section{Conclusion}
 
-The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is far beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
+A neural network was used to numerically solve a partial differential equation. While the results obtained were close to the analytic solution, explicit solvers performed much better, and being much more efficient. For more complex PDEs, for instant non-linear ones, the explicit schemes can be difficult to set up, so a neural network might be the best tool.
 
-\appendix
-\section{And now for something completely different}
-Bias-variance tradeoff. Maybe
+The genetic algorithm used was unable to find the analytical expression desired, and major flaws were uncovered in the method used. There is strong reason to believe that the algorithm does not work through cumulative adaptations of the chromosomes, as intended, but rather through randomly creating a new set of chromosomes at each generation and picking out the fittest. To change this, a different encoding scheme would be needed for the genetic code, one which gives each locus in the genome an unambiguous interpretation, independent of the other genes. This would preserve the structure of the expressions between mutations, and would allow for small, step-wise adaptations. The development of such an encoding scheme, however, is beyond the scope of this paper, but is certainly a worthy topic for further research, given the importance and wide applicability in many fields of being able to solve complicated differential equations.
+
+The neural network-differential equation solver was applied to find the eigenvalues of a symmetrix matrix. While being a quite quick and accurate method, it only gives one eigenvalue for a choice of initial vector. Thus many vectors are needed to find them all. This does not take very much time, and so can be used to solve differential equations which can be reformulated as eigenvalue problems. 
 
 
 \bibliographystyle{plain}
