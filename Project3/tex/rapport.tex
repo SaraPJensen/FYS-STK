@@ -74,7 +74,7 @@ In its most general form, a PDE can be written as:
 	f(\mathbf{x}, g(\mathbf{x}), g'(\mathbf{x}), g''(\mathbf{x}), \dots, g^{(n)}(\mathbf{x})) = 0,
 \end{align}
 
-where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independent variables, and $g(\mathbf{x})$ the solution of the PDE.
+where $\mathbf{x} = x_1, x_2, \dots x_m$ are the independent variables, and $g(\mathbf{x})$ the solution of the PDE, with the derivatives containing a term for each of the independent variables.
 
 The temperature gradient $u(x, t)$ in a rod of length $L=1$ can be described by the one-dimensional diffusion equation, a partial differential equation with two independent variables, on the form
 \begin{equation}\label{eq:diff}
@@ -136,7 +136,7 @@ A feed forward neural network consist of $L$ layers, each with a set number of n
 \subsubsection{Cost function}
 In order to determine the error, a cost function must be defined. In the case of regression problems, this could simply be the mean of the error in all points, squared. For classification, cross entropy is used.
 
-Looking at equation \eqref{eq:f-cost}, $f^2$ is then a natural choice of the cost function when optimising the solution of a PDF. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$.
+Looking at equation \eqref{eq:f-cost}, $f^2$ is then a natural choice of the cost function when optimising the solution of a PDE. When weighted by the total number of points, this is essentially the mean square error of the differential equation. The solution will be given in the output layer of the neural network, $g(\mathbf{x}) = N(\mathbf{x}, P)$, where $N$ is the output-layer when $\mathbf{x}$ is fed through the weights and biases $P$.
 Then, through $E$ iterations, the weights and biases $P$ are updated using the back-propagation algorithm, as described in \cite{p2S} and \cite{p2HO}.
 
 \subsubsection{Trial function}\label{sec:trialf}
@@ -144,13 +144,13 @@ In order to take care of the boundary and initial conditions, a trial-function
 \begin{align*}
 	g_t(\mathbf{x}) = b(\mathbf{x}) + h(\mathbf{x}, N(\mathbf{x}, P))
 \end{align*}
-is used rather than the actual solution. Here $b(\mathbf{x})$ ensures that the trial function gives correct initial and boundary values, while $h(\mathbf{x})$ ensures that $N(\mathbf{x})$ has no contribution at these points.
+is used rather than the actual solution given by the output layer. Here $b(\mathbf{x})$ ensures that the trial function gives correct initial and boundary values, while $h(\mathbf{x})$ ensures that $N(\mathbf{x})$ has no contribution at these points. While the neural network could have been used dirently, this would require many more training iterations before it converges to the solution.
 
 
 
 
 \subsection{Genetic Algorithms}
-Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his students and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland} is still in use today.
+Genetic algorithms form a family of machine learning algorithms inspired by the process of natural selection. The use of evolutionary systems to develop computational methods to solve optimisation problems stems \newline back to the 1950s and 60s. Genetic algorithms were originally developed by John Holland and his students and colleagues at the University of Michigan in the 60s and 70s, and his main theoretical framework as presented in his 1975 book \textit{Adaptation in Natural and Artificial Systems} \cite{Holland} is still in use today.
 
 The main idea behind genetic algorithms is to take inspiration from the unsupervised Darwinian evolution of populations of living organisms over generations and create an analogous machine learning algorithm. Before exploring the specific algorithm, it will therefore be useful to take a look at some of the main underlying principles of evolution.
 
@@ -165,10 +165,10 @@ Finally, a crucial premise for this algorithm to work is the so-called the build
 
 
 \subsubsection{Differential Equations and Grammatical Evolution}
-Genetic algorithms have been found to be useful in various optimisation problems. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris in their  \cite{Lagaris}.
+Genetic algorithms have been found to be useful in various optimisation problems. As discussed above, it is possible to reformulate differential equations as optimisation problems. The use of genetic algorithms in solving such problems is a fairly recent development. It can be done in various ways, but in the present paper the focus shall be on a method based on \textit{grammatical evolution}, first presented by Tsoulos and Lagaris in their 2006 paper \textit{Genetic Programming and Evolvable Machines} \cite{Lagaris}. Here, each chromosome is an analytic expression encoded by the genes through an encoding scheme. This scheme is given by the grammar of the algorithm. If the solution can be expressed in closed-form, there is thus hope of retrieving the true solution to the problem. If not, an approximate solution can be found. The algorithm and grammar here used is heavily inspired by the one used by Tsoulos and Lagaris.
 
 \subsection{Differential equation for eigenvectors of symmetric matrices}
-While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are completely different beasts, however. While possible to solve, more effort is needed to implement in an explicit scheme. This is where the power of neural networks comes in, as they make solving such problems easier. This is one of the main reasons why differential equation solving neural networks are interesting.
+While linear differential equations are not always trivial to solve, many techniques can be used to get an analytic solution to many families of PDEs. They are also very simple to solve numerically through explicit schemes. Non-linear differential equations are completely different beasts, however. While possible to solve, more effort is needed to implement in an explicit scheme. This is where the power of machine learning comes in, as they only need an expression to evaluate, which is easy to set up. This is one of the main reasons why differential equation solving neural networks and genetic algorithms are interesting.
 
 Zhang Yi and Yan Fu showed in \cite{symmetric} a non-linear differential equation that will give an eigenvector of a symmetric $n\times n$ matrix $A$. It will here be stated without proof, and the reader is referred to \cite{symmetric} for further details. A random initial vector $x(0)$, if $x(0)$ is not orthogonal to one of the eigenvectors of $A$, a solution to
 \begin{equation}\label{eq:diff_sym}
@@ -181,6 +181,8 @@ for $t>0$, will, for large $t$, converge to an eigenvector of $A$, denoted $\nu$
 	\lambda = \frac{\nu^TA\nu}{\nu^T\nu}.
 \end{equation}
 
+The neural network will be able to apprixmate the solution to $x(t)$, while the genetic algorithms find an expression that give solutions close to the analytical solution.
+
 
 \section{Methods}
 The code where the algorithms are implemented can be found on the \href{https://github.com/SaraPJensen/FYS-STK/tree/main/Project3/code}{GitHub for this paper}.
@@ -190,7 +192,7 @@ There are many hyper-parameters governing the efficiency and accuracy of a Neura
 
 While the best method for determining the best parameters for a neural network is searching the entire hyperparameter-space, this is very time-consuming, and requires spending a lot of time on some parameter values giving quite bad results. Therefore, a manual grid-search was performed, optimising one parameter at a time. Setting all parameters to some reasonable value such that a result is obtained, they were in turn tweaked one by one until an optimal value was found for the set of other parameters, while training for a fixed number of epochs. A repeat of the process was done to re-optimise the previously set parameters. This method will not ensure the globally optimal parameter set, but will quickly lead to reasonably good results.
 
-Specifically, the optimal value of the $L_2$-regularisation parameter $\lambda$ was found to be zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems, like over- or under-flow, in order to ensure as quick convergence as possible.
+Specifically, the optimal value of the $L_2$-regularisation parameter $\lambda$ was expected to be zero. Both the learning rate $\eta$ and momentum $\gamma$ should be as large as possible, without causing severe numerical problems, like over- or under-flow, in order to ensure as quick convergence as possible.
 
 One thing discussed in \cite{p2HO} that could give better results was a different learning schedule, i.e. the way the learning rate changes during training. It is often beneficial to decrease the learning rate, as it allows for the convergence into a minimum. An experiment with 5 different functions was set up. These include a constant $\eta$, a linearly decreasing $\eta$, a parabola, a cosine decreasing from 1, and a cosine increasing from 1.
 The specific expressions were as follows, in the same order as above
@@ -205,7 +207,7 @@ The specific expressions were as follows, in the same order as above
 	\\
 	\eta(e) & = \eta_0 \cos(e),
 \end{align*}
-where $e$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slow at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before decreasing again, allowing for convergence into a local minimum. The increasing cosine is counterintuitively increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top figure in Figure \ref{fig:ls}.
+where $e$ is the current epoch, divided by total number of epochs. The constant learning rate is the 'null hypothesis' to improve from. The linearly decreasing one was found to give good results in \cite{p2HO}. The parabola is meant to increase slowly at first, where there is a high risk of getting sudden spikes causing the program to crash, and then have higher learning rate when this risk is lower, before decreasing again, allowing for convergence into a local minimum. The constants were choses to give this behaviour. The increasing cosine is counterintuitively increasing the learning rate with time, included to see how this affects the results, while the normal cosine has it decreasing. Many more could have been tested, but these give a nice range of behaviours to test. The functions are shown in the top plot in Figure \ref{fig:ls}.
 
 \subsubsection{Solving the differential equation}
 When solving the differential equation \eqref{eq:diff}, both the explicit scheme \eqref{eq:euler}, and the neural network were used. The results were compared to the analytical solution \eqref{eq:anal}. For the explicit scheme, both $\Delta x=0.1$ and $\Delta x=0.01$ were used, with $\Delta t$ determined by the stability criterion \eqref{eq:stability_crit}. The same stability criterion is not applicable to the neural network, so one is more free to choose $\Delta x$ and $\Delta t$. The neural network is considerably more computationally heavy, so using too many points was very slow. Further, by changing the step sizes, the optimal parameters will also change. Therefore, the neural network was only used for the first set of step sizes.
@@ -221,7 +223,7 @@ The outline of the algorithm used is as follows. A population-class is defined c
 The \textit{E} fittest individuals are then passed onto the next generation unaltered, whereas the remaining new individuals are generated according to some crossover scheme, before mutations are applied to some, or all, of these.  This process is repeated until the maximum number of generations is reached, or until the fitness criteria is met by the fittest chromosome. In this case, \textit{C} was set to 1000, \textit{G} to 50.
 
 \subsubsection{Grammar}
-Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}. The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithm used always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2.
+Each chromosome contains 50 genes, where each gene is an integer value in the range [0, 255]. A chromosome is interpreted by reading the genes sequentially and constructing an analytic expression using the grammar as given in Table \ref{tab:grammar}. The meaning of a given gene thus depends on the type expected when it is interpreted. To decode it, the modulus of the gene with the number of options in that type is taken. E.g., if an expression \texttt{<expr>} is expected, the gene 17 will be interpreted as 17 mod 6 = 5, giving ``t''. Note that the decoding algorithm used always interprets the first gene as an expression \texttt{<expr>}.  Furthermore, to prevent the candidate solutions from being too simple, the first gene in the chromosomes was always set to 0 or 2, encoding \texttt{<expr><op><expr>} and \texttt{<func>}, respectively.
 
 \begin{table}[h]
 	\centering
@@ -278,7 +280,7 @@ Each chromosome contains 50 genes, where each gene is an integer value in the ra
 \end{table}
 
 
-For reference, the analytic solution to the problem studied can be encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 10, 2, 0, 3, 10, 2, 5, 2, 2, 0, 0, 3, 10, 2, 3].
+For reference, the analytic solution to the problem studied, \eqref{eq:anal}, can be encoded as: [0, 2, 2, 0, 3, 0, 1, 0, 3, 10, 2, 0, 3, 10, 2, 5, 2, 2, 0, 0, 3, 10, 2, 3].
 
 \subsubsection{Fitness evaluation}
 The fitness of an individual is a weighed sum of its deviance from the differential equation and from the boundary conditions. Only the equations for partial differential equations will be included here, but these are easily simplified to other types of differential equations.
